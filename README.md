@@ -44,15 +44,14 @@ Voici les visuels de l'interface **Les Saveurs Du Jardin** pour les différents 
 
 | Desktop | Tablette | Mobile |
 | :--- | :--- | :--- |
-| ![Desktop](Desktop.png) | ![Tablette](Tablet.png) | ![Mobile](Mobile.png) |
+| ![Desktop](docs/Desktop.png) | ![Tablette](docs/Tablet.png) | ![Mobile](docs/Mobile.png) |
 
 ---
 
 ## 📂 Documentation de Référence
 
-- 📄 **[Cahier des Charges Détaillé](CAHIER_DES_CHARGES.md)**
-- 📝 **[Méthodologie de Gestion de Projet](docs/METHODOLOGY.md)**
-- 🏗️ **[Modèle de Données & Relations](docs/DATABASE_MODEL.md)**
+- 📄 **[Cahier des Charges Détaillé](docs/CAHIER_DES_CHARGES.md)**
+- 📕 **[Spécifications PDF](docs/Cahier%20de%20charge.pdf)**
 
 ---
 
