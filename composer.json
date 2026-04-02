@@ -1,5 +1,7 @@
 {
     "type": "project",
+    "name": "armsal/les-saveurs-du-jardin",
+    "description": "Portail de gestion multi-magasin pour Les Saveurs Du Jardin",
     "license": "proprietary",
     "minimum-stability": "stable",
     "prefer-stable": true,
