@@ -1,0 +1,27 @@
+### Symfony ###
+/vendor/
+/var/
+/.env.local
+/.env.local.php
+/.env.test.local
+/public/bundles/
+/public/build/
+/public/uploads/
+/config/secrets/prod/prod.decrypt.private.php
+/public/storage/
+
+### Docker ###
+/.docker/
+/db-data/
+
+### OS / IDE ###
+.DS_Store
+.idea/
+.vscode/
+.env.php
+Thumbs.db
+node_modules/
+
+### Project Specific ###
+/tmp/
+/tmp_docx/

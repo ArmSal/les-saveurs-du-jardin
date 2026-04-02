@@ -1,0 +1,68 @@
+# 🐳 Docker Compose - Les Saveurs Du Jardin (Full Stack)
+
+services:
+  # PHP-FPM Service (Application logic)
+  app:
+    build:
+      context: .
+      target: dev
+    container_name: lsj-app
+    volumes:
+      - .:/var/www/html
+      - ./docker/php-fpm.conf:/usr/local/etc/php-fpm.d/www.conf
+    env_file:
+      - .env
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - lsj-network
+
+  # Web Server (Nginx)
+  web:
+    image: nginx:alpine
+    container_name: lsj-web
+    ports:
+      - "8080:80"
+    volumes:
+      - .:/var/www/html
+      - ./docker/nginx/conf.d:/etc/nginx/conf.d
+    depends_on:
+      - app
+    networks:
+      - lsj-network
+
+  # Database Service (MySQL 8)
+  db:
+    image: mysql:8
+    container_name: lsj-db
+    restart: always
+    environment:
+      MYSQL_DATABASE: lsj_db
+      MYSQL_ROOT_PASSWORD: root
+    ports:
+      - "3306:3306"
+    volumes:
+      - db-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin" ,"ping", "-h", "localhost"]
+      timeout: 10s
+      retries: 5
+    networks:
+      - lsj-network
+
+  # Adminer (Database UI for dev)
+  adminer:
+    image: adminer
+    container_name: lsj-adminer
+    ports:
+      - "8081:8080"
+    networks:
+      - lsj-network
+
+networks:
+  lsj-network:
+    driver: bridge
+
+volumes:
+  db-data:
