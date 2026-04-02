@@ -1,7 +1,7 @@
 # ⚙️ Dockerfile - Les Saveurs Du Jardin (Symfony 7)
 
 # --- Stage 1: Build & Dependencies ---
-FROM php:8.2-fpm-alpine as base
+FROM php:8.2-fpm-alpine AS base
 
 # Install system dependencies
 RUN apk add --no-cache \
@@ -32,7 +32,7 @@ COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 WORKDIR /var/www/html
 
 # --- Stage 2: Development ---
-FROM base as dev
+FROM base AS dev
 
 # Set Env
 ENV APP_ENV=dev
@@ -47,7 +47,7 @@ RUN composer install --no-scripts --no-autoloader
 CMD ["php-fpm"]
 
 # --- Stage 3: Production Builds ---
-FROM base as prod
+FROM base AS prod
 
 # Optimized PHP config
 RUN mv "$PHP_INI_DIR/php.ini-production" "$PHP_INI_DIR/php.ini"
@@ -62,7 +62,7 @@ COPY . .
 # Production Install
 RUN composer install --no-dev --optimize-autoloader --no-scripts
 
-# Permissions
-RUN chown -R www-data:www-data /var/www/html/var
+# Create var directory and set permissions
+RUN mkdir -p /var/www/html/var && chown -R www-data:www-data /var/www/html/var
 
 CMD ["php-fpm"]
