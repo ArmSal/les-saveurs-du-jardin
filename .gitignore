@@ -26,4 +26,14 @@ node_modules/
 /tmp/
 /tmp_docx/
 
+### Infrastructure & DevOps ###
+.terraform/
+*.tfstate
+*.tfstate.backup
+*.tfvars
+*.tfvars.json
+.terraform.lock.hcl
+*.retry
+infra/ansible/inventory.ini
+
 /docker/alertmanager/discord_webhook_url
