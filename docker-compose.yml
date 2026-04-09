@@ -9,7 +9,6 @@ services:
     container_name: lsj-app
     volumes:
       - .:/var/www/html
-      - ./docker/php-fpm.conf:/usr/local/etc/php-fpm.d/www.conf
     env_file:
       - .env
     depends_on:
@@ -32,21 +31,23 @@ services:
     networks:
       - lsj-network
 
-  # Database Service (MySQL 8)
+  # Database Service (PostgreSQL 16)
   db:
-    image: mysql:8
+    image: postgres:16-alpine
     container_name: lsj-db
     restart: always
     environment:
-      MYSQL_DATABASE: lsj_db
-      MYSQL_ROOT_PASSWORD: root
+      POSTGRES_DB: lsj_db
+      POSTGRES_PASSWORD: root
+      POSTGRES_USER: app
     ports:
-      - "3306:3306"
+      - "5432:5432"
     volumes:
-      - db-data:/var/lib/mysql
+      - db-data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD", "mysqladmin" ,"ping", "-h", "localhost"]
-      timeout: 10s
+      test: ["CMD-SHELL", "pg_isready -U app -d lsj_db"]
+      interval: 10s
+      timeout: 5s
       retries: 5
     networks:
       - lsj-network

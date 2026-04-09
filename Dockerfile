@@ -12,7 +12,7 @@ RUN apk add --no-cache \
     libpng-dev \
     libjpeg-turbo-dev \
     freetype-dev \
-    mysql-client \
+    postgresql-dev \
     git \
     unzip
 
@@ -20,7 +20,7 @@ RUN apk add --no-cache \
 RUN docker-php-ext-configure gd --with-freetype --with-jpeg \
     && docker-php-ext-install -j$(nproc) \
     intl \
-    pdo_mysql \
+    pdo_pgsql \
     zip \
     gd \
     opcache
