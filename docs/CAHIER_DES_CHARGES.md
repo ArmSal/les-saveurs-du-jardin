@@ -64,26 +64,46 @@ DATABASE_URL="postgresql://dbadmin:admin123@lsj-rds-endpoint:5432/lsj_db?serverV
 
 ### 9.1 Architecture Cloud (BC01)
 L'infrastructure est hébergée sur **AWS** et entièrement gérée en **Infrastructure as Code (IaC)**.
-- **Réseau** : VPC personnalisé avec subnet public (Serveur App) et subnets privés (Base de données RDS).
-- **Gestion d'état** : Utilisation d'un bucket **AWS S3** pour le stockage distant du `terraform.tfstate`.
-- **Sécurité** : Groupes de sécurité (Security Groups) limitant les flux entrants au strict nécessaire (80, 443, 22).
 
-### 9.2 Provisionnement et Configuration
-- **Terraform** : Provisionnement des ressources AWS (VPC, EC2, RDS).
-- **Ansible** : Configuration post-installation du serveur (installation Docker, sécurisation OS, fail2ban).
+```mermaid
+graph TD
+    subgraph "AWS Cloud (eu-west-3)"
+        subgraph "VPC (10.0.0.0/16)"
+            subgraph "Public Subnet (10.0.1.0/24)"
+                EC2[EC2 Instance: lsj-server]
+                SG_EC2[Security Group: allow 80, 22, 3000]
+            end
+            
+            subgraph "Private Subnets (10.0.2.0/24)"
+                RDS[(AWS RDS: PostgreSQL)]
+                SG_RDS[Security Group: allow 5432 from EC2]
+            end
+        end
+    end
 
-### 9.3 Supervision et Alerting (BC03)
-La plateforme est monitorée en temps réel via une stack **Prometheus & Grafana**.
-- **Indicateurs clés (KPIs)** :
-  - Charge CPU (Alerte si > 80%)
-  - Espace Disque (Alerte si > 90%)
-  - Temps de réponse PHP-FPM (Alerte si > 2s)
+    User((Utilisateur)) -->|Port 8080| EC2
+    EC2 -->|SQL| RDS
+```
 
-### 9.4 Cycle de Vie et CI/CD
+### 9.2 Cycle de Vie et CI/CD
 Chaque modification du code déclenche un pipeline automatisé :
-1. **Tests** : Validation syntaxique, sécurité et tests fonctionnels (WebTestCase).
-2. **Docker Security** : Scan de vulnérabilités via **Trivy**.
-3. **Build** : Création de l'image Docker optimisée pour la production.
+
+```mermaid
+sequenceDiagram
+    participant Dev as Développeur
+    participant GH as GitHub Actions
+    participant AWS as Infrastructure AWS
+
+    Dev->>GH: Git Push
+    GH->>GH: PHP Syntax & Security Check
+    GH->>GH: Unit & Functional Tests (PHPUnit)
+    GH->>GH: Build Docker Image
+    GH->>GH: Vulnerability Scan (Trivy)
+    GH->>AWS: Provision (Terraform)
+    GH->>AWS: Configure (Ansible)
+    GH->>AWS: Deploy Docker Compose
+    AWS-->>Dev: Green Deployment ✅
+```
 
 ---
 
