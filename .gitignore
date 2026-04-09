@@ -25,3 +25,13 @@ node_modules/
 ### Project Specific ###
 /tmp/
 /tmp_docx/
+
+### Infrastructure & DevOps ###
+.terraform/
+*.tfstate
+*.tfstate.backup
+*.tfvars
+*.tfvars.json
+.terraform.lock.hcl
+*.retry
+infra/ansible/inventory.ini
