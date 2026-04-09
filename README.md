@@ -61,6 +61,29 @@ Voici les visuels de l'interface **Les Saveurs Du Jardin** pour les différents 
 # Cloner le projet
 git clone https://github.com/ArmSal/les-saveurs-du-jardin.git
 
+## 🏗️ Infrastructure & DevOps (BC01 & BC03)
+
+Le projet intègre une plateforme DevOps complète pour la certification :
+
+### ☁️ Infrastructure Cloud (BC01)
+Provisionnement automatisé sur **AWS** :
+- **Terraform** : VPC, Subnets, EC2, RDS (PostgreSQL). Dossier : `infra/terraform/`.
+- **Ansible** : Provisionnement Docker et sécurité système. Dossier : `infra/ansible/`.
+- **S3 Backend** : Gestion de l'état (State) centralisée.
+
+### 📊 Supervision & Alerting (BC03)
+Stack d'observabilité complète :
+- **Prometheus & Grafana** : Visualisation des métriques.
+- **Alert Rules** : Seuils configurés pour CPU (>80%), Disque (>90%) et Latence PHP (>2s).
+- **Exporters** : Node Exporter et PHP-FPM Exporter.
+
+### 🛡️ Sécurité & CI/CD
+- **Trivy** : Scan de vulnérabilités Docker intégré au pipeline.
+- **Secrets** : Gestion sécurisée via `.env.local` et secrets GitHub.
+- **Automated Tests** : Pipeline bloquant en cas d'échec de PHPUnit.
+
+Consultez le [Schéma d'Architecture](docs/architecture_schema.md) pour plus de détails.
+
 # Lancer l'environnement de développement
 docker-compose up -d --build
 
