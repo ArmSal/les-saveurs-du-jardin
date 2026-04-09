@@ -57,7 +57,7 @@ jobs:
 
     - name: Prepare Database for tests
       env:
-        DATABASE_URL: "postgresql://app:!ChangeMe!@127.0.0.1:5432/app_test?serverVersion=16&charset=utf8"
+        DATABASE_URL: "postgresql://app:admin123@127.0.0.1:5432/app_test?serverVersion=16&charset=utf8"
       run: |
         php bin/console doctrine:database:create --env=test --if-not-exists
         php bin/console doctrine:migrations:migrate --env=test --no-interaction
