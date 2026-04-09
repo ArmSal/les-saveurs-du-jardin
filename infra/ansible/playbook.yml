@@ -1,0 +1,61 @@
+# infra/ansible/playbook.yml
+
+---
+- name: Provisionnement du Serveur LSDJ
+  hosts: app
+  become: yes
+  
+  vars:
+    docker_packages:
+      - apt-transport-https
+      - ca-certificates
+      - curl
+      - gnupg
+      - lsb-release
+
+  tasks:
+    - name: Mise à jour des dépôts apt
+      apt:
+        update_cache: yes
+        force_apt_get: yes
+
+    - name: Installation des dépendances Docker
+      apt:
+        name: "{{ docker_packages }}"
+        state: present
+
+    - name: Ajout de la clé GPG officielle Docker
+      apt_key:
+        url: https://download.docker.com/linux/ubuntu/gpg
+        state: present
+
+    - name: Ajout du dépôt Docker
+      apt_repository:
+        repo: "deb [arch=amd64] https://download.docker.com/linux/ubuntu {{ ansible_distribution_release }} stable"
+        state: present
+
+    - name: Installation de Docker Engine
+      apt:
+        name: 
+          - docker-ce
+          - docker-ce-cli
+          - containerd.io
+          - docker-compose-plugin
+        state: present
+
+    - name: Assurer que Docker est démarré
+      service:
+        name: docker
+        state: started
+        enabled: yes
+
+    - name: Ajout de l'utilisateur ubuntu au groupe docker
+      user:
+        name: ubuntu
+        groups: docker
+        append: yes
+
+    - name: Installation de Fail2Ban pour la sécurité
+      apt:
+        name: fail2ban
+        state: present
