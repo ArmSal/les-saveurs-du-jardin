@@ -1,0 +1,257 @@
+{# 1. EMPLOYEE REQUEST MODAL - Clean Dashboard Style #}
+<div id="ask-conge-modal" class="fixed inset-0 bg-slate-950/50 backdrop-blur-sm z-[500] hidden items-center justify-center p-4">
+    <div class="bg-white rounded-xl w-full max-w-lg overflow-hidden shadow-xl">
+        <div class="p-6 pb-4 flex justify-between items-center border-b border-slate-100">
+            <div>
+                <h3 class="text-xl font-bold text-slate-900">Nouvelle Demande</h3>
+                <p class="text-indigo-600 text-xs font-medium mt-1">Demande de congé</p>
+            </div>
+            <button onclick="closeModal('ask-conge-modal')" class="p-2 bg-slate-100 rounded-lg hover:bg-slate-200 transition-colors">
+                <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12"></path></svg>
+            </button>
+        </div>
+        
+        <form action="{{ path('app_rh_conge_ask') }}" method="POST" class="p-6 space-y-5">
+            <div class="grid grid-cols-2 gap-4">
+                <div class="space-y-1.5">
+                    <label class="text-xs font-semibold text-slate-500 uppercase">Départ</label>
+                    <input type="date" name="start_date" required class="w-full bg-slate-50 border border-slate-200 rounded-lg text-sm py-2.5 px-3 outline-none focus:border-indigo-500 transition-all">
+                </div>
+                <div class="space-y-1.5">
+                    <label class="text-xs font-semibold text-slate-500 uppercase">Dernier Jour</label>
+                    <input type="date" name="end_date" required class="w-full bg-slate-50 border border-slate-200 rounded-lg text-sm py-2.5 px-3 outline-none focus:border-indigo-500 transition-all">
+                </div>
+            </div>
+            <div class="space-y-1.5">
+                <label class="text-xs font-semibold text-slate-500 uppercase">Nature du congé</label>
+                <select name="type" required class="w-full bg-slate-50 border border-slate-200 rounded-lg text-sm py-2.5 px-3 outline-none focus:border-indigo-500 transition-all cursor-pointer">
+                    <option value="Congé Payé">Congé Payé</option>
+                    <option value="Sans Solde">Sans Solde</option>
+                    <option value="Autre">Autre</option>
+                </select>
+            </div>
+            <div class="space-y-1.5">
+                <label class="text-xs font-semibold text-slate-500 uppercase">Note (optionnel)</label>
+                <textarea name="comment" rows="3" class="w-full bg-slate-50 border border-slate-200 rounded-lg text-sm py-2.5 px-3 outline-none focus:border-indigo-500 transition-all resize-none" placeholder="Ex: Voyage familial..."></textarea>
+            </div>
+            <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 rounded-lg transition-all text-sm">Soumettre la demande</button>
+        </form>
+    </div>
+</div>
+
+{# 2. ADMIN APPROVE MODAL - Clean Style #}
+{% if canEdit %}
+    <div id="admin-approve-modal" class="fixed inset-0 bg-slate-950/50 backdrop-blur-sm z-[500] hidden items-center justify-center p-4">
+        <div class="bg-white rounded-xl w-full max-w-lg overflow-hidden shadow-xl">
+            <div class="p-6 pb-4 flex justify-between items-center border-b border-emerald-100 bg-emerald-50/30">
+                <div>
+                    <h3 class="text-xl font-bold text-emerald-900">Validation</h3>
+                    <p class="text-emerald-600 text-xs font-medium mt-1">Signature requise</p>
+                </div>
+                <button onclick="closeModal('admin-approve-modal')" class="p-2 bg-white rounded-lg hover:bg-slate-100 transition-colors">
+                    <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+            </div>
+            
+            <form id="admin-approve-form" method="POST" class="p-6 space-y-5">
+                <input type="hidden" name="action" value="APPROVE">
+                
+                <div class="space-y-1.5">
+                    <label class="text-xs font-semibold text-slate-500 uppercase">Message à l'employé (optionnel)</label>
+                    <textarea name="comment" maxlength="1000" rows="3" class="w-full bg-slate-50 border border-slate-200 rounded-lg text-sm py-2.5 px-3 outline-none focus:border-emerald-500 transition-all resize-none" placeholder="Votre message..."></textarea>
+                </div>
+
+                <div class="space-y-2">
+                    <div class="flex items-center justify-between">
+                        <label class="text-xs font-semibold text-emerald-600 uppercase">Signature</label>
+                        <span class="text-xs text-slate-400">Tracer ci-dessous</span>
+                    </div>
+                    <div class="relative bg-slate-50 rounded-lg border border-slate-200 overflow-hidden">
+                        <canvas id="admin-signature-pad" class="w-full h-28 touch-none cursor-crosshair"></canvas>
+                        <button type="button" id="clear-admin-signature" class="absolute bottom-3 right-3 p-2 bg-white hover:bg-slate-100 text-slate-400 hover:text-rose-500 rounded-lg border border-slate-200 transition-all">
+                            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1-1v3M4 7h16"></path></svg>
+                        </button>
+                    </div>
+                    <input type="hidden" name="signature" id="admin-signature-input">
+                </div>
+
+                <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-3 rounded-lg transition-all text-sm">Signer & Valider</button>
+            </form>
+        </div>
+    </div>
+
+    {# 3. ADMIN MODIFY MODAL - Clean Style #}
+    <div id="admin-modify-modal" class="fixed inset-0 bg-slate-950/50 backdrop-blur-sm z-[500] hidden items-center justify-center p-4">
+        <div class="bg-white rounded-xl w-full max-w-lg overflow-hidden shadow-xl">
+            <div class="p-6 pb-4 flex justify-between items-center border-b border-indigo-100 bg-indigo-50/30">
+                <div>
+                    <h3 class="text-xl font-bold text-indigo-900">Proposition</h3>
+                    <p class="text-indigo-600 text-xs font-medium mt-1">Nouvelles dates</p>
+                </div>
+                <button onclick="closeModal('admin-modify-modal')" class="p-2 bg-white rounded-lg hover:bg-slate-100 transition-colors">
+                    <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+            </div>
+            
+            <form id="admin-modify-form" method="POST" class="p-6 space-y-5">
+                <input type="hidden" name="action" value="MODIFY">
+                
+                <div class="p-4 bg-slate-50 rounded-lg border border-slate-200 space-y-4">
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="space-y-1.5">
+                            <label class="text-xs font-semibold text-slate-500 uppercase">Départ</label>
+                            <input type="date" name="new_start_date" id="modify-start-input" class="w-full bg-white border border-slate-200 rounded-lg text-sm py-2 px-3 outline-none focus:border-indigo-500">
+                        </div>
+                        <div class="space-y-1.5">
+                            <label class="text-xs font-semibold text-slate-500 uppercase">Fin</label>
+                            <input type="date" name="new_end_date" id="modify-end-input" class="w-full bg-white border border-slate-200 rounded-lg text-sm py-2 px-3 outline-none focus:border-indigo-500">
+                        </div>
+                    </div>
+                    <div class="space-y-1.5">
+                        <label class="text-xs font-semibold text-slate-500 uppercase">Nature</label>
+                        <select name="new_type" id="modify-type-input" class="w-full bg-white border border-slate-200 rounded-lg text-sm py-2 px-3 outline-none cursor-pointer focus:border-indigo-500">
+                            <option value="Congé Payé">Congé Payé</option>
+                            <option value="Sans Solde">Sans Solde</option>
+                            <option value="Autre">Autre</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="space-y-1.5">
+                    <label class="text-xs font-semibold text-slate-500 uppercase">Justification</label>
+                    <textarea name="comment" maxlength="1000" rows="3" required class="w-full bg-slate-50 border border-slate-200 rounded-lg text-sm py-2.5 px-3 outline-none focus:border-indigo-500 transition-all resize-none" placeholder="Expliquez le changement..."></textarea>
+                </div>
+
+                <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 rounded-lg transition-all text-sm">Envoyer la proposition</button>
+            </form>
+        </div>
+    </div>
+
+    {# 4. ADMIN REJECT MODAL - Clean Style #}
+    <div id="admin-reject-modal" class="fixed inset-0 bg-slate-950/50 backdrop-blur-sm z-[500] hidden items-center justify-center p-4">
+        <div class="bg-white rounded-xl w-full max-w-lg overflow-hidden shadow-xl">
+            <div class="p-6 pb-4 flex justify-between items-center border-b border-rose-100 bg-rose-50/30">
+                <div>
+                    <h3 class="text-xl font-bold text-rose-900">Refus</h3>
+                    <p class="text-rose-600 text-xs font-medium mt-1">Action définitive</p>
+                </div>
+                <button onclick="closeModal('admin-reject-modal')" class="p-2 bg-white rounded-lg hover:bg-slate-100 transition-colors">
+                    <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+            </div>
+            
+            <form id="admin-reject-form" method="POST" class="p-6 space-y-5">
+                <input type="hidden" name="action" value="REJECT">
+                
+                <div class="space-y-1.5">
+                    <label class="text-xs font-semibold text-slate-500 uppercase">Motif du refus (obligatoire)</label>
+                    <textarea name="comment" maxlength="1000" rows="4" required class="w-full bg-slate-50 border border-slate-200 rounded-lg text-sm py-2.5 px-3 outline-none focus:border-rose-500 transition-all resize-none" placeholder="Expliquez les raisons..."></textarea>
+                </div>
+
+                <button type="submit" class="w-full bg-rose-600 hover:bg-rose-700 text-white font-semibold py-3 rounded-lg transition-all text-sm">Confirmer le refus</button>
+            </form>
+        </div>
+    </div>
+{% endif %}
+
+
+{# 5. EMPLOYEE ACCEPT MODAL - Clean Style #}
+<div id="employee-accept-modal" class="fixed inset-0 bg-slate-950/50 backdrop-blur-sm z-[500] hidden items-center justify-center p-4">
+    <div class="bg-white rounded-xl w-full max-w-md overflow-hidden shadow-xl">
+        <div class="p-6 pb-4 flex justify-between items-center border-b border-emerald-100 bg-emerald-50/30">
+            <div>
+                <h3 class="text-lg font-bold text-emerald-900">Accepter</h3>
+                <p class="text-emerald-600 text-xs font-medium mt-1">Confirmer la proposition</p>
+            </div>
+            <button onclick="closeModal('employee-accept-modal')" class="p-2 bg-white rounded-lg hover:bg-slate-100 transition-colors">
+                <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12"></path></svg>
+            </button>
+        </div>
+        
+        <form id="employee-accept-form" method="POST" class="p-6 space-y-5">
+            <input type="hidden" name="action" value="ACCEPT">
+            <div class="space-y-1.5">
+                <label class="text-xs font-semibold text-slate-500 uppercase">Message (optionnel)</label>
+                <textarea name="comment" rows="3" class="w-full bg-slate-50 border border-slate-200 rounded-lg text-sm py-2.5 px-3 outline-none focus:border-emerald-500 transition-all resize-none" placeholder="Votre message..."></textarea>
+            </div>
+            <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-3 rounded-lg transition-all text-sm">Confirmer</button>
+        </form>
+    </div>
+</div>
+
+{# 6. EMPLOYEE MODIFY MODAL - Clean Style #}
+<div id="employee-modify-modal" class="fixed inset-0 bg-slate-950/50 backdrop-blur-sm z-[500] hidden items-center justify-center p-4">
+    <div class="bg-white rounded-xl w-full max-w-lg overflow-hidden shadow-xl">
+        <div class="p-6 pb-4 flex justify-between items-center border-b border-indigo-100 bg-indigo-50/30">
+            <div>
+                <h3 class="text-lg font-bold text-indigo-900">Modifier</h3>
+                <p class="text-indigo-600 text-xs font-medium mt-1">Ajuster la demande</p>
+            </div>
+            <button onclick="closeModal('employee-modify-modal')" class="p-2 bg-white rounded-lg hover:bg-slate-100 transition-colors">
+                <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12"></path></svg>
+            </button>
+        </div>
+        
+        <form id="employee-modify-form" method="POST" class="p-6 space-y-5">
+            <input type="hidden" name="action" value="MODIFY">
+            
+            <div class="p-4 bg-slate-50 rounded-lg border border-slate-200 space-y-4">
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="space-y-1.5">
+                        <label class="text-xs font-semibold text-slate-500 uppercase">Départ</label>
+                        <input type="date" name="new_start_date" id="emp-modify-start-input" class="w-full bg-white border border-slate-200 rounded-lg text-sm py-2 px-3 outline-none focus:border-indigo-500">
+                    </div>
+                    <div class="space-y-1.5">
+                        <label class="text-xs font-semibold text-slate-500 uppercase">Fin</label>
+                        <input type="date" name="new_end_date" id="emp-modify-end-input" class="w-full bg-white border border-slate-200 rounded-lg text-sm py-2 px-3 outline-none focus:border-indigo-500">
+                    </div>
+                </div>
+                <div class="space-y-1.5">
+                    <label class="text-xs font-semibold text-slate-500 uppercase">Nature</label>
+                    <select name="new_type" id="emp-modify-type-input" class="w-full bg-white border border-slate-200 rounded-lg text-sm py-2 px-3 outline-none cursor-pointer focus:border-indigo-500">
+                        <option value="Congé Payé">Congé Payé</option>
+                        <option value="Sans Solde">Sans Solde</option>
+                        <option value="Autre">Autre</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="space-y-1.5">
+                <label class="text-xs font-semibold text-slate-500 uppercase">Note (optionnel)</label>
+                <textarea name="comment" maxlength="1000" rows="3" class="w-full bg-slate-50 border border-slate-200 rounded-lg text-sm py-2.5 px-3 outline-none focus:border-indigo-500 transition-all resize-none" placeholder="Expliquez votre ajustement..."></textarea>
+            </div>
+
+            <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 rounded-lg transition-all text-sm">Mettre à jour</button>
+        </form>
+    </div>
+</div>
+
+{# 7. EMPLOYEE CANCEL MODAL - Clean Style #}
+<div id="employee-cancel-modal" class="fixed inset-0 bg-slate-950/50 backdrop-blur-sm z-[500] hidden items-center justify-center p-4">
+    <div class="bg-white rounded-xl w-full max-w-md overflow-hidden shadow-xl">
+        <div class="p-6 pb-4 flex justify-between items-center border-b border-rose-100 bg-rose-50/30">
+            <div>
+                <h3 class="text-lg font-bold text-rose-900">Annuler</h3>
+                <p class="text-rose-600 text-xs font-medium mt-1">Action irréversible</p>
+            </div>
+            <button onclick="closeModal('employee-cancel-modal')" class="p-2 bg-white rounded-lg hover:bg-slate-100 transition-colors">
+                <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12"></path></svg>
+            </button>
+        </div>
+        
+        <form id="employee-cancel-form" method="POST" class="p-6 space-y-5">
+            <input type="hidden" name="action" value="CANCEL">
+            <div class="space-y-1.5">
+                <label class="text-xs font-semibold text-slate-500 uppercase">Motif (optionnel)</label>
+                <textarea name="comment" rows="3" class="w-full bg-slate-50 border border-slate-200 rounded-lg text-sm py-2.5 px-3 outline-none focus:border-rose-500 transition-all resize-none" placeholder="Pourquoi annulez-vous ?"></textarea>
+            </div>
+            <button type="submit" class="w-full bg-rose-600 hover:bg-rose-700 text-white font-semibold py-3 rounded-lg transition-all text-sm">Confirmer l'annulation</button>
+        </form>
+    </div>
+</div>
+
+
+<style>
+    @keyframes modal-in { from { opacity: 0; transform: translateY(20px) scale(0.98); } to { opacity: 1; transform: translateY(0) scale(1); } }
+    .animate-modal-in { animation: modal-in 0.4s cubic-bezier(0.19, 1, 0.22, 1) both; }
+</style>

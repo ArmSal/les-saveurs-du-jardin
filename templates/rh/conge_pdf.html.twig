@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="fr">
+	<head>
+		<meta charset="UTF-8">
+		<style>
+			@page {
+				margin: 0;
+				size: A4;
+			}
+			* {
+				margin: 0;
+				padding: 0;
+				box-sizing: border-box;
+			}
+
+			.page-border {
+				position: fixed;
+				top: 8mm;
+				left: 8mm;
+				right: 8mm;
+				bottom: 8mm;
+				border: 0.8px solid #94a3b8;
+				pointer-events: none;
+			}
+
+			.page-content {
+				padding: 17mm 16mm 14mm;
+			}
+
+			body {
+				font-family: 'DejaVu Sans', Arial, sans-serif;
+				color: #1e293b;
+				background: #fff;
+				font-size: 9px;
+				line-height: 1.4;
+			}
+
+			/* ─── HEADER ─── */
+			.header {
+				display: table;
+				width: 100%;
+				margin-bottom: 6mm;
+				padding-bottom: 5mm;
+				border-bottom: 0.5px solid #cbd5e1;
+			}
+			.header-left {
+				display: table-cell;
+				width: 60%;
+				vertical-align: middle;
+			}
+			.header-right {
+				display: table-cell;
+				width: 40%;
+				vertical-align: middle;
+				text-align: right;
+			}
+
+			.company-name {
+				font-size: 16px;
+				font-weight: 900;
+				color: #0f172a;
+				text-transform: uppercase;
+				letter-spacing: -0.5px;
+			}
+			.company-sub {
+				font-size: 7px;
+				color: #94a3b8;
+				font-weight: 700;
+				text-transform: uppercase;
+				letter-spacing: 1.5px;
+				margin-top: 2px;
+			}
+
+			.ref-block {
+				text-align: right;
+			}
+			.ref-num {
+				font-size: 13px;
+				font-weight: 900;
+				color: #1e293b;
+			}
+			.ref-date {
+				font-size: 7px;
+				color: #94a3b8;
+				font-weight: 700;
+			}
+			.ref-status {
+				display: inline-block;
+				margin-top: 3px;
+				padding: 2px 8px;
+				border: 0.5px solid #cbd5e1;
+				border-radius: 12px;
+				font-size: 7px;
+				font-weight: 900;
+				text-transform: uppercase;
+				color: #64748b;
+			}
+
+			/* ─── TITLE ─── */
+			.title-block {
+				text-align: center;
+				margin-bottom: 5mm;
+			}
+			.doc-label {
+				font-size: 7px;
+				font-weight: 900;
+				text-transform: uppercase;
+				letter-spacing: 3px;
+				color: #94a3b8;
+				margin-bottom: 3px;
+			}
+			.doc-main {
+				font-size: 22px;
+				font-weight: 900;
+				color: #0f172a;
+				text-transform: uppercase;
+				letter-spacing: -0.5px;
+			}
+			hr.rule {
+				border: none;
+				border-top: 0.5px solid #e2e8f0;
+				margin: 4mm 0;
+			}
+
+			/* ─── EMPLOYEE BOX ─── */
+			.employee-box {
+				border: 0.5px solid #e2e8f0;
+				border-left: 3px solid #1e293b;
+				border-radius: 4px;
+				padding: 8px 12px;
+				margin-bottom: 5mm;
+			}
+			.emp-label {
+				font-size: 7px;
+				font-weight: 800;
+				text-transform: uppercase;
+				letter-spacing: 1px;
+				color: #94a3b8;
+				margin-bottom: 2px;
+			}
+			.emp-name {
+				font-size: 14px;
+				font-weight: 900;
+				color: #0f172a;
+			}
+			.emp-store {
+				font-size: 8px;
+				color: #64748b;
+				font-weight: 700;
+			}
+
+			/* ─── PERIOD ─── */
+			.period-row {
+				display: table;
+				width: 100%;
+				margin-bottom: 5mm;
+				border-collapse: separate;
+				border-spacing: 4px 0;
+			}
+			.period-cell {
+				display: table-cell;
+				width: 33.33%;
+				vertical-align: top;
+			}
+			.period-card {
+				border: 0.5px solid #e2e8f0;
+				border-radius: 6px;
+				padding: 8px 10px;
+				text-align: center;
+				background: #f8fafc;
+			}
+			.period-card.main-card {
+				background: #fff;
+				border: 0.5px solid #cbd5e1;
+			}
+			.p-label {
+				font-size: 6.5px;
+				font-weight: 800;
+				text-transform: uppercase;
+				letter-spacing: 1px;
+				color: #94a3b8;
+				margin-bottom: 3px;
+			}
+			.main-card .p-label {
+				color: rgba(255, 255, 255, 0.5);
+			}
+			.p-val {
+				font-size: 14px;
+				font-weight: 900;
+				color: #0f172a;
+			}
+			.main-card .p-val {
+				font-size: 28px;
+				color: #1e293b;
+				line-height: 1;
+			}
+			.breakdown-row {
+				display: table;
+				width: 100%;
+				margin-top: 4px;
+				border-top: 0.5px solid #e2e8f0;
+				padding-top: 4px;
+			}
+			.breakdown-col {
+				display: table-cell;
+				width: 33.33%;
+				text-align: center;
+			}
+			.bd-val {
+				font-size: 13px;
+				font-weight: 900;
+				color: #1e293b;
+			}
+			.bd-label {
+				font-size: 6px;
+				font-weight: 800;
+				color: #94a3b8;
+				text-transform: uppercase;
+			}
+
+			/* ─── SIGNATURES ─── */
+			.sig-row {
+				display: table;
+				width: 100%;
+				border-collapse: separate;
+				border-spacing: 6px 0;
+				margin-top: 6mm;
+			}
+			.sig-col {
+				display: table-cell;
+				width: 50%;
+				vertical-align: top;
+			}
+
+			/* TAMPON */
+			.tampon-wrap {
+				text-align: center;
+				padding: 10px 0;
+			}
+			.tampon {
+				display: inline-block;
+				width: 32mm;
+				height: 32mm;
+				border-radius: 50%;
+				border: 2px solid #1e293b;
+				vertical-align: middle;
+				text-align: center;
+				padding-top: 7px;
+			}
+			.t-company {
+				font-size: 6.5px;
+				font-weight: 900;
+				text-transform: uppercase;
+				letter-spacing: 1px;
+				color: #1e293b;
+			}
+			.t-valid {
+				font-size: 11px;
+				font-weight: 900;
+				text-transform: uppercase;
+				color: #1e293b;
+				margin: 3px 0;
+			}
+			.t-date {
+				font-size: 6px;
+				font-weight: 800;
+				color: #64748b;
+			}
+
+			/* SIGNATURE BOX */
+			.sig-box {
+				border: 0.5px solid #e2e8f0;
+				border-radius: 6px;
+				padding: 10px;
+				min-height: 35mm;
+			}
+			.sig-label {
+				font-size: 7px;
+				font-weight: 900;
+				text-transform: uppercase;
+				letter-spacing: 1px;
+				color: #94a3b8;
+				margin-bottom: 5px;
+			}
+			.sig-img {
+				max-width: 100%;
+				max-height: 22mm;
+				display: block;
+				margin: 0 auto 5px;
+			}
+			.sig-placeholder {
+				height: 20mm;
+				border: 0.5px dashed #e2e8f0;
+				border-radius: 4px;
+				margin-bottom: 5px;
+			}
+			.sig-line {
+				border: none;
+				border-top: 0.5px solid #e2e8f0;
+				margin: 4px 0;
+			}
+			.sig-name {
+				font-size: 9px;
+				font-weight: 900;
+				color: #0f172a;
+			}
+			.sig-role {
+				font-size: 7px;
+				color: #94a3b8;
+				font-weight: 700;
+			}
+
+			/* ─── FOOTER & SIGNATURE ─── */
+			.footer-signature-container {
+				position: absolute;
+				bottom: 14mm;
+				left: 16mm;
+				right: 16mm;
+			}
+			.sig-wrapper {
+				text-align: center;
+				margin-bottom: 8mm;
+			}
+			.sig-box {
+				display: inline-block;
+				text-align: center;
+				min-width: 70mm;
+				border: 1px solid #e2e8f0;
+				border-radius: 8px;
+				padding: 12px 20px;
+				background: linear-gradient(to bottom, #ffffff, #f8fafc);
+			}
+			.sig-label {
+				font-size: 9px;
+				font-weight: 800;
+				text-transform: uppercase;
+				letter-spacing: 2px;
+				color: #94a3b8;
+				margin-bottom: 12px;
+				padding-bottom: 8px;
+				border-bottom: 1px solid #e2e8f0;
+			}
+			.sig-img {
+				max-width: 55mm;
+				max-height: 20mm;
+				margin: 0 auto 10px;
+				display: block;
+			}
+			.sig-name {
+				font-size: 11px;
+				font-weight: 900;
+				color: #0f172a;
+				border-top: 1px solid #e2e8f0;
+				padding-top: 5px;
+				display: block;
+			}
+			.sig-role {
+				font-size: 8px;
+				color: #475569;
+				font-weight: 600;
+				display: block;
+				text-transform: uppercase;
+				letter-spacing: 0.5px;
+			}
+			.footer-line {
+				font-size: 7px;
+				color: #94a3b8;
+				border-top: 0.5px solid #e2e8f0;
+				padding-top: 6px;
+				text-align: center;
+			}
+            
+            /* ─── CERTIFICATION STAMP ─── */
+            .certification-stamp {
+                position: absolute;
+                top: 50%;
+                right: 20mm;
+                width: 35mm;
+                height: 35mm;
+                border: 2px solid #4f46e5;
+                border-radius: 50%;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                text-align: center;
+                opacity: 0.15;
+                transform: rotate(-15deg);
+                pointer-events: none;
+            }
+            .stamp-text {
+                font-size: 8px;
+                font-weight: 900;
+                text-transform: uppercase;
+                letter-spacing: 1px;
+                color: #4f46e5;
+                line-height: 1.2;
+            }
+		</style>
+	</head>
+	<body>
+
+		{# ─── PAGE BORDER (visible frame on all 4 sides) ─── #}
+		<div class="page-border"></div>
+
+		{# ─── ALL CONTENT INSIDE BORDER ─── #}
+		<div
+			class="page-content">
+
+			{# ─── HEADER ─── #}
+			<div class="header">
+				<div class="header-left">
+					{% if logoBase64 %}
+						<img src="{{ logoBase64 }}" style="height: 38px; display: block; margin-bottom: 4px;">
+					{% endif %}
+					<div class="company-name">Les Saveurs du Jardin</div>
+					<div class="company-sub">Portail Ressources Humaines</div>
+				</div>
+				<div class="header-right">
+					<div class="ref-block">
+						<div class="ref-num">N° #{{ '%05d'|format(conge.id) }}</div>
+						<div class="ref-date">Émis le
+							{{ 'now'|date('d/m/Y') }}</div>
+						<div class="ref-status">
+							{% if conge.status == 'APPROVED' %}Approuvé
+								{% elseif conge.status == 'REJECTED' %}Refusé
+								{% else %}En cours
+							{% endif %}
+						</div>
+					</div>
+				</div>
+			</div>
+
+			{# ─── TITLE ─── #}
+			<div class="title-block">
+				<div class="doc-label">Attestation Officielle</div>
+				<div class="doc-main">AUTORISATION DE CONGÉ</div>
+			</div>
+
+			<hr
+			class="rule">
+
+			{# ─── EMPLOYEE ─── #}
+			<div class="employee-box">
+				<div class="emp-label">Concernant le collaborateur</div>
+				<div class="emp-name">{{ conge.user.prenom|upper }}
+					{{ conge.user.nom|upper }}</div>
+				<div class="emp-store">{{ conge.user.magasin|default('LSDJ — Siège') }}</div>
+			</div>
+
+			<div class="period-row">
+				<div class="period-cell" style="width: 50%;">
+					<div class="period-card">
+						<div class="p-label">Début</div>
+						<div class="p-val">{{ conge.startDate|date('d/m/Y') }}</div>
+					</div>
+				</div>
+				<div class="period-cell" style="width: 50%;">
+					<div class="period-card">
+						<div class="p-label">Fin</div>
+						<div class="p-val">{{ conge.endDate|date('d/m/Y') }}</div>
+					</div>
+				</div>
+			</div>
+
+
+			{# ─── SIGNATURE + FOOTER at the very bottom ─── #}
+			<div class="footer-signature-container">
+				
+				{# Signature Block on the right #}
+				<div class="sig-wrapper">
+					<div class="sig-box">
+						<div class="sig-label">SIGNATURE</div>
+						{% if conge.approvedSignature %}
+							<img src="{{ conge.approvedSignature }}" class="sig-img">
+						{% endif %}
+						<span class="sig-name">{{ conge.approvedBy|default('Direction') }}</span>
+						<span class="sig-role">Les Saveurs du Jardin</span>
+						{% if conge.approvedAt %}
+							<span class="sig-role">Signé le {{ conge.approvedAt|date('d/m/Y à H:i') }}</span>
+						{% endif %}
+					</div>
+				</div>
+
+				{# Footer Block as a single line #}
+				<div class="footer-line">
+					Document généré automatiquement via le Portail RH LSDJ. Toute modification manuelle annule ce document. · Les Saveurs du Jardin · Page 1/1
+				</div>
+
+			</div>
+
+		</div>
+		{# end .page-content #}
+
+	</body>
+</html>

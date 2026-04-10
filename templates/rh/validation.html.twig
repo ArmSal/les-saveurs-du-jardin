@@ -1,0 +1,773 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Validation des Horaires - {{ parent() }}{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    <style>
+        .signature-pad { touch-action: none; width: 100%; height: 160px; }
+        .hour-badge { display: inline-flex; align-items: center; gap: 4px; padding: 4px 8px; border-radius: 6px; font-size: 11px; font-weight: 700; }
+        .hour-badge.active { background-color: #e0e7ff; color: #4338ca; }
+        .hour-badge.absence { background-color: #fef3c7; color: #b45309; }
+    </style>
+{% endblock %}
+
+{% block body %}
+    <div class="p-4 md:p-6 lg:p-8 max-w-[1600px] mx-auto">
+        {# Header #}
+        <div class="mb-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div>
+                <h1 class="text-3xl md:text-4xl font-black text-slate-900 mb-2 tracking-tight">Validation des Horaires</h1>
+                <p class="text-slate-500 font-medium flex items-center gap-2">
+                    <span class="w-2 h-2 bg-emerald-500 rounded-full"></span>
+                    Signature mensuelle du personnel
+                </p>
+            </div>
+            <div class="text-right">
+                <div class="text-2xl font-black text-indigo-600">{{ monthName|upper }} {{ year }}</div>
+                <div class="text-sm text-slate-400 font-medium">Période de validation</div>
+            </div>
+        </div>
+
+        {# Filters Bar #}
+        <div class="flex flex-col md:flex-row gap-4 mb-6 bg-white p-4 md:p-6 rounded-lg shadow-sm border border-slate-200 items-start md:items-end">
+            {% if canEdit or isFullAccess %}
+                <div class="w-full md:w-auto {{ isMagasinOnly ? 'hidden' : '' }}">
+                    <label class="block text-sm font-semibold mb-1 text-slate-700">Filtrer par Magasin</label>
+                    <select id="magasinFilter" onchange="filterByMagasin(this.value)" 
+                            class="w-full md:w-64 px-3 py-2 text-sm border border-slate-300 rounded-md focus:ring-2 focus:ring-indigo-500 outline-none bg-white">
+                        <option value="all" {{ selectedMagasin == 'all' or not selectedMagasin ? 'selected' : '' }}>Tous les magasins</option>
+                        {% for mag in allMagasins %}
+                            <option value="{{ mag }}" {{ selectedMagasin == mag ? 'selected' : '' }}>{{ mag }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="w-full md:w-auto">
+                    <label class="block text-sm font-semibold mb-1 text-slate-700">Sélectionner un employé</label>
+                    <select id="userFilter" onchange="filterByUser(this.value)"
+                            class="w-full md:w-64 px-3 py-2 text-sm border border-slate-300 rounded-md focus:ring-2 focus:ring-indigo-500 outline-none bg-white">
+                        <option value="" {{ not targetUserId ? 'selected' : '' }}>-- Choisir un employé --</option>
+                        {% for emp in employes %}
+                            <option value="{{ emp.id }}" data-magasin="{{ emp.magasin }}" {{ targetUserId == emp.id ? 'selected' : '' }}>
+                                {{ emp.prenom }} {{ emp.nom }} ({{ emp.magasin }})
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+            {% endif %}
+
+            <div class="flex items-center gap-1.5 bg-slate-100 p-1 rounded-lg w-fit md:ml-auto">
+                <a href="{{ path('app_rh_validation', {month: month == 1 ? 12 : month - 1, year: month == 1 ? year - 1 : year}) }}" 
+                   class="w-10 h-10 flex items-center justify-center rounded-md bg-white text-slate-600 shadow-sm hover:bg-indigo-600 hover:text-white transition-all">
+                    <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M15 19l-7-7 7-7"></path></svg>
+                </a>
+                <div class="px-4 text-center">
+                    <span class="text-sm font-black text-slate-900">{{ month|format('%02d') }} / {{ year }}</span>
+                </div>
+                <a href="{{ path('app_rh_validation', {month: month == 12 ? 1 : month + 1, year: month == 12 ? year + 1 : year}) }}"
+                   class="w-10 h-10 flex items-center justify-center rounded-md bg-white text-slate-600 shadow-sm hover:bg-indigo-600 hover:text-white transition-all">
+                    <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"></path></svg>
+                </a>
+            </div>
+        </div>
+
+        {# Manager Dashboard #}
+        {% if canEdit or isFullAccess %}
+            {% set total_missing = 0 %}{% set total_signed = 0 %}
+            {% for mag, users in dashboard.missing %}{% set total_missing = total_missing + users|length %}{% endfor %}
+            {% for mag, users in dashboard.signed %}{% set total_signed = total_signed + users|length %}{% endfor %}
+            
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-6">
+                <div class="bg-white p-4 rounded-lg shadow-sm border border-slate-200">
+                    <div class="flex items-center justify-between mb-3">
+                        <span class="text-sm font-semibold text-slate-600">Taux de Signature</span>
+                        <span class="text-2xl font-black text-slate-900">{{ total_signed }} / {{ total_signed + total_missing }}</span>
+                    </div>
+                    {% set percent = (total_signed + total_missing) > 0 ? (total_signed / (total_signed + total_missing) * 100) : 0 %}
+                    <div class="h-2 w-full bg-slate-100 rounded-full overflow-hidden">
+                        <div class="h-full bg-indigo-600 rounded-full" style="width: {{ percent }}%"></div>
+                    </div>
+                    {% if dashboard.is_urgent and total_missing > 0 %}
+                        <div class="mt-3 flex items-center gap-2 text-amber-600 text-xs font-bold">
+                            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                            Délai dépassé - Action requise
+                        </div>
+                    {% endif %}
+                </div>
+
+                <div class="lg:col-span-2 bg-white p-4 rounded-lg shadow-sm border border-slate-200">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-sm font-semibold text-slate-700">Suivi par magasin</h3>
+                        <div class="flex gap-2">
+                            <span class="px-2 py-1 bg-amber-100 text-amber-700 rounded text-xs font-bold">{{ total_missing }} en attente</span>
+                            <span class="px-2 py-1 bg-emerald-100 text-emerald-700 rounded text-xs font-bold">{{ total_signed }} signés</span>
+                        </div>
+                    </div>
+                    
+                    {% set all_magasins = [] %}
+                    {% for mag, u in dashboard.missing %}{% if mag not in all_magasins %}{% set all_magasins = all_magasins|merge([mag]) %}{% endif %}{% endfor %}
+                    {% for mag, u in dashboard.signed %}{% if mag not in all_magasins %}{% set all_magasins = all_magasins|merge([mag]) %}{% endif %}{% endfor %}
+                    
+                    <div class="space-y-3 max-h-[300px] overflow-y-auto">
+                        {% for mag in all_magasins|sort %}
+                            {% set missing_count = dashboard.missing[mag]|default([])|length %}
+                            {% set signed_count = dashboard.signed[mag]|default([])|length %}
+                            <div class="border border-slate-200 rounded-lg overflow-hidden">
+                                <div class="flex items-center justify-between p-3 bg-slate-50 cursor-pointer hover:bg-slate-100 transition-colors" onclick="toggleMagasinSection('{{ mag }}')">
+                                    <div class="flex items-center gap-2">
+                                        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" class="text-slate-400">
+                                            <path d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
+                                        </svg>
+                                        <span class="font-bold text-slate-700">{{ mag }}</span>
+                                    </div>
+                                    <span class="text-sm font-bold {% if signed_count == signed_count + missing_count %}text-emerald-600{% else %}text-amber-600{% endif %}">
+                                        {{ signed_count }}/{{ signed_count + missing_count }}
+                                    </span>
+                                </div>
+                                
+                                <div id="section-{{ mag }}" class="hidden">
+                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 p-3">
+                                        {# En attente #}
+                                        <div>
+                                            <div class="flex items-center gap-2 mb-2">
+                                                <div class="w-2 h-2 bg-amber-400 rounded-full animate-pulse"></div>
+                                                <span class="text-xs font-bold text-amber-700 uppercase">En attente ({{ missing_count }})</span>
+                                            </div>
+                                            <div class="space-y-1">
+                                                {% for item in dashboard.missing[mag]|default([]) %}
+                                                    {% set emp = item.user %}
+                                                    <div class="flex items-center justify-between p-2 bg-amber-50 rounded border border-amber-100">
+                                                        <a href="#" onclick="selectEmployee({{ emp.id }}); return false;" class="flex items-center gap-2 flex-1 min-w-0 cursor-pointer">
+                                                            {% if emp.photo %}
+                                                                <img src="{{ path('app_media_user', {filename: emp.photo}) }}" class="w-6 h-6 rounded object-cover">
+                                                            {% else %}
+                                                                <div class="w-6 h-6 bg-amber-200 rounded flex items-center justify-center text-[8px] font-bold text-amber-700">
+                                                                    {{ emp.prenom|slice(0,1) }}{{ emp.nom|slice(0,1) }}
+                                                                </div>
+                                                            {% endif %}
+                                                            <span class="text-xs font-semibold text-slate-700 truncate">{{ emp.prenom }} {{ emp.nom }}</span>
+                                                        </a>
+                                                        <div class="flex items-center gap-1">
+                                                            <button onclick="remindSignature('{{ emp.id }}', '{{ month }}', '{{ year }}', this)" 
+                                                                    class="p-1.5 hover:bg-amber-200 rounded text-amber-600" title="Rappel">
+                                                                <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                                                    <path d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path>
+                                                                </svg>
+                                                            </button>
+                                                            <button onclick="toggleUnlock('{{ emp.id }}', '{{ month }}', '{{ year }}', this)" 
+                                                                    class="p-1.5 hover:bg-slate-200 rounded {{ item.unlocked ? 'text-emerald-600' : 'text-slate-400' }}" 
+                                                                    title="{{ item.unlocked ? 'Débloqué' : 'Débloquer' }}">
+                                                                <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                                                    {% if item.unlocked %}
+                                                                        <path d="M8 11V7a4 4 0 118 0m-4 8v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2z"></path>
+                                                                    {% else %}
+                                                                        <path d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
+                                                                    {% endif %}
+                                                                </svg>
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                {% endfor %}
+                                            </div>
+                                        </div>
+
+                                        {# Signés #}
+                                        <div>
+                                            <div class="flex items-center gap-2 mb-2">
+                                                <div class="w-2 h-2 bg-emerald-400 rounded-full"></div>
+                                                <span class="text-xs font-bold text-emerald-700 uppercase">Signés ({{ signed_count }})</span>
+                                            </div>
+                                            <div class="space-y-1">
+                                                {% for item in dashboard.signed[mag]|default([]) %}
+                                                    <div class="flex items-center justify-between p-2 bg-emerald-50 rounded border border-emerald-100">
+                                                        <a href="#" onclick="selectEmployee({{ item.user.id }}); return false;" class="flex items-center gap-2 flex-1 min-w-0 cursor-pointer">
+                                                            {% if item.user.photo %}
+                                                                <img src="{{ path('app_media_user', {filename: item.user.photo}) }}" class="w-6 h-6 rounded object-cover">
+                                                            {% else %}
+                                                                <div class="w-6 h-6 bg-emerald-200 rounded flex items-center justify-center text-[8px] font-bold text-emerald-700">
+                                                                    {{ item.user.prenom|slice(0,1) }}{{ item.user.nom|slice(0,1) }}
+                                                                </div>
+                                                            {% endif %}
+                                                            <span class="text-xs font-semibold text-slate-700 truncate">{{ item.user.prenom }} {{ item.user.nom }}</span>
+                                                        </a>
+                                                        <div class="flex items-center gap-1">
+                                                            <a href="{{ path('app_rh_validation_download', {id: item.validation.id}) }}" target="_blank" 
+                                                               class="p-1.5 hover:bg-emerald-200 rounded text-emerald-600" title="PDF">
+                                                                <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                                                    <path d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                                                                </svg>
+                                                            </a>
+                                                        <button onclick="resetValidation('{{ item.user.id }}', '{{ month }}', '{{ year }}', this)" 
+                                                                class="px-2 py-1 bg-white border border-rose-200 hover:bg-rose-50 rounded text-rose-600 text-[10px] font-bold uppercase tracking-wider flex items-center gap-1 transition-all" title="Déverrouiller - permet de modifier les horaires">
+                                                            <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                                                <path d="M8 11V7a4 4 0 118 0m-4 8v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2z"></path>
+                                                            </svg>
+                                                            Déverr.
+                                                        </button>
+                                                        </div>
+                                                    </div>
+                                                {% endfor %}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+
+        {# Main Content Grid #}
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            {# Hours Table - Show when user is selected #}
+            {% if targetUserId %}
+            <div id="hours-container" class="lg:col-span-2 order-last lg:order-none bg-white rounded-lg shadow-sm border border-slate-200 overflow-hidden">
+            {% else %}
+            <div id="hours-container" class="lg:col-span-2 order-last lg:order-none bg-white rounded-lg shadow-sm border border-slate-200 overflow-hidden" style="display: none;">
+            {% endif %}
+                <div class="p-4 border-b border-slate-100 bg-slate-50/50 flex items-center justify-between">
+                    <div>
+                        <h2 class="text-lg font-bold text-slate-900">Détail des Horaires</h2>
+                        <p id="user-name-display" class="text-sm text-slate-500">{{ targetUserId ? targetUser.prenom ~ ' ' ~ targetUser.nom : '' }}</p>
+                    </div>
+                    <span id="my-hours-badge" class="px-3 py-1 bg-indigo-100 text-indigo-700 rounded-full text-xs font-bold uppercase" style="display: {{ targetUserId and targetUser.id == app.user.id ? 'inline-flex' : 'none' }}">Mes horaires</span>
+                </div>
+                
+                <div class="lg:overflow-x-auto">
+                    {# Desktop Table #}
+                    <table id="hours-desktop-table" class="hidden lg:table w-full text-left">
+                        <thead class="bg-slate-50">
+                            <tr>
+                                <th class="px-4 py-3 text-xs font-bold text-slate-500 uppercase">Date</th>
+                                <th class="px-4 py-3 text-xs font-bold text-slate-500 uppercase">Horaires</th>
+                                <th class="px-4 py-3 text-xs font-bold text-slate-500 uppercase text-right">Total</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-100">
+                            {% set total_seconds = 0 %}
+                            {% for dateStr, dayData in daysMap %}
+                                {% set day_total_seconds = 0 %}
+                                <tr class="transition-colors">
+                                    <td class="px-4 py-3">
+                                        <div class="flex flex-col">
+                                            <span class="text-sm font-bold text-slate-900 uppercase">
+                                                {{ dayData.date|date('D')|replace({'Mon':'Lun','Tue':'Mar','Wed':'Mer','Thu':'Jeu','Fri':'Ven','Sat':'Sam','Sun':'Dim'}) }}
+                                            </span>
+                                            <span class="text-xs text-slate-400">{{ dayData.date|date('d/m/Y') }}</span>
+                                        </div>
+                                    </td>
+                                    <td class="px-4 py-3">
+                                        <div class="flex flex-wrap gap-2">
+                                            {% for horaire in dayData.horaires %}
+                                                {% set is_actif = (horaire.status == 'Actif' or not horaire.status) %}
+                                                {% set diff_seconds = horaire.endTime.timestamp - horaire.startTime.timestamp %}
+                                                {% if is_actif %}{% set total_seconds = total_seconds + diff_seconds %}{% set day_total_seconds = day_total_seconds + diff_seconds %}{% endif %}
+                                                <span class="hour-badge {{ is_actif ? 'active' : 'absence' }}">
+                                                    {{ horaire.startTime|date('H:i') }}-{{ horaire.endTime|date('H:i') }}
+                                                    {% if not is_actif %}({{ horaire.status }}){% endif %}
+                                                </span>
+                                            {% else %}
+                                                <span class="text-xs text-slate-300 italic">—</span>
+                                            {% endfor %}
+                                        </div>
+                                    </td>
+                                    <td class="px-4 py-3 text-right">
+                                        {% if day_total_seconds > 0 %}
+                                            {% set dh = (day_total_seconds / 3600)|round(0, 'floor') %}
+                                            {% set dm = ((day_total_seconds % 3600) / 60)|round(0, 'floor') %}
+                                            <span class="text-lg font-black text-slate-900">{{ dh }}h{{ dm|format('%02d') }}</span>
+                                        {% else %}
+                                            <span class="text-slate-300">—</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                        {% set total_h = (total_seconds / 3600)|round(0, 'floor') %}
+                        {% set total_m = ((total_seconds % 3600) / 60)|round(0, 'floor') %}
+                        <tfoot class="bg-slate-900">
+                            <tr>
+                                <td colspan="2" class="px-4 py-4 text-right !bg-slate-900" style="background-color: rgb(15 23 42) !important;">
+                                    <span class="text-sm font-bold text-slate-400 uppercase tracking-wider">Total Mensuel</span>
+                                </td>
+                                <td class="px-4 py-4 text-right !bg-slate-900" style="background-color: rgb(15 23 42) !important;">
+                                    <span id="monthly-total" class="text-3xl font-black text-white">{{ targetUserId ? total_h ~ 'h' ~ total_m|format('%02d') : '0h00' }}</span>
+                                </td>
+                            </tr>
+                        </tfoot>
+                    </table>
+
+                    {# Mobile Cards #}
+                    <div class="lg:hidden divide-y divide-slate-100">
+                        {% set total_seconds = 0 %}
+                        {% for dateStr, dayData in daysMap %}
+                            {% set day_total_seconds = 0 %}
+                            <div class="p-3">
+                                <div class="flex items-center justify-between mb-2">
+                                    <div class="flex flex-col">
+                                        <span class="text-sm font-bold text-slate-900 uppercase">
+                                            {{ dayData.date|date('D')|replace({'Mon':'Lun','Tue':'Mar','Wed':'Mer','Thu':'Jeu','Fri':'Ven','Sat':'Sam','Sun':'Dim'}) }}
+                                        </span>
+                                        <span class="text-xs text-slate-400">{{ dayData.date|date('d/m/Y') }}</span>
+                                    </div>
+                                    {% if dayData.horaires|length > 0 %}
+                                        {% for horaire in dayData.horaires %}
+                                            {% set is_actif = (horaire.status == 'Actif' or not horaire.status) %}
+                                            {% set diff_seconds = horaire.endTime.timestamp - horaire.startTime.timestamp %}
+                                            {% if is_actif %}{% set total_seconds = total_seconds + diff_seconds %}{% set day_total_seconds = day_total_seconds + diff_seconds %}{% endif %}
+                                        {% endfor %}
+                                        {% if day_total_seconds > 0 %}
+                                            {% set dh = (day_total_seconds / 3600)|round(0, 'floor') %}
+                                            {% set dm = ((day_total_seconds % 3600) / 60)|round(0, 'floor') %}
+                                            <span class="text-lg font-black text-slate-900">{{ dh }}h{{ dm|format('%02d') }}</span>
+                                        {% endif %}
+                                    {% endif %}
+                                </div>
+                                <div class="flex flex-wrap gap-1">
+                                    {% for horaire in dayData.horaires %}
+                                        {% set is_actif = (horaire.status == 'Actif' or not horaire.status) %}
+                                        <span class="hour-badge text-[10px] {{ is_actif ? 'active' : 'absence' }}">
+                                            {{ horaire.startTime|date('H:i') }}-{{ horaire.endTime|date('H:i') }}
+                                        </span>
+                                    {% else %}
+                                        <span class="text-xs text-slate-300 italic">—</span>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                    {# Mobile Sticky Footer - Total Mensuel #}
+                    <div class="lg:hidden fixed bottom-0 left-0 right-0 bg-slate-900 p-3 flex items-center justify-between z-50 border-t border-slate-700 shadow-lg">
+                        {% set total_h = (total_seconds / 3600)|round(0, 'floor') %}
+                        {% set total_m = ((total_seconds % 3600) / 60)|round(0, 'floor') %}
+                        <span class="text-sm font-bold text-slate-400 uppercase">Total Mensuel</span>
+                        <span class="text-2xl font-black text-white">{{ total_h }}h{{ total_m|format('%02d') }}</span>
+                    </div>
+                    {# Spacer for mobile to prevent content being hidden behind sticky footer #}
+                    <div class="lg:hidden h-16"></div>
+                </div>
+            </div>
+            
+            {# No employee selected - show placeholder #}
+            {% if not targetUserId %}
+            <div id="hours-placeholder" class="lg:col-span-2 order-last lg:order-none bg-slate-50 rounded-lg border-2 border-dashed border-slate-200 p-8 flex flex-col items-center justify-center text-center min-h-[300px]">
+                <div class="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mb-4">
+                    <svg width="32" height="32" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" class="text-slate-400">
+                        <path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                </div>
+                <h3 class="text-lg font-bold text-slate-700 mb-2">Aucun employé sélectionné</h3>
+                <p class="text-sm text-slate-500 max-w-xs">Veuillez sélectionner un employé dans le menu déroulant ci-dessus pour afficher ses horaires.</p>
+            </div>
+            {% endif %}
+
+            {# Signature Panel #}
+            <div id="signature-panel" class="lg:col-span-1 order-first lg:order-none space-y-4">
+                {% if targetUser.id == app.user.id %}
+                    {% if not validation or not validation.signature %}
+                        {% if signableStatus.signable %}
+                            <div class="bg-white rounded-lg shadow-sm border border-slate-200 p-6">
+                                <h3 class="text-lg font-bold text-slate-900 mb-2">Signer mes horaires</h3>
+                                <p class="text-sm text-slate-500 mb-4">Attestation sur l'honneur</p>
+                                
+                                <div class="space-y-4">
+                                    <div class="relative bg-slate-50 rounded-lg border-2 border-dashed border-slate-300 overflow-hidden">
+                                        <canvas id="signature-pad" class="signature-pad"></canvas>
+                                        <button type="button" onclick="clearSignature()" 
+                                                class="absolute bottom-2 right-2 px-3 py-1 bg-white border border-slate-200 rounded text-xs font-semibold text-slate-600 hover:text-rose-500 transition-colors">
+                                            Effacer
+                                        </button>
+                                    </div>
+
+                                    <form action="{{ path('app_rh_validation_sign') }}" method="POST" id="signature-form" onsubmit="return submitSignature()">
+                                        <input type="hidden" name="month" value="{{ month }}">
+                                        <input type="hidden" name="year" value="{{ year }}">
+                                        <input type="hidden" name="signature" id="signature-input">
+                                        
+                                        <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-4 rounded-lg shadow-sm transition-colors flex items-center justify-center gap-2">
+                                            <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                                <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                            </svg>
+                                            Valider et Signer
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                        {% else %}
+                            {# Cannot sign - show reason #}
+                            <div class="bg-amber-50 rounded-lg p-6 border border-amber-200 text-center">
+                                <svg width="48" height="48" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" class="text-amber-500 mx-auto mb-3">
+                                    <path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+                                </svg>
+                                <h3 class="text-lg font-bold text-amber-900 mb-1">Signature non disponible</h3>
+                                <p class="text-sm text-amber-700">{{ signableStatus.reason }}</p>
+                            </div>
+                        {% endif %}
+                    {% else %}
+                        {# Already signed - employee view #}
+                        <div class="bg-emerald-50 rounded-lg p-6 border border-emerald-200">
+                            <div class="flex items-center gap-3 mb-4">
+                                <div class="w-12 h-12 bg-emerald-100 rounded-full flex items-center justify-center text-emerald-600">
+                                    <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24">
+                                        <path d="M5 13l4 4L19 7"></path>
+                                    </svg>
+                                </div>
+                                <div>
+                                    <h3 class="text-lg font-bold text-emerald-900">Horaires validés</h3>
+                                    <p class="text-sm text-emerald-700">Signé le {{ validation.signedAt|date('d/m/Y à H:i') }}</p>
+                                </div>
+                            </div>
+                            <div class="bg-white rounded-lg p-4 border border-emerald-100">
+                                <div class="flex items-start gap-3">
+                                    <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" class="text-emerald-500 mt-0.5">
+                                        <path d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                    </svg>
+                                    <div>
+                                        <p class="text-sm font-semibold text-slate-700">Vos horaires sont signés et archivés</p>
+                                        <p class="text-xs text-slate-500 mt-1">Pour obtenir une copie du document signé, veuillez contacter votre responsable de magasin.</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    {% endif %}
+                {% else %}
+                    {# Viewing someone else's hours - Manager view #}
+                    <div class="bg-slate-50 rounded-lg p-6 border border-slate-200 text-center">
+                        <div class="w-16 h-16 bg-slate-200 rounded-full flex items-center justify-center mx-auto mb-3">
+                            <svg width="32" height="32" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" class="text-slate-400">
+                                <path d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                            </svg>
+                        </div>
+                        <h3 class="text-lg font-bold text-slate-900 mb-1">Vue manager</h3>
+                        <p class="text-sm text-slate-500">{{ targetUser.prenom }} {{ targetUser.nom }}</p>
+                        <p class="text-xs text-slate-400 mt-2">Seul l'employé peut signer ses propres horaires</p>
+                    </div>
+                {% endif %}
+
+                {# Legend #}
+                <div class="bg-white rounded-lg shadow-sm border border-slate-200 p-4">
+                    <h4 class="text-sm font-bold text-slate-700 mb-3 uppercase">Légende</h4>
+                    <div class="space-y-2 text-sm">
+                        <div class="flex items-center gap-2">
+                            <span class="w-3 h-3 rounded-full bg-indigo-600"></span>
+                            <span class="text-slate-600">Temps de travail</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <span class="w-3 h-3 rounded-full bg-amber-400"></span>
+                            <span class="text-slate-600">Congés / Absences</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/signature_pad@4.0.0/dist/signature_pad.umd.min.js"></script>
+    <script>
+        let signaturePad;
+        let canvas;
+
+        document.addEventListener('DOMContentLoaded', function() {
+            canvas = document.getElementById('signature-pad');
+            if (canvas) {
+                signaturePad = new SignaturePad(canvas, {
+                    backgroundColor: 'rgba(255, 255, 255, 0)',
+                    penColor: '#0f172a'
+                });
+                resizeCanvas();
+                window.addEventListener('resize', resizeCanvas);
+            }
+        });
+
+        function resizeCanvas() {
+            if (!canvas) return;
+            const ratio = Math.max(window.devicePixelRatio || 1, 1);
+            canvas.width = canvas.offsetWidth * ratio;
+            canvas.height = canvas.offsetHeight * ratio;
+            canvas.getContext('2d').scale(ratio, ratio);
+            signaturePad.clear();
+        }
+
+        function clearSignature() {
+            if (signaturePad) signaturePad.clear();
+        }
+
+        function submitSignature() {
+            if (!signaturePad || signaturePad.isEmpty()) {
+                showAlertModal('Attention', 'Veuillez signer avant de valider.', 'info');
+                return false;
+            }
+            document.getElementById('signature-input').value = signaturePad.toDataURL();
+            return true;
+        }
+
+        function toggleMagasinSection(mag) {
+            const section = document.getElementById('section-' + mag);
+            const text = document.getElementById('toggle-text-' + mag);
+            if (section.classList.contains('hidden')) {
+                section.classList.remove('hidden');
+                text.textContent = 'Réduire';
+            } else {
+                section.classList.add('hidden');
+                text.textContent = 'Développer';
+            }
+        }
+
+        function remindSignature(userId, month, year, btn) {
+            btn.disabled = true;
+            fetch('{{ path("app_rh_validation_remind") }}', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: 'userId=' + userId + '&month=' + month + '&year=' + year
+            })
+            .then(r => r.json())
+            .then(d => {
+                showAlertModal(
+                    d.success ? 'Succès' : 'Erreur',
+                    d.success ? 'Rappel envoyé avec succès' : 'Erreur lors de l\'envoi',
+                    d.success ? 'success' : 'error'
+                );
+                btn.disabled = false;
+            })
+            .catch(() => {
+                showAlertModal('Erreur', 'Erreur de connexion', 'error');
+                btn.disabled = false;
+            });
+        }
+
+        function toggleUnlock(userId, month, year, btn) {
+            btn.disabled = true;
+            fetch('{{ path("app_rh_validation_unlock") }}', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: 'userId=' + userId + '&month=' + month + '&year=' + year
+            })
+            .then(r => r.json())
+            .then(d => {
+                if (d.success) {
+                    showAlertModal('Succès', d.unlocked ? 'Signature débloquée' : 'Signature verrouillée', 'success', () => {
+                        location.reload();
+                    });
+                } else {
+                    showAlertModal('Erreur', 'Une erreur est survenue', 'error');
+                    btn.disabled = false;
+                }
+            })
+            .catch(() => {
+                showAlertModal('Erreur', 'Erreur de connexion', 'error');
+                btn.disabled = false;
+            });
+        }
+
+        // Custom Modal Functions - Using global functions from modal.js
+        // showConfirmModal(title, message, onConfirm, onCancel)
+        // showAlertModal(title, message, type, onClose)
+
+        function resetValidation(userId, month, year, btn) {
+            showConfirmModal(
+                'Déverrouiller la signature',
+                'Êtes-vous sûr de vouloir annuler cette signature ? Les horaires pourront à nouveau être modifiés.',
+                () => {
+                    btn.disabled = true;
+                    fetch('{{ path("app_rh_validation_reset") }}', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                        body: 'userId=' + userId + '&month=' + month + '&year=' + year
+                    })
+                    .then(r => r.json())
+                    .then(d => {
+                        if (d.success) {
+                            showAlertModal('Succès', 'Signature annulée avec succès', 'success', () => {
+                                location.reload();
+                            });
+                        } else {
+                            showAlertModal('Erreur', d.error || 'Une erreur est survenue', 'error');
+                            btn.disabled = false;
+                        }
+                    })
+                    .catch(() => {
+                        showAlertModal('Erreur', 'Erreur de connexion', 'error');
+                        btn.disabled = false;
+                    });
+                }
+            );
+        }
+
+        function filterByMagasin(magasin) {
+            const userFilter = document.getElementById('userFilter');
+            const options = userFilter.querySelectorAll('option');
+            options.forEach(opt => {
+                if (opt.value === '') {
+                    opt.style.display = 'block';
+                } else {
+                    const empMag = opt.getAttribute('data-magasin');
+                    opt.style.display = (magasin === 'all' || empMag === magasin) ? 'block' : 'none';
+                }
+            });
+            userFilter.value = '';
+            showPlaceholder();
+        }
+
+        function filterByUser(userId) {
+            if (!userId) {
+                showPlaceholder();
+                return;
+            }
+            loadEmployeeHours(userId);
+        }
+
+        function selectEmployee(userId, prenom, nom) {
+            // Update URL without reloading
+            const url = new URL(window.location.href);
+            url.searchParams.set('user_id', userId);
+            window.history.pushState({}, '', url);
+            
+            // Update dropdown
+            const userFilter = document.getElementById('userFilter');
+            if (userFilter) {
+                userFilter.value = userId;
+            }
+            
+            // Load hours via AJAX
+            loadEmployeeHours(userId);
+        }
+
+        function loadEmployeeHours(userId) {
+            const url = '{{ path("app_rh_validation_api_hours") }}?user_id=' + userId + '&month={{ month }}&year={{ year }}';
+            
+            fetch(url)
+                .then(r => r.json())
+                .then(data => {
+                    if (data.error) {
+                        showAlertModal('Erreur', data.error, 'error');
+                        return;
+                    }
+                    renderHoursTable(data);
+                })
+                .catch(() => {
+                    showAlertModal('Erreur', 'Erreur de chargement des horaires', 'error');
+                });
+        }
+
+        function renderHoursTable(data) {
+            const container = document.getElementById('hours-container');
+            const placeholder = document.getElementById('hours-placeholder');
+            
+            if (placeholder) placeholder.style.display = 'none';
+            if (container) container.style.display = 'block';
+            
+            // Update header info
+            const userNameEl = document.getElementById('user-name-display');
+            if (userNameEl) {
+                userNameEl.textContent = data.user.prenom + ' ' + data.user.nom;
+            }
+            
+            const isCurrentUser = data.isCurrentUser;
+            const myHoursBadge = document.getElementById('my-hours-badge');
+            if (myHoursBadge) {
+                myHoursBadge.style.display = isCurrentUser ? 'inline-flex' : 'none';
+            }
+            
+            // Render desktop table
+            const tbody = document.querySelector('#hours-desktop-table tbody');
+            if (tbody) {
+                tbody.innerHTML = '';
+                let totalSeconds = 0;
+                
+                const dayNames = {'Mon': 'Lun', 'Tue': 'Mar', 'Wed': 'Mer', 'Thu': 'Jeu', 'Fri': 'Ven', 'Sat': 'Sam', 'Sun': 'Dim'};
+                
+                data.days.forEach(day => {
+                    let dayTotalSeconds = 0;
+                    let horairesHtml = '';
+                    
+                    day.horaires.forEach(h => {
+                        const diffSeconds = (new Date('2000-01-01T' + h.end + ':00') - new Date('2000-01-01T' + h.start + ':00')) / 1000;
+                        if (h.isActif) {
+                            totalSeconds += diffSeconds;
+                            dayTotalSeconds += diffSeconds;
+                        }
+                        const badgeClass = h.isActif ? 'active' : 'absence';
+                        const statusText = h.isActif ? '' : '(' + h.status + ')';
+                        horairesHtml += `<span class="hour-badge ${badgeClass}">${h.start}-${h.end} ${statusText}</span>`;
+                    });
+                    
+                    if (!horairesHtml) horairesHtml = '<span class="text-xs text-slate-300 italic">—</span>';
+                    
+                    const dh = Math.floor(dayTotalSeconds / 3600);
+                    const dm = Math.round((dayTotalSeconds % 3600) / 60);
+                    const totalText = dayTotalSeconds > 0 ? `${dh}h${dm.toString().padStart(2, '0')}` : '<span class="text-slate-300">—</span>';
+                    
+                    const row = document.createElement('tr');
+                    row.className = 'transition-colors';
+                    row.innerHTML = `
+                        <td class="px-4 py-3">
+                            <div class="flex flex-col">
+                                <span class="text-sm font-bold text-slate-900 uppercase">${dayNames[day.dayName] || day.dayName}</span>
+                                <span class="text-xs text-slate-400">${day.dayNumber}</span>
+                            </div>
+                        </td>
+                        <td class="px-4 py-3">
+                            <div class="flex flex-wrap gap-2">${horairesHtml}</div>
+                        </td>
+                        <td class="px-4 py-3 text-right">${totalText}</td>
+                    `;
+                    tbody.appendChild(row);
+                });
+                
+                // Update footer total
+                const totalH = Math.floor(totalSeconds / 3600);
+                const totalM = Math.round((totalSeconds % 3600) / 60);
+                const totalFooter = document.getElementById('monthly-total');
+                if (totalFooter) {
+                    totalFooter.textContent = `${totalH}h${totalM.toString().padStart(2, '0')}`;
+                }
+            }
+            
+            // Update signature panel visibility
+            const signaturePanel = document.getElementById('signature-panel-content');
+            if (signaturePanel) {
+                if (isCurrentUser && !data.isSigned) {
+                    signaturePanel.style.display = 'block';
+                } else {
+                    signaturePanel.innerHTML = isCurrentUser && data.isSigned 
+                        ? `<div class="bg-emerald-50 rounded-lg p-6 border border-emerald-200">
+                            <div class="flex items-center gap-3 mb-4">
+                                <div class="w-12 h-12 bg-emerald-100 rounded-full flex items-center justify-center text-emerald-600">
+                                    <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24">
+                                        <path d="M5 13l4 4L19 7"></path>
+                                    </svg>
+                                </div>
+                                <div>
+                                    <h3 class="text-lg font-bold text-emerald-900">Horaires validés</h3>
+                                    <p class="text-sm text-emerald-700">Signé le ${new Date().toLocaleDateString('fr-FR')}</p>
+                                </div>
+                            </div>
+                           </div>`
+                        : `<div class="bg-slate-50 rounded-lg p-6 border border-slate-200 text-center">
+                            <p class="text-sm text-slate-500">${isCurrentUser ? 'Vos horaires sont signés et archivés' : "Seul l'employé peut signer ses propres horaires"}</p>
+                           </div>`;
+                }
+            }
+            
+            // Show/hide validate button
+            const validateBtn = document.getElementById('validate-hours-btn');
+            if (validateBtn) {
+                validateBtn.style.display = isCurrentUser && !data.isSigned ? 'flex' : 'none';
+            }
+        }
+
+        function showPlaceholder() {
+            const container = document.getElementById('hours-container');
+            const placeholder = document.getElementById('hours-placeholder');
+            
+            if (container) container.style.display = 'none';
+            if (placeholder) placeholder.style.display = 'flex';
+            
+            const validateBtn = document.getElementById('validate-hours-btn');
+            if (validateBtn) validateBtn.style.display = 'none';
+        }
+    </script>
+{% endblock %}

@@ -1,0 +1,80 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Historique Opérationnel | Plateforme LSDJ
+{% endblock %}
+
+{% block body %}
+	<div class="mb-4">
+		<div class="text-xs font-bold uppercase tracking-widest text-indigo-600 mb-1">Historique</div>
+		<h1 class="text-xl font-bold text-slate-900 mb-0.5">Commandes Enregistrées</h1>
+		<p class="text-slate-500 text-sm">Consultez le suivi complet de vos acquisitions.</p>
+	</div>
+
+	<div class="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
+		<div class="overflow-x-auto">
+			<table class="w-full" style="min-width:340px;">
+				<thead>
+					<tr>
+						<th class="text-left px-4 py-3 text-xs font-bold uppercase tracking-widest text-slate-400 border-b border-slate-100 bg-slate-50">Référence</th>
+						<th class="text-left px-3 py-3 text-xs font-bold uppercase tracking-widest text-slate-400 border-b border-slate-100 bg-slate-50">Date</th>
+						<th class="text-right px-4 py-3 text-xs font-bold uppercase tracking-widest text-slate-400 border-b border-slate-100 bg-slate-50">État</th>
+					</tr>
+				</thead>
+				<tbody>
+					{% for c in commandes %}
+						<tr onclick="window.location.href='{{ path('app_commande_show', {id: c.id}) }}'" class="cursor-pointer border-b border-slate-50 hover:bg-slate-50 transition-colors active:bg-slate-100">
+							<td class="px-4 py-3">
+								<div class="inline-block bg-slate-50 border border-slate-200 rounded-md px-2 py-0.5 font-mono text-xs font-bold text-slate-900">
+									#{{ c.slug|slice(0, 10)|upper }}
+								</div>
+							</td>
+							<td class="px-3 py-3">
+								<div class="font-bold text-slate-900 text-xs">{{ c.createdAt|date('d/m/Y') }}</div>
+								<div class="text-[10px] text-slate-400">{{ c.createdAt|date('H:i') }}</div>
+							</td>
+							<td class="px-4 py-3 text-right">
+								{% set statusConfig = {
+									'delivered': {'bg': '#dcfce7', 'color': '#166534', 'label': 'Livrée'},
+									'canceled': {'bg': '#fee2e2', 'color': '#991b1b', 'label': 'Annulée'},
+									'pending': {'bg': '#fef9c3', 'color': '#854d0e', 'label': 'En Attente'},
+									'processing': {'bg': '#eef2ff', 'color': '#4f46e5', 'label': 'En Préparation'},
+									'confirmed': {'bg': '#e0f2fe', 'color': '#0369a1', 'label': 'Confirmée'},
+									'processed': {'bg': '#f0fdf4', 'color': '#15803d', 'label': 'Préparée'},
+									'archived': {'bg': '#f8fafc', 'color': '#475569', 'label': 'Archivée'},
+									'updated': {'bg': '#fff7ed', 'color': '#c2410c', 'label': 'Modifiée'}
+								} %}
+								{% set config = statusConfig[c.status] | default({'bg': '#f1f5f9', 'color': '#475569', 'label': c.status}) %}
+								<span class="badge text-[10px] font-bold uppercase px-2.5 py-1 rounded-full" style="background: {{ config.bg }}; color: {{ config.color }};">
+									{{ config.label }}
+								</span>
+							</td>
+						</tr>
+					{% else %}
+						<tr>
+							<td colspan="3" class="text-center py-16 px-6 bg-slate-50">
+								<div class="w-16 h-16 border-2 border-dashed border-slate-200 flex items-center justify-center mx-auto mb-4 bg-white rounded-xl rotate-6">
+									<svg width="28" height="28" fill="none" stroke="#94a3b8" stroke-width="1.5" viewbox="0 0 24 24">
+										<path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+									</svg>
+								</div>
+								<h2 class="text-base font-bold text-slate-900 mb-1">Aucun historique actif</h2>
+								<p class="text-slate-500 text-sm mb-4">Vous n'avez pas encore passé de commande.</p>
+								<a href="{{ path('app_produit_index') }}" class="btn btn-primary px-5 py-2 text-xs font-bold rounded-xl">Parcourir les Produits</a>
+							</td>
+						</tr>
+					{% endfor %}
+				</tbody>
+			</table>
+		</div>
+		
+		{# PAGINATION #}
+		{% if commandes.getTotalItemCount > commandes.getItemNumberPerPage %}
+			<div class="px-6 py-4 bg-slate-50 border-t border-slate-100 flex justify-center">
+				<div class="portal-pagination">
+					{{ knp_pagination_render(commandes) }}
+				</div>
+			</div>
+		{% endif %}
+	</div>
+{% endblock %}
+

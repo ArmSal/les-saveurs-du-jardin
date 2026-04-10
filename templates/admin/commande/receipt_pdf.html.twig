@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="fr">
+	<head>
+		<meta charset="UTF-8">
+		<style>
+			@page {
+				margin: 0.4cm;
+			}
+			body {
+				font-family: 'Helvetica', 'Arial', sans-serif;
+				font-size: 10px;
+				color: #1e293b;
+				line-height: 1.2;
+			}
+			.header {
+				border-bottom: 1px solid #4f46e5;
+				padding-bottom: 8px;
+				margin-bottom: 10px;
+			}
+			.logo {
+				height: 30px;
+				float: left;
+			}
+			.company-info {
+				float: right;
+				text-align: right;
+			}
+			.company-name {
+				font-size: 11px;
+				font-weight: bold;
+				color: #4f46e5;
+			}
+			.clear {
+				clear: both;
+			}
+			.receipt-title {
+				text-align: center;
+				font-size: 14px;
+				font-weight: bold;
+				margin: 10px 0;
+				text-transform: uppercase;
+			}
+			.details-grid {
+				width: 100%;
+				margin-bottom: 10px;
+			}
+			.details-box {
+				width: 48%;
+				background: #f8fafc;
+				border: 1px solid #e2e8f0;
+				padding: 6px;
+				border-radius: 4px;
+			}
+			.details-label {
+				font-size: 8px;
+				font-weight: bold;
+				color: #64748b;
+				text-transform: uppercase;
+				margin-bottom: 2px;
+			}
+			.details-value {
+				font-size: 10px;
+				font-weight: bold;
+			}
+			table {
+				width: 100%;
+				border-collapse: collapse;
+				margin-bottom: 10px;
+			}
+			th {
+				background: #f1f5f9;
+				text-align: left;
+				padding: 5px;
+				font-size: 9px;
+				text-transform: uppercase;
+				color: #64748b;
+				border-bottom: 1px solid #e2e8f0;
+			}
+			td {
+				padding: 4px 6px;
+				border-bottom: 1px solid #f1f5f9;
+			}
+			.total-row {
+				background: #f1f5f9;
+				font-weight: bold;
+			}
+			.status-badge {
+				display: inline-block;
+				padding: 2px 6px;
+				border-radius: 4px;
+				font-size: 8px;
+				font-weight: bold;
+			}
+			.footer {
+				position: fixed;
+				bottom: 0;
+				left: 0;
+				right: 0;
+				text-align: center;
+				font-size: 8px;
+				color: #94a3b8;
+				border-top: 1px solid #e2e8f0;
+				padding-top: 5px;
+			}
+		</style>
+	</head>
+	<body>
+		<div class="header">
+			{% if logoBase64 %}
+				<img src="{{ logoBase64 }}" class="logo" alt="Logo">
+			{% endif %}
+			<div class="company-info">
+				<div class="company-name">LES SAVEURS DU JARDIN</div>
+				<div>{{ headerAddress }}</div>
+			</div>
+			<div class="clear"></div>
+		</div>
+
+		<div class="receipt-title">Bon de Commande #{{ commande.id }}</div>
+
+		<table class="details-grid">
+			<tr>
+				<td class="details-box" style="vertical-align: top;">
+					<div class="details-label">Magasin</div>
+					<div class="details-value">{{ magasinInfo.name }}</div>
+					<div style="font-size: 9px; color: #475569; margin-top: 4px;">{{ magasinInfo.line1 }}</div>
+					<div style="font-size: 9px; color: #475569;">{{ magasinInfo.line2 }}</div>
+				</td>
+				<td style="width: 4%;"></td>
+				<td class="details-box" style="vertical-align: top;">
+					<div class="details-label">Informations Logistiques</div>
+					<div>Date:
+						<b>{{ commande.createdAt|date('d/m/Y H:i') }}</b>
+					</div>
+					<div style="margin-top: 8px;">
+						{% set statusColors = {
+							'pending': {'bg': '#fef9c3', 'color': '#854d0e', 'border': '#854d0e'},
+							'updated': {'bg': '#dbeafe', 'color': '#1e40af', 'border': '#1e40af'},
+							'confirmed': {'bg': '#d1fae5', 'color': '#065f46', 'border': '#065f46'},
+							'processing': {'bg': '#e0e7ff', 'color': '#3730a3', 'border': '#3730a3'},
+							'processed': {'bg': '#c7d2fe', 'color': '#312e81', 'border': '#312e81'},
+							'delivered': {'bg': '#86efac', 'color': '#14532d', 'border': '#14532d'},
+							'archived': {'bg': '#f3f4f6', 'color': '#4b5563', 'border': '#4b5563'},
+							'canceled': {'bg': '#fecaca', 'color': '#991b1b', 'border': '#991b1b'}
+						} %}
+						{% set colors = statusColors[commande.status] ?? statusColors['pending'] %}
+						<span class="status-badge" style="background: {{ colors.bg }}; color: {{ colors.color }}; border: 1px solid {{ colors.border }};">
+							{{ commande.statusLabelFr|upper }}
+						</span>
+					</div>
+				</td>
+			</tr>
+		</table>
+
+		<table style="border-top: 1px solid #e2e8f0;">
+			<thead>
+				<tr>
+					<th style="width: 70%; border-bottom: 1px solid #4f46e5; background: #fff; color: #1e293b; padding: 4px;">Désignation Article</th>
+					<th style="text-align: center; border-bottom: 1px solid #4f46e5; background: #fff; color: #1e293b; padding: 4px;">Format</th>
+					<th style="text-align: right; border-bottom: 1px solid #4f46e5; background: #fff; color: #1e293b; padding: 4px;">Qté</th>
+				</tr>
+			</thead>
+			<tbody>
+				{% set totalQty = 0 %}
+				{% for item in commande.items %}
+					{% set totalQty = totalQty + item.quantity %}
+					<tr>
+						<td style="padding: 6px 4px;">
+							<div style="font-weight: bold; font-size: 10px;">{{ item.product.designation }}</div>
+							<div style="font-size: 8px; color: #64748b; font-family: monospace;">REF:
+								{{ item.product.reference }}</div>
+						</td>
+						<td style="text-align: center; font-size: 9px;">{{ item.product.unite }}</td>
+						<td style="text-align: right; font-weight: bold; font-size: 12px;">{{ item.quantity }}</td>
+					</tr>
+				{% endfor %}
+				<tr class="total-row" style="background: #f1f5f9;">
+					<td colspan="2" style="text-align: right; text-transform: uppercase; font-size: 9px; padding: 8px; font-weight: bold;">Volume total cumulé</td>
+					<td style="text-align: right; font-size: 14px; padding: 8px; border-left: 1px solid #fff;">{{ totalQty }}
+						<span style="font-size: 9px; font-weight: normal;">UVC</span>
+					</td>
+				</tr>
+			</tbody>
+		</table>
+
+		<div class="footer">
+			Édition par :
+			{{ currentUser.prenom }}
+			{{ currentUser.nom|upper }}
+			— 
+			        Généré via Plateforme LSDJ le
+			{{ "now"|date('d/m/Y à H:i') }}<br>
+			Document de gestion interne certifié.
+		</div>
+	</body>
+</html>
+

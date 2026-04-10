@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <style>
+        @page { margin: 10mm; }
+        body { font-family: 'Helvetica', 'Arial', sans-serif; color: #1e293b; line-height: 1.3; font-size: 12px; margin: 0; padding: 0; background-color: #ffffff; }
+        .header { position: relative; margin-bottom: 20px; border-bottom: 2px solid #059669; padding-bottom: 15px; }
+        .logo { height: 50px; }
+        .header-table { width: 100%; border-collapse: collapse; }
+        .header-title { font-size: 22px; font-weight: 900; color: #1e293b; text-transform: uppercase; margin: 0; }
+        .header-subtitle { font-size: 13px; font-weight: 700; color: #64748b; margin-top: 3px; }
+        
+        .user-block { margin-bottom: 30px; page-break-inside: avoid; }
+        .user-header { background-color: #f8fafc; padding: 10px 15px; border-left: 4px solid #059669; margin-bottom: 10px; }
+        .user-name { font-size: 16px; font-weight: 900; color: #0f172a; }
+        .user-magasin { font-size: 12px; color: #64748b; font-weight: 700; text-transform: uppercase; }
+
+        .data-table { width: 100%; border-collapse: collapse; margin-bottom: 15px; }
+        .data-table th { background-color: #f1f5f9; padding: 8px 10px; text-align: left; font-size: 10px; font-weight: 800; color: #475569; text-transform: uppercase; border-bottom: 1px solid #e2e8f0; }
+        .data-table td { padding: 8px 10px; border-bottom: 1px solid #f1f5f9; font-size: 12px; }
+        
+        .day-cell { font-weight: 800; color: #0f172a; width: 120px; }
+        .time-cell { font-weight: 700; color: #1e293b; width: 100px; }
+        .note-cell { font-style: italic; color: #64748b; }
+        .status-badge { display: inline-block; padding: 1px 4px; border-radius: 3px; font-size: 9px; font-weight: 800; text-transform: uppercase; background-color: #f1f5f9; color: #475569; }
+        
+        .total-row { background-color: #f8fafc; font-weight: 900; }
+        .footer-note { font-size: 10px; color: #94a3b8; text-align: center; margin-top: 30px; }
+
+        /* Legend */
+        .legend-area {
+            margin-top: 20px;
+            padding: 10px;
+            background-color: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 4px;
+        }
+        .legend-title { font-weight: 900; font-size: 10px; color: #1e293b; text-transform: uppercase; margin-bottom: 5px; display: block; }
+        .legend-grid { display: block; }
+        .legend-item { display: inline-block; margin-right: 15px; font-size: 10px; color: #475569; }
+        .legend-key { font-weight: 900; color: #1e293b; background-color: #e2e8f0; padding: 1px 3px; border-radius: 2px; margin-right: 3px; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <table class="header-table">
+            <tr>
+                <td style="width: 100px;">
+                    {% if logoBase64 %}
+                        <img src="{{ logoBase64 }}" class="logo">
+                    {% endif %}
+                </td>
+                <td style="text-align: right;">
+                    <h1 class="header-title">Rapport d'Horaires Prévisionnels</h1>
+                    <div class="header-subtitle">Période du {{ start|date('d/m/Y') }} au {{ end|date('d/m/Y') }}</div>
+                </td>
+            </tr>
+        </table>
+    </div>
+
+    {% for data in userData %}
+        <div class="user-block">
+            <div class="user-header">
+                <span class="user-name">{{ data.user.prenom }} {{ data.user.nom }}</span>
+                <span style="margin: 0 10px; color: #cbd5e1;">|</span>
+                <span class="user-magasin">{{ data.user.magasin|default('LSDJ') }}</span>
+            </div>
+
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Date & Jour</th>
+                        <th>Horaires</th>
+                        <th>Durée</th>
+                        <th>Statut / Note</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% set user_total_seconds = 0 %}
+                    {% for h in data.horaires %}
+                        {% set diff = h.endTime.timestamp - h.startTime.timestamp %}
+                        {% set user_total_seconds = user_total_seconds + diff %}
+                        <tr>
+                            <td class="day-cell">
+                                {{ h.startTime|date('l d/m/Y')|replace({
+                                    'Monday': 'Lundi', 'Tuesday': 'Mardi', 'Wednesday': 'Mercredi',
+                                    'Thursday': 'Jeudi', 'Friday': 'Vendredi', 'Saturday': 'Samedi', 'Sunday': 'Dimanche'
+                                }) }}
+                            </td>
+                            <td class="time-cell">{{ h.startTime|date('H:i') }} — {{ h.endTime|date('H:i') }}</td>
+                            <td>
+                                {% set hours = (diff / 3600)|round(0, 'floor') %}
+                                {% set mins = ((diff % 3600) / 60)|round(0, 'floor') %}
+                                {{ hours|format('%02d') }}h{{ mins|format('%02d') }}
+                            </td>
+                            <td>
+                                {% if h.status and h.status != 'Actif' %}
+                                    <span class="status-badge">{{ statusAcronyms[h.status] ?? h.status }}</span>
+                                {% endif %}
+                                <span class="note-cell">{{ h.note }}</span>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                    <tr class="total-row">
+                        <td colspan="2" style="text-align: right; padding-right: 20px;">TOTAL PÉRIODE</td>
+                        <td>
+                            {% set th = (user_total_seconds / 3600)|round(0, 'floor') %}
+                            {% set tm = ((user_total_seconds % 3600) / 60)|round(0, 'floor') %}
+                            {{ th|format('%02d') }}h{{ tm|format('%02d') }}
+                        </td>
+                        <td></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <div style="text-align: center; padding: 50px; color: #94a3b8; font-style: italic;">
+            Aucun horaire enregistré pour cette période.
+        </div>
+    {% endfor %}
+
+    <div class="legend-area">
+        <span class="legend-title">Légende des statuts</span>
+        <div class="legend-grid">
+            {% for acro, full in legend %}
+                <span class="legend-item"><span class="legend-key">{{ acro }}</span> {{ full }}</span>
+            {% endfor %}
+        </div>
+    </div>
+
+    <div class="footer-note">
+        Document généré le {{ "now"|date('d/m/Y à H:i') }} • Portail LSDJ RH
+    </div>
+</body>
+</html>
+

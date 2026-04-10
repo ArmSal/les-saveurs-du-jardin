@@ -1,0 +1,683 @@
+{% extends 'base.html.twig' %}
+{% block title %}Documents RH | LSDJ{% endblock %}
+
+{% block body %}
+<div class="min-h-screen bg-slate-50 py-2 sm:py-4 px-0 sm:px-4 lg:px-8">
+<div class="max-w-7xl mx-auto">
+
+    {# Header #}
+    <div class="mb-4 sm:mb-6 px-3 sm:px-0">
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+            <div>
+                <h1 class="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">Documents & Contrats</h1>
+                <p class="text-xs text-slate-500 mt-0.5 flex items-center gap-2">
+                    <span class="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></span>
+                    <span>Portail RH • LSDJ Group</span>
+                </p>
+            </div>
+            <div class="flex items-center gap-2">
+                {% if canEdit %}
+                    <button onclick="openModal('director-signature-modal')" class="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 bg-white text-slate-900 font-bold py-2 px-4 rounded-lg hover:bg-slate-50 transition-all text-[11px] uppercase tracking-wider border border-slate-200 shadow-sm relative">
+                        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
+                        <span>Signature</span>
+                        {% if app.user.signature %}
+                            <span class="absolute -top-1 -right-1 flex h-2.5 w-2.5">
+                                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                                <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
+                            </span>
+                        {% endif %}
+                    </button>
+                {% endif %}
+                <button onclick="openModal('send-doc-modal')" class="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 bg-indigo-600 text-white font-bold py-2 px-6 rounded-lg hover:bg-indigo-700 transition-all text-[11px] uppercase tracking-wider shadow-sm">
+                    <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path d="M12 4v16m8-8H4"></path></svg>
+                    {{ canEdit ? 'Envoyer' : 'Déposer' }}
+                </button>
+            </div>
+        </div>
+    </div>
+
+{# PENDING REVIEW SECTION (FOR DIRECTOR) #}
+{% if canEdit and pendingDocuments|length > 0 %}
+<section class="mb-6 px-3 sm:px-0">
+    <div class="bg-indigo-600 rounded-lg p-4 text-white shadow-md relative overflow-hidden">
+        <div class="absolute -right-4 -top-4 w-24 h-24 bg-white/10 rounded-full blur-2xl"></div>
+        <div class="relative z-10">
+            <div class="flex items-center gap-3 mb-4">
+                <div class="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center backdrop-blur-sm">
+                    <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                </div>
+                <div>
+                    <h3 class="text-[11px] font-black uppercase tracking-wider mb-0.5">Dossiers à traiter</h3>
+                    <p class="text-[9px] font-bold text-white/60 uppercase tracking-widest">Votre signature est attendue</p>
+                </div>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
+                {% for doc in pendingDocuments %}
+                    <div class="bg-white/10 border border-white/20 backdrop-blur-md rounded-lg p-3 flex items-center gap-3 transition-all hover:bg-white/20 group">
+                        <div class="w-9 h-9 rounded-lg bg-white/10 flex items-center justify-center text-[10px] font-black uppercase shadow-inner">
+                            {{ doc.targetUser ? (doc.targetUser.prenom|first ~ doc.targetUser.nom|first) : '??' }}
+                        </div>
+                        <div class="min-w-0 flex-1">
+                            <p class="text-xs font-bold truncate group-hover:text-indigo-200 transition-colors">{{ doc.title }}</p>
+                            <p class="text-[9px] font-bold text-white/60 uppercase tracking-widest truncate">{{ doc.targetUser ? (doc.targetUser.prenom ~ ' ' ~ doc.targetUser.nom) : 'Général' }}</p>
+                        </div>
+                        <a href="{{ path('app_rh_document_stream', {id: doc.id}) }}" target="_blank" class="shrink-0 w-8 h-8 bg-white text-indigo-600 rounded-lg flex items-center justify-center hover:scale-105 transition-transform shadow-md" title="Voir le document">
+                            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
+                        </a>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</section>
+{% endif %}
+
+{# FILTERS & LIST SECTION #}
+<div id="documents-container" data-employees="{{ employes|json_encode|e('html_attr') }}">
+
+    {% if canEdit %}
+    <div class="bg-white rounded-lg shadow-sm border border-slate-200 p-3 sm:p-4 transition-all mb-4">
+        <div class="flex flex-col xl:flex-row xl:items-center gap-4">
+            <div class="flex items-center gap-3 flex-1 min-w-0">
+                <div class="shrink-0 w-8 h-8 bg-slate-50 rounded-lg flex items-center justify-center text-slate-400">
+                    <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path></svg>
+                </div>
+                <div class="flex-1 min-w-0">
+                    <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Établissement</label>
+                    <select id="filter_magasin_select" onchange="updateFilters()" class="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-1.5 text-xs font-bold text-slate-700 focus:ring-1 focus:ring-indigo-100 focus:border-indigo-400 outline-none cursor-pointer h-9">
+                        <option value="">Tous les établissements</option>
+                        {% for mag in magasins %}
+                            <option value="{{ mag }}" {{ currentMagasin == mag ? 'selected' : '' }}>{{ mag|upper }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+            
+            <div class="hidden xl:block w-[1px] h-10 bg-slate-100"></div>
+            
+            <div class="flex items-center gap-3 flex-1 min-w-0">
+                <div class="shrink-0 w-8 h-8 bg-slate-50 rounded-lg flex items-center justify-center text-slate-400">
+                    <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
+                </div>
+                <div class="flex-1 min-w-0">
+                    <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Employé</label>
+                    <select id="filter_employee_select" onchange="updateFilters()" class="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-1.5 text-xs font-bold text-slate-700 focus:ring-1 focus:ring-indigo-100 focus:border-indigo-400 outline-none cursor-pointer h-9">
+                        <option value="">Tous les employés</option>
+                        {% for emp in employes %}
+                            <option value="{{ emp.id }}" data-magasin="{{ emp.magasin }}" {{ currentEmployee == emp.id ? 'selected' : '' }}>{{ emp.prenom }} {{ emp.nom }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+
+            {% if currentMagasin or currentEmployee %}
+            <div id="reset-button-container" class="xl:ml-auto">
+                <button onclick="resetFilters()" class="inline-flex items-center justify-center gap-2 px-4 py-2 bg-rose-50 text-rose-600 hover:bg-rose-100 rounded-lg text-xs font-bold uppercase tracking-wider transition-colors w-full xl:w-auto h-9">
+                    <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12"></path></svg>
+                    Réinitialiser
+                </button>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<script>
+// Store all employees data from the rendered options
+let allEmployees = [];
+
+function initializeEmployeesData() {
+    const employeeSelect = document.getElementById('filter_employee_select');
+    if (!employeeSelect) return;
+    
+    const options = employeeSelect.querySelectorAll('option[value]:not([value=""])');
+    allEmployees = [];
+    
+    options.forEach(function(option) {
+        allEmployees.push({
+            id: option.value,
+            name: option.textContent,
+            magasin: option.getAttribute('data-magasin')
+        });
+    });
+    
+    console.log('Initialized', allEmployees.length, 'employees');
+}
+
+function updateFilters() {
+    const magasinSelect = document.getElementById('filter_magasin_select');
+    const employeeSelect = document.getElementById('filter_employee_select');
+    
+    if (!magasinSelect || !employeeSelect) {
+        console.error('Select elements not found!');
+        return;
+    }
+    
+    const selectedMagasin = magasinSelect.value;
+    const currentValue = employeeSelect.value;
+    
+    console.log('Filtering by magasin:', selectedMagasin);
+    
+    // Rebuild employee dropdown
+    employeeSelect.innerHTML = '<option value="">Tous les employés</option>';
+    
+    let hasCurrentValue = false;
+    let addedCount = 0;
+    
+    allEmployees.forEach(function(emp) {
+        // Show all if no magasin selected, or only matching magasin
+        if (!selectedMagasin || emp.magasin === selectedMagasin) {
+            const option = document.createElement('option');
+            option.value = emp.id;
+            option.textContent = emp.name;
+            option.setAttribute('data-magasin', emp.magasin);
+            
+            if (emp.id === currentValue) {
+                option.selected = true;
+                hasCurrentValue = true;
+            }
+            
+            employeeSelect.appendChild(option);
+            addedCount++;
+        }
+    });
+    
+    console.log('Added', addedCount, 'employees');
+    
+    // Clear value if current selection not in list
+    if (!hasCurrentValue && selectedMagasin) {
+        employeeSelect.value = '';
+    }
+    
+    updateDocumentsList();
+}
+
+function resetFilters() {
+    const magasinSelect = document.getElementById('filter_magasin_select');
+    const employeeSelect = document.getElementById('filter_employee_select');
+    
+    if (magasinSelect) magasinSelect.value = '';
+    if (employeeSelect) employeeSelect.value = '';
+    
+    // Reset employee dropdown to show all
+    employeeSelect.innerHTML = '<option value="">Tous les employés</option>';
+    allEmployees.forEach(function(emp) {
+        const option = document.createElement('option');
+        option.value = emp.id;
+        option.textContent = emp.name;
+        option.setAttribute('data-magasin', emp.magasin);
+        employeeSelect.appendChild(option);
+    });
+    
+    updateDocumentsList();
+}
+
+function updateDocumentsList() {
+    const magasinSelect = document.getElementById('filter_magasin_select');
+    const employeeSelect = document.getElementById('filter_employee_select');
+    
+    const magasin = magasinSelect ? magasinSelect.value : '';
+    const employee = employeeSelect ? employeeSelect.value : '';
+    
+    const url = new URL(window.location.href);
+    url.searchParams.delete('magasin');
+    url.searchParams.delete('employee');
+    url.searchParams.delete('page');
+    
+    if (magasin) url.searchParams.set('magasin', magasin);
+    if (employee) url.searchParams.set('employee', employee);
+    
+    window.history.pushState({}, '', url);
+    fetchDocuments(url.toString());
+    updateResetButton();
+}
+
+function fetchDocuments(url) {
+    const container = document.getElementById('documents-list-container');
+    if (!container) return;
+    
+    container.style.opacity = '0.5';
+    
+    fetch(url, {headers: {'X-Requested-With': 'XMLHttpRequest'}})
+        .then(r => r.text())
+        .then(html => {
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(html, 'text/html');
+            const newContent = doc.getElementById('documents-list-container');
+            if (newContent) {
+                container.innerHTML = newContent.innerHTML;
+                attachPaginationListeners();
+            }
+        })
+        .catch(e => console.error('Fetch error:', e))
+        .finally(() => container.style.opacity = '1');
+}
+
+function attachPaginationListeners() {
+    document.querySelectorAll('.portal-pagination a').forEach(link => {
+        link.addEventListener('click', function(e) {
+            e.preventDefault();
+            fetchDocuments(this.href);
+        });
+    });
+}
+
+function updateResetButton() {
+    const magasinSelect = document.getElementById('filter_magasin_select');
+    const employeeSelect = document.getElementById('filter_employee_select');
+    
+    const hasFilters = (magasinSelect && magasinSelect.value) || 
+                       (employeeSelect && employeeSelect.value);
+    const btn = document.getElementById('reset-button-container');
+    if (btn) btn.style.display = hasFilters ? 'block' : 'none';
+}
+
+// Initialize when DOM is ready
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('Initializing...');
+    initializeEmployeesData();
+    attachPaginationListeners();
+    updateResetButton();
+});
+</script>
+
+    <div id="documents-list-container" class="px-3 sm:px-0">
+    {% if pagination|length == 0 %}
+    <div class="bg-white rounded-lg border border-slate-200 py-12 text-center shadow-sm">
+        <div class="w-12 h-12 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-3">
+            <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" class="text-slate-300"><path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+        </div>
+        <p class="text-xs font-bold text-slate-400 uppercase tracking-widest">Aucun document trouvé</p>
+    </div>
+{% else %}
+    {# ADAPTIVE CARDS VIEW (For screens < 1280px) #}
+    <div class="xl:hidden space-y-3">
+        {% for doc in pagination %}
+            <div class="bg-white border border-slate-200 rounded-lg p-4 shadow-sm space-y-3">
+                <div class="flex items-start justify-between gap-3">
+                    <div class="flex items-center gap-3 min-w-0">
+                        <div class="w-9 h-9 bg-slate-50 rounded-lg flex items-center justify-center text-slate-400 shrink-0">
+                            <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg>
+                        </div>
+                        <div class="min-w-0">
+                            <h4 class="text-xs font-bold text-slate-900 leading-tight truncate">{{ doc.title }}</h4>
+                            <p class="text-[10px] text-slate-400 mt-0.5">{{ doc.uploadedAt|date('d/m/Y à H:i') }}</p>
+                        </div>
+                    </div>
+                    <div class="shrink-0">
+                        <span class="inline-flex px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider {{ doc.type == 'CONTRACT' ? 'bg-indigo-50 text-indigo-600' : 'bg-slate-50 text-slate-500' }}">
+                            {{ doc.type == 'CONTRACT' ? 'Contrat' : 'Fichier' }}
+                        </span>
+                    </div>
+                </div>
+                
+                {% if doc.message %}
+                    <p class="text-[11px] text-slate-600 bg-slate-50 p-2.5 rounded-lg italic">"{{ doc.message }}"</p>
+                {% endif %}
+
+                <div class="flex items-center justify-between border-t border-slate-50 pt-3">
+                    {% if canEdit or isFullAccess %}
+                        <div class="flex items-center gap-2">
+                            <div class="w-6 h-6 bg-slate-100 rounded-full flex items-center justify-center text-[8px] font-bold text-slate-500 uppercase">{{ doc.targetUser ? doc.targetUser.prenom|first : '?' }}</div>
+                            <span class="text-[10px] font-bold text-slate-700 truncate max-w-[100px]">{{ doc.targetUser ? (doc.targetUser.prenom ~ ' ' ~ doc.targetUser.nom) : 'Direction' }}</span>
+                        </div>
+                    {% endif %}
+                    
+                    {% if doc.type == 'CONTRACT' %}
+                        <span class="inline-flex items-center gap-1 text-[9px] font-bold uppercase tracking-wider {{ doc.status == 'SIGNED' ? 'text-emerald-600' : 'text-amber-500' }}">
+                            <span class="w-1.5 h-1.5 rounded-full {{ doc.status == 'SIGNED' ? 'bg-emerald-500' : 'bg-amber-500 animate-pulse' }}"></span>
+                            {{ doc.status == 'SIGNED' ? 'Signé' : 'En attente' }}
+                        </span>
+                    {% endif %}
+                </div>
+
+                <div class="flex items-center gap-2 pt-1">
+                    <a href="{{ path('app_rh_document_stream', {id: doc.id}) }}" target="_blank" class="flex-1 inline-flex items-center justify-center gap-2 bg-slate-100 text-slate-700 font-bold py-2 rounded-lg hover:bg-slate-200 transition-all text-[10px] uppercase tracking-wider">
+                        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
+                        Ouvrir
+                    </a>
+                    {% if doc.type == 'CONTRACT' and doc.status == 'PENDING_SIGNATURE' and doc.targetUser == app.user %}
+                        <button onclick="openSignModal('{{ doc.id }}', '{{ doc.title|e('js') }}')" class="flex-1 inline-flex items-center justify-center gap-2 bg-indigo-600 text-white font-bold py-2 rounded-lg hover:bg-indigo-700 transition-all text-[10px] uppercase tracking-wider shadow-sm">
+                            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M15.232 5.232l3.536 3.536M9 11l6-6 3 3-6 6H9v-3z"></path></svg>
+                            Signer
+                        </button>
+                    {% endif %}
+                    {% if canEdit %}
+                        <form action="{{ path('app_rh_document_delete', {id: doc.id}) }}" method="POST" onsubmit="return confirm('Supprimer ce document ?');" class="shrink-0">
+                            <button type="submit" class="w-9 h-9 flex items-center justify-center bg-white text-slate-400 border border-slate-200 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-all">
+                                <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                            </button>
+                        </form>
+                    {% endif %}
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+
+    {# DESKTOP TABLE VIEW (xl screens >= 1280px) #}
+    <div class="hidden xl:block bg-white border border-slate-200 rounded-lg overflow-hidden shadow-sm">
+        <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse">
+                <thead>
+                    <tr class="bg-slate-50 border-b border-slate-100">
+                        <th class="px-4 py-2.5 text-[10px] font-bold text-slate-500 uppercase tracking-wider">Document</th>
+                        {% if canEdit %}
+                        <th class="px-4 py-2.5 text-[10px] font-bold text-slate-500 uppercase tracking-wider">Employé</th>
+                        {% endif %}
+                        <th class="px-4 py-2.5 text-[10px] font-bold text-slate-500 uppercase tracking-wider">Type</th>
+                        <th class="px-4 py-2.5 text-[10px] font-bold text-slate-500 uppercase tracking-wider">Statut</th>
+                        <th class="px-4 py-2.5 text-[10px] font-bold text-slate-500 uppercase tracking-wider">Date</th>
+                        <th class="px-4 py-2.5 text-[10px] font-bold text-slate-500 uppercase tracking-wider text-right">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-50">
+                    {% for doc in pagination %}
+                    <tr class="hover:bg-slate-50/80 transition-colors">
+                        <td class="px-4 py-3">
+                            <div class="flex items-center gap-3">
+                                <div class="w-8 h-8 bg-slate-50 rounded-lg flex items-center justify-center text-slate-400 shrink-0 border border-slate-100">
+                                    <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg>
+                                </div>
+                                <div class="min-w-0">
+                                    <p class="text-xs font-bold text-slate-900 truncate max-w-[200px]">{{ doc.title }}</p>
+                                    {% if doc.message %}
+                                    <p class="text-[10px] text-slate-400 italic mt-0.5 truncate max-w-[200px]">"{{ doc.message }}"</p>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </td>
+                        {% if canEdit or isFullAccess %}
+                        <td class="px-4 py-3">
+                            <div class="flex items-center gap-2">
+                                <div class="w-6 h-6 bg-slate-200 rounded-full flex items-center justify-center text-[8px] font-bold text-slate-600 uppercase shrink-0">{{ doc.targetUser ? doc.targetUser.prenom|first : '?' }}</div>
+                                <span class="text-[10px] font-bold text-slate-700 truncate max-w-[120px]">{{ doc.targetUser ? (doc.targetUser.prenom ~ ' ' ~ doc.targetUser.nom) : 'Direction' }}</span>
+                            </div>
+                        </td>
+                        {% endif %}
+                        <td class="px-4 py-3">
+                            <span class="inline-flex px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider {{ doc.type == 'CONTRACT' ? 'bg-indigo-50 text-indigo-600' : 'bg-slate-100 text-slate-500' }}">
+                                {{ doc.type == 'CONTRACT' ? 'Contrat' : 'Fichier' }}
+                            </span>
+                        </td>
+                        <td class="px-4 py-3">
+                            {% if doc.type == 'CONTRACT' %}
+                                <span class="inline-flex items-center gap-1 text-[9px] font-bold uppercase tracking-wider {{ doc.status == 'SIGNED' ? 'text-emerald-600' : 'text-amber-500' }}">
+                                    <span class="w-1.5 h-1.5 rounded-full {{ doc.status == 'SIGNED' ? 'bg-emerald-500' : 'bg-amber-500 animate-pulse' }}"></span>
+                                    {{ doc.status == 'SIGNED' ? 'Signé' : 'En attente' }}
+                                </span>
+                            {% else %}
+                                <span class="text-slate-300">—</span>
+                            {% endif %}
+                        </td>
+                        <td class="px-4 py-3 whitespace-nowrap">
+                            <p class="text-[10px] font-bold text-slate-700">{{ doc.uploadedAt|date('d/m/Y') }}</p>
+                            <p class="text-[9px] text-slate-400">{{ doc.uploadedAt|date('H:i') }}</p>
+                        </td>
+                        <td class="px-4 py-3 text-right">
+                            <div class="flex items-center justify-end gap-1.5">
+                                <a href="{{ path('app_rh_document_stream', {id: doc.id}) }}" target="_blank" class="inline-flex items-center gap-1.5 bg-white text-slate-600 font-bold py-1.5 px-2.5 rounded-lg hover:bg-slate-50 transition-all text-[9px] uppercase tracking-wider border border-slate-200 shadow-sm">
+                                    <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
+                                    Voir
+                                </a>
+                                {% if doc.type == 'CONTRACT' and doc.status == 'PENDING_SIGNATURE' and doc.targetUser == app.user %}
+                                    <button onclick="openSignModal('{{ doc.id }}', '{{ doc.title|e('js') }}')" class="inline-flex items-center gap-1 bg-indigo-600 text-white font-bold py-1.5 px-2.5 rounded-lg hover:bg-indigo-700 transition-all text-[9px] uppercase tracking-wider shadow-sm">
+                                        <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M15.232 5.232l3.536 3.536M9 11l6-6 3 3-6 6H9v-3z"></path></svg>
+                                        Signer
+                                    </button>
+                                {% endif %}
+                                {% if canEdit %}
+                                    <form action="{{ path('app_rh_document_delete', {id: doc.id}) }}" method="POST" onsubmit="return confirm('Supprimer ce document ?');" class="inline">
+                                        <button type="submit" class="w-8 h-8 flex items-center justify-center bg-white text-slate-400 border border-slate-200 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-all">
+                                            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                                        </button>
+                                    </form>
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    {# PAGINATION #}
+    {% if pagination.getTotalItemCount > pagination.getItemNumberPerPage %}
+        <div class="py-10 flex justify-center">
+            <div class="portal-pagination scale-110">
+                {{ knp_pagination_render(pagination) }}
+            </div>
+        </div>
+    {% endif %}
+{% endif %}
+</div> <!-- documents-list-container -->
+</div> <!-- max-w-7xl -->
+</div> <!-- min-h-screen -->
+
+{# ===== MODAL: Envoyer / Déposer ===== #}
+<div id="send-doc-modal" class="fixed inset-0 bg-slate-950/40 backdrop-blur-sm z-[500] hidden items-center justify-center p-4">
+    <div class="bg-white rounded-xl w-full max-w-lg shadow-xl animate-modal-in overflow-hidden border border-slate-200">
+        <div class="flex items-center justify-between px-6 py-4 border-b border-slate-100">
+            <div>
+                <h3 class="text-sm font-bold text-slate-900 uppercase tracking-wider">{{ canEdit ? 'Envoyer un document' : 'Déposer un document' }}</h3>
+                <p class="text-[10px] text-slate-400 mt-0.5">Espace RH sécurisé</p>
+            </div>
+            <button onclick="closeModal('send-doc-modal')" class="w-8 h-8 flex items-center justify-center bg-slate-50 hover:bg-slate-100 rounded-lg transition-colors">
+                <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12"></path></svg>
+            </button>
+        </div>
+        <form action="{{ path('app_rh_document_send') }}" method="POST" enctype="multipart/form-data" class="p-6 space-y-4">
+            <div class="space-y-1.5">
+                <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider">Titre du document</label>
+                <input type="text" name="title" required placeholder="Ex: Contrat de travail..." class="w-full bg-slate-50 border border-slate-200 rounded-lg px-4 py-2 text-sm text-slate-700 focus:ring-1 focus:ring-indigo-100 focus:border-indigo-400 outline-none transition-all">
+            </div>
+
+            {% if canEdit %}
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div class="space-y-1.5">
+                    <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider">Établissement</label>
+                    <select id="send_magasin_select" onchange="filterSendEmployees(this.value)" class="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-700 outline-none focus:border-indigo-400 focus:ring-1 focus:ring-indigo-100 cursor-pointer">
+                        <option value="">Tous les établissements</option>
+                        {% for mag in magasins %}
+                            <option value="{{ mag }}">{{ mag|upper }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="space-y-1.5">
+                    <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider">Destinataire</label>
+                    <select id="send_employee_select" name="target_user_id" required class="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-700 outline-none focus:border-indigo-400 focus:ring-1 focus:ring-indigo-100 cursor-pointer">
+                        <option value="">Choisir un employé...</option>
+                        {% for emp in employes %}
+                            <option value="{{ emp.id }}" data-magasin="{{ emp.magasin }}">{{ emp.prenom }} {{ emp.nom }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+            <div class="space-y-1.5">
+                <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider">Type de document</label>
+                <select name="type" id="docTypeSelect" onchange="toggleDirectorLabel(this.value)" class="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-700 outline-none focus:border-indigo-400 focus:ring-1 focus:ring-indigo-100 cursor-pointer">
+                    <option value="EMPLOYEE_DOC">Document standard</option>
+                    <option value="CONTRACT">Contrat (nécessite signature)</option>
+                </select>
+            </div>
+            {% endif %}
+
+            <div id="directorLabelContainer" class="space-y-1.5 hidden">
+                <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider">Mention de signature</label>
+                <input type="text" name="director_label" placeholder="Ex: Lu et approuvé, le Directeur," class="w-full bg-slate-50 border border-slate-200 rounded-lg px-4 py-2 text-sm text-slate-700 focus:ring-1 focus:ring-indigo-100 focus:border-indigo-400 outline-none">
+            </div>
+
+            <div class="space-y-1.5">
+                <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider">Fichier PDF</label>
+                <div class="relative group">
+                    <input type="file" name="file" id="documentFileInput" required accept=".pdf,.doc,.docx,.jpg,.jpeg,.png" class="absolute inset-0 opacity-0 cursor-pointer z-10 w-full h-full" onchange="document.getElementById('fileNameDisplay').textContent = this.files[0] ? this.files[0].name : 'Sélectionner un fichier'">
+                    <div class="bg-slate-50 border border-dashed border-slate-200 group-hover:border-indigo-400 group-hover:bg-indigo-50/30 rounded-lg p-6 py-8 text-center transition-all pointer-events-none">
+                        <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" class="mx-auto mb-2 text-slate-300"><path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
+                        <p id="fileNameDisplay" class="text-xs font-bold text-slate-400 truncate px-4 text-center">Sélectionner un fichier PDF, Word ou Image</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="space-y-1.5">
+                <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider">Commentaire (optionnel)</label>
+                <textarea name="message" rows="2" placeholder="Ajouter une note..." class="w-full bg-slate-50 border border-slate-200 rounded-lg px-4 py-2 text-sm text-slate-700 focus:ring-1 focus:ring-indigo-100 focus:border-indigo-400 outline-none resize-none"></textarea>
+            </div>
+
+            <div class="flex gap-3 pt-2">
+                <button type="button" onclick="closeModal('send-doc-modal')" class="flex-1 py-2.5 bg-slate-100 text-slate-700 font-bold rounded-lg hover:bg-slate-200 transition-all text-xs uppercase tracking-wider">Annuler</button>
+                <button type="submit" class="flex-1 py-2.5 bg-indigo-600 text-white font-bold rounded-lg hover:bg-slate-900 transition-all text-xs uppercase tracking-wider shadow-md">Envoyer le document</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+{# ===== MODAL: Signer le contrat ===== #}
+<div id="sign-doc-modal" class="fixed inset-0 bg-slate-950/40 backdrop-blur-sm z-[600] hidden items-center justify-center p-4">
+    <div class="bg-white rounded-xl w-full max-w-sm shadow-xl animate-modal-in overflow-hidden border border-slate-200">
+        <div class="flex items-center justify-between px-6 py-4 border-b border-slate-100">
+            <div>
+                <h3 class="text-sm font-bold text-slate-900 uppercase tracking-wider">Signer le contrat</h3>
+                <p id="sign-doc-title" class="text-[10px] text-indigo-600 font-bold truncate max-w-[200px] mt-0.5"></p>
+            </div>
+            <button onclick="closeModal('sign-doc-modal')" class="w-8 h-8 flex items-center justify-center bg-slate-50 hover:bg-slate-100 rounded-lg transition-colors">
+                <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12"></path></svg>
+            </button>
+        </div>
+        <form id="sign-doc-form" method="POST" class="p-6 space-y-4">
+            <p class="text-[10px] text-slate-500 italic">Veuillez signer à l'intérieur du cadre ci-dessous :</p>
+            <div class="relative bg-slate-50 border border-slate-200 rounded-lg overflow-hidden" style="height:160px">
+                <canvas id="doc-signature-pad" class="absolute inset-0 w-full h-full touch-none cursor-crosshair"></canvas>
+                <button type="button" id="clear-doc-signature" class="absolute bottom-2 right-2 z-20 w-7 h-7 flex items-center justify-center bg-white border border-slate-200 text-slate-400 hover:text-rose-500 rounded-lg transition-all shadow-sm">
+                    <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                </button>
+            </div>
+            <input type="hidden" name="signature" id="doc-signature-input">
+            <div class="flex gap-3">
+                <button type="button" onclick="closeModal('sign-doc-modal')" class="flex-1 py-2.5 bg-slate-100 text-slate-700 font-bold rounded-lg hover:bg-slate-200 transition-all text-xs uppercase tracking-wider">Annuler</button>
+                <button type="submit" class="flex-1 py-2.5 bg-emerald-600 text-white font-bold rounded-lg hover:bg-slate-900 transition-all text-xs uppercase tracking-wider shadow-md">Signer le document ✓</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+{# ===== MODAL: Signature Directeur ===== #}
+{% if canEdit %}
+<div id="director-signature-modal" class="fixed inset-0 bg-slate-950/40 backdrop-blur-sm z-[600] hidden items-center justify-center p-4">
+    <div class="bg-white rounded-xl w-full max-w-sm shadow-xl animate-modal-in overflow-hidden border border-slate-200">
+        <div class="flex items-center justify-between px-6 py-4 border-b border-slate-100">
+            <div>
+                <h3 class="text-sm font-bold text-slate-900 uppercase tracking-wider">Ma Signature Directeur</h3>
+                <p class="text-[10px] text-slate-400 mt-0.5">Enregistrer votre signature officielle</p>
+            </div>
+            <button onclick="closeModal('director-signature-modal')" class="w-8 h-8 flex items-center justify-center bg-slate-50 hover:bg-slate-100 rounded-lg transition-colors">
+                <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12"></path></svg>
+            </button>
+        </div>
+        <div class="p-6 space-y-4">
+            {% if app.user.signature %}
+            <div class="p-3 bg-slate-50 border border-slate-100 rounded-lg">
+                <label class="block text-[9px] font-bold text-slate-500 uppercase tracking-wider mb-2">Signature actuelle :</label>
+                <img src="{{ app.user.signature }}" alt="Ma Signature" class="max-h-12 mx-auto mix-blend-multiply opacity-80">
+            </div>
+            {% endif %}
+            <div class="relative bg-slate-50 border border-slate-200 rounded-lg overflow-hidden" style="height:140px">
+                <canvas id="director-signature-pad" class="absolute inset-0 w-full h-full touch-none cursor-crosshair"></canvas>
+                <button type="button" onclick="directorPad.clear()" class="absolute bottom-2 right-2 z-20 w-7 h-7 flex items-center justify-center bg-white border border-slate-200 text-slate-400 hover:text-rose-500 rounded-lg transition-all shadow-sm">
+                    <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                </button>
+            </div>
+            <div class="flex gap-3">
+                <button type="button" onclick="closeModal('director-signature-modal')" class="flex-1 py-2.5 bg-slate-100 text-slate-700 font-bold rounded-lg hover:bg-slate-200 transition-all text-xs uppercase tracking-wider">Annuler</button>
+                <button type="button" onclick="saveDirectorSignature()" class="flex-1 py-2.5 bg-indigo-600 text-white font-bold rounded-lg hover:bg-emerald-600 transition-all text-xs uppercase tracking-wider shadow-md">Enregistrer ✓</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<script src="https://cdn.jsdelivr.net/npm/signature_pad@4.1.7/dist/signature_pad.umd.min.js"></script>
+<script>
+function toggleDirectorLabel(val) {
+    const container = document.getElementById('directorLabelContainer');
+    const fileInput = document.getElementById('documentFileInput');
+    if (container) {
+        if (val === 'CONTRACT') {
+            container.classList.remove('hidden');
+            if (fileInput) fileInput.setAttribute('accept', '.pdf');
+        } else {
+            container.classList.add('hidden');
+            if (fileInput) fileInput.setAttribute('accept', '.pdf,.doc,.docx,.jpg,.jpeg,.png');
+        }
+    }
+}
+
+let docPad = null, directorPad = null;
+function resizeCanvas(mode) {
+    const ratio = Math.max(window.devicePixelRatio || 1, 1);
+    const canvas = document.getElementById(mode === 'director' ? 'director-signature-pad' : 'doc-signature-pad');
+    if (!canvas) return;
+    canvas.width = canvas.offsetWidth * ratio;
+    canvas.height = canvas.offsetHeight * ratio;
+    canvas.getContext('2d').scale(ratio, ratio);
+}
+function openModal(id) { 
+    const m = document.getElementById(id); if (!m) return;
+    m.classList.remove('hidden'); m.classList.add('flex');
+    if (id === 'director-signature-modal') {
+        const can = document.getElementById('director-signature-pad');
+        if (can && !directorPad) directorPad = new SignaturePad(can, { penColor: 'rgb(15,23,42)' });
+        setTimeout(() => resizeCanvas('director'), 50);
+    }
+}
+function closeModal(id) {
+    const m = document.getElementById(id); if (m) { m.classList.add('hidden'); m.classList.remove('flex'); }
+}
+function openSignModal(id, title) {
+    document.getElementById('sign-doc-form').action = `/rh/documents/sign/${id}`;
+    document.getElementById('sign-doc-title').textContent = title;
+    openModal('sign-doc-modal');
+    const can = document.getElementById('doc-signature-pad');
+    if (can && !docPad) docPad = new SignaturePad(can, { penColor: 'rgb(15,23,42)' });
+    setTimeout(() => resizeCanvas('doc'), 50);
+}
+function saveDirectorSignature() {
+    if (!directorPad || directorPad.isEmpty()) { alert('Signez d\'abord.'); return; }
+    const formData = new URLSearchParams(); formData.append('signature', directorPad.toDataURL());
+    fetch('{{ path('app_rh_document_save_director_signature') }}', {
+        method: 'POST', body: formData.toString(),
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'X-Requested-With': 'XMLHttpRequest' }
+    }).then(r => r.json()).then(d => d.success ? location.reload() : alert('Erreur')).catch(() => alert('Erreur réseau'));
+}
+document.addEventListener('DOMContentLoaded', () => {
+    document.getElementById('sign-doc-form')?.addEventListener('submit', e => {
+        if (!docPad || docPad.isEmpty()) { e.preventDefault(); alert('Signez le contrat.'); return; }
+        document.getElementById('doc-signature-input').value = docPad.toDataURL();
+    });
+    document.getElementById('clear-doc-signature')?.addEventListener('click', () => docPad?.clear());
+});
+function filterSendEmployees(magasin) {
+    const select = document.getElementById('send_employee_select');
+    const options = select.querySelectorAll('option');
+    select.value = ""; 
+    
+    options.forEach(opt => {
+        if (opt.value === "") {
+            opt.style.display = ""; 
+            return;
+        }
+        const optMag = opt.getAttribute('data-magasin');
+        if (!magasin || optMag === magasin) {
+            opt.style.display = "";
+        } else {
+            opt.style.display = "none";
+        }
+    });
+}
+</script>
+<style>
+@keyframes modal-in { from { opacity: 0; transform: scale(0.98) translateY(10px); } to { opacity:1; transform: scale(1) translateY(0); } }
+.animate-modal-in { animation: modal-in .2s ease-out both; }
+.truncate { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+</style>
+{% endblock %}

@@ -1,0 +1,602 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Gestion des Accès | LSDJ{% endblock %}
+
+{% block body %}
+<div class="min-h-screen bg-slate-50 py-2 sm:py-4 px-0 sm:px-4 lg:px-8" x-data="accessManager()">
+    <div class="max-w-7xl mx-auto">
+        
+        {# Header #}
+        <div class="mb-4 sm:mb-6 px-3 sm:px-0">
+            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                <div>
+                    <h1 class="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">Gestion des Accès</h1>
+                    <p class="text-xs text-slate-500 mt-0.5">Configuration des permissions par module et rôle</p>
+                </div>
+            </div>
+        </div>
+
+        {# Quick Stats Cards - Mobile optimized #}
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-4 mb-4 sm:mb-6 px-3 sm:px-0">
+            <div class="bg-white rounded-lg p-3 shadow-sm border border-slate-200">
+                <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Rôles</div>
+                <div class="text-lg sm:text-xl font-black text-slate-800">{{ roles|length }}</div>
+            </div>
+            <div class="bg-white rounded-lg p-3 shadow-sm border border-slate-200">
+                <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Magasins</div>
+                <div class="text-lg sm:text-xl font-black text-slate-800">{{ magasins|length }}</div>
+            </div>
+            <div class="bg-white rounded-lg p-3 shadow-sm border border-slate-200">
+                <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Modules</div>
+                <div class="text-lg sm:text-xl font-black text-slate-800">{{ modules|length }}</div>
+            </div>
+            <div class="bg-white rounded-lg p-3 shadow-sm border border-slate-200">
+                <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Permissions</div>
+                <div class="text-lg sm:text-xl font-black text-teal-600">{{ roles|length * modules|length }}</div>
+            </div>
+        </div>
+
+        {# Tab Navigation - Mobile optimized #}
+        <div class="px-3 sm:px-0 mb-4">
+            <div class="bg-white rounded-lg shadow-sm border border-slate-200 p-1 flex gap-1">
+                <button 
+                    @click="activeTab = 'matrix'" 
+                    :class="{ 'bg-teal-500 text-white shadow': activeTab === 'matrix', 'text-slate-600 hover:bg-slate-100': activeTab !== 'matrix' }"
+                    class="flex-1 py-2 px-2 rounded-md text-[11px] font-bold uppercase tracking-wider transition-all duration-200">
+                    <span class="hidden sm:inline">Matrice des Accès</span>
+                    <span class="sm:hidden">Accès</span>
+                </button>
+                <button 
+                    @click="activeTab = 'roles'" 
+                    :class="{ 'bg-indigo-500 text-white shadow': activeTab === 'roles', 'text-slate-600 hover:bg-slate-100': activeTab !== 'roles' }"
+                    class="flex-1 py-2 px-2 rounded-md text-[11px] font-bold uppercase tracking-wider transition-all duration-200">
+                    <span class="hidden sm:inline">Gestion des Rôles</span>
+                    <span class="sm:hidden">Rôles</span>
+                </button>
+                <button 
+                    @click="activeTab = 'magasins'" 
+                    :class="{ 'bg-emerald-500 text-white shadow': activeTab === 'magasins', 'text-slate-600 hover:bg-slate-100': activeTab !== 'magasins' }"
+                    class="flex-1 py-2 px-2 rounded-md text-[11px] font-bold uppercase tracking-wider transition-all duration-200">
+                    <span class="hidden sm:inline">Gestion des Magasins</span>
+                    <span class="sm:hidden">Magasins</span>
+                </button>
+            </div>
+        </div>
+
+        {# Access Matrix Tab #}
+        <div x-show="activeTab === 'matrix'" x-collapse class="px-3 sm:px-0 space-y-3">
+            
+            {# Search Filter #}
+            <div class="relative max-w-sm">
+                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <svg class="h-4 w-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                    </svg>
+                </div>
+                <input 
+                    type="text" 
+                    x-model="moduleSearch"
+                    placeholder="Rechercher un module..." 
+                    class="w-full pl-9 pr-3 py-2 bg-white border border-slate-200 rounded-lg text-sm text-slate-700 placeholder-slate-400 outline-none focus:border-teal-400 focus:ring-1 focus:ring-teal-100 transition-all shadow-sm">
+            </div>
+
+            {# Module Cards #}
+            <div class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-3">
+                {% for key, label in modules %}
+                    <div 
+                        x-show="'{{ label|lower }} {{ key|lower }}'.includes(moduleSearch.toLowerCase()) || moduleSearch === ''"
+                        class="bg-white rounded-lg shadow-sm border border-slate-200 overflow-hidden"
+                        x-data="{ expanded: false }">
+                        
+                        {# Module Header #}
+                        <button 
+                            @click="expanded = !expanded"
+                            class="w-full flex items-center justify-between p-3 sm:p-4 bg-gradient-to-r from-slate-50 to-white hover:from-slate-100 hover:to-slate-50 transition-all">
+                            <div class="flex items-center gap-3">
+                                <div class="w-9 h-9 rounded-lg bg-gradient-to-br from-teal-400 to-cyan-500 flex items-center justify-center text-white shadow-sm shrink-0">
+                                    {% if key == 'dashboard' %}
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/></svg>
+                                    {% elseif key == 'documents' %}
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                                    {% elseif key == 'users' %}
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
+                                    {% elseif key == 'agenda' %}
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                                    {% elseif key == 'access_management' %}
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"/></svg>
+                                    {% else %}
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h14M5 12a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v4a2 2 0 01-2 2M5 12a2 2 0 00-2 2v4a2 2 0 002 2h14a2 2 0 002-2v-4a2 2 0 00-2-2m-3-1l-2-2m0 0l-2 2m2-2v10"/></svg>
+                                    {% endif %}
+                                </div>
+                                <div class="text-left min-w-0">
+                                    <h3 class="text-sm font-bold text-slate-800 truncate">{{ label }}</h3>
+                                    <p class="text-[9px] text-slate-400 font-medium">{{ key }}</p>
+                                </div>
+                            </div>
+                            <svg 
+                                class="w-5 h-5 text-slate-400 transition-transform duration-200 shrink-0 ml-2"
+                                :class="{ 'rotate-180': expanded }"
+                                fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                            </svg>
+                        </button>
+
+                        {# Role Permissions List #}
+                        <div x-show="expanded" x-collapse class="border-t border-slate-100">
+                            <div class="divide-y divide-slate-50">
+                                {% for role in roles %}
+                                    {% set currentAccess = matrix[key][role.name] ?? 'AUCUN_ACCES' %}
+                                    {# ROLE_DIRECTEUR always has ACCES_TOTAL #}
+                                    {% if role.name == 'ROLE_DIRECTEUR' %}
+                                        {% set currentAccess = 'ACCES_TOTAL' %}
+                                    {% endif %}
+                                    <div class="p-2 sm:p-3 flex items-center justify-between gap-3 hover:bg-slate-50 transition-colors">
+                                        <div class="flex-1 min-w-0">
+                                            <div class="text-[11px] font-semibold text-slate-700 truncate">{{ role.label }}</div>
+                                            <div class="text-[9px] text-slate-400">{{ role.name }}</div>
+                                        </div>
+                                        <div class="relative shrink-0">
+                                            <select
+                                                {% if role.name == 'ROLE_DIRECTEUR' %}disabled{% endif %}
+                                                onchange="updatePermission('{{ key }}', '{{ role.name }}', this.value)"
+                                                data-original="{{ currentAccess }}"
+                                                class="access-select w-32 sm:w-40 text-[10px] font-bold uppercase tracking-wider border border-slate-200 rounded-md px-2 py-1.5 focus:ring-2 focus:ring-teal-100 focus:border-teal-400 outline-none cursor-pointer transition-all
+                                                {% if role.name == 'ROLE_DIRECTEUR' %}
+                                                    bg-emerald-50 text-emerald-600 border-emerald-200
+                                                {% elseif currentAccess == 'AUCUN_ACCES' %}
+                                                    bg-slate-100 text-slate-500 border-slate-200
+                                                {% elseif currentAccess == 'ACCES_TOTAL' %}
+                                                    bg-emerald-50 text-emerald-600 border-emerald-200
+                                                {% elseif currentAccess == 'ADMIN_MAGASIN' %}
+                                                    bg-indigo-50 text-indigo-600 border-indigo-200
+                                                {% elseif currentAccess == 'LECTURE_TOTALE' %}
+                                                    bg-sky-50 text-sky-600 border-sky-200
+                                                {% elseif currentAccess == 'LECTURE_MAGASIN' %}
+                                                    bg-teal-50 text-teal-600 border-teal-200
+                                                {% elseif currentAccess == 'ACCES_PERSONNEL' %}
+                                                    bg-amber-50 text-amber-600 border-amber-200
+                                                {% else %}
+                                                    bg-slate-100 text-slate-500 border-slate-200
+                                                {% endif %}"
+                                            >
+                                                {% for level in accessLevels %}
+                                                    {% if key == 'produits' %}
+                                                    {% if level in ['AUCUN_ACCES', 'LECTURE_TOTALE', 'ACCES_TOTAL'] %}
+                                                            <option value="{{ level }}" {{ currentAccess == level ? 'selected' : '' }}>
+                                                                {% if level == 'LECTURE_TOTALE' %}UTILISATEUR{% elseif level == 'ACCES_TOTAL' %}ACCES TOTAL{% else %}{{ level|replace({'_': ' '}) }}{% endif %}
+                                                            </option>
+                                                        {% endif %}
+                                                    {% elseif key == 'documents' %}
+                                                        {% if level in ['AUCUN_ACCES', 'ACCES_TOTAL', 'LECTURE_TOTALE'] %}
+                                                            <option value="{{ level }}" {{ currentAccess == level ? 'selected' : '' }}>
+                                                                {% if level == 'ACCES_TOTAL' %}ACCES TOTAL{% elseif level == 'LECTURE_TOTALE' %}LECTURE TOTALE{% else %}{{ level|replace({'_': ' '}) }}{% endif %}
+                                                            </option>
+                                                        {% endif %}
+                                                    {% elseif key in ['access_management', 'dashboard'] %}
+                                                        {% if level in ['AUCUN_ACCES', 'ACCES_TOTAL'] %}
+                                                            <option value="{{ level }}" {{ currentAccess == level ? 'selected' : '' }}>
+                                                                {% if level == 'ACCES_TOTAL' %}ACCES TOTAL{% else %}{{ level|replace({'_': ' '}) }}{% endif %}
+                                                            </option>
+                                                        {% endif %}
+                                                    {% elseif key == 'user_observations' %}
+                                                        {% if level in ['AUCUN_ACCES', 'ADMIN_MAGASIN', 'ACCES_TOTAL'] %}
+                                                            <option value="{{ level }}" {{ currentAccess == level ? 'selected' : '' }}>
+                                                                {% if level == 'ACCES_TOTAL' %}ACCES TOTAL{% elseif level == 'ADMIN_MAGASIN' %}ACCES MAGASIN{% else %}AUCUN ACCES{% endif %}
+                                                            </option>
+                                                        {% endif %}
+                                                    {% elseif key == 'transport_logistique' %}
+                                                        {% if level in ['AUCUN_ACCES', 'ACCES_TOTAL'] %}
+                                                            <option value="{{ level }}" {{ currentAccess == level ? 'selected' : '' }}>
+                                                                {% if level == 'ACCES_TOTAL' %}ACCES TOTAL{% else %}{{ level|replace({'_': ' '}) }}{% endif %}
+                                                            </option>
+                                                        {% endif %}
+                                                    {% elseif key == 'maintenance_suivi' %}
+                                                        {% if level in ['AUCUN_ACCES', 'ACCES_TOTAL', 'ACCES_PERSONNEL'] %}
+                                                            <option value="{{ level }}" {{ currentAccess == level ? 'selected' : '' }}>
+                                                                {% if level == 'ACCES_TOTAL' %}ACCES TOTAL{% elseif level == 'ACCES_PERSONNEL' %}ACCES PERSONNEL{% else %}{{ level|replace({'_': ' '}) }}{% endif %}
+                                                            </option>
+                                                        {% endif %}
+                                                    {% elseif key == 'commandes' %}
+                                                        {% if level in ['AUCUN_ACCES', 'ACCES_TOTAL', 'ADMIN_MAGASIN'] %}
+                                                            <option value="{{ level }}" {{ currentAccess == level ? 'selected' : '' }}>
+                                                                {% if level == 'ACCES_TOTAL' %}ACCES TOTAL{% elseif level == 'ADMIN_MAGASIN' %}ACCES MAGASIN{% else %}{{ level|replace({'_': ' '}) }}{% endif %}
+                                                            </option>
+                                                        {% endif %}
+                                                    {% elseif key in ['rh_validation', 'rh_documents'] %}
+                                                        {% if level in ['AUCUN_ACCES', 'ACCES_TOTAL', 'ADMIN_MAGASIN', 'ACCES_PERSONNEL'] %}
+                                                            <option value="{{ level }}" {{ currentAccess == level ? 'selected' : '' }}>
+                                                                {% if level == 'ACCES_TOTAL' %}ACCES TOTAL{% elseif level == 'ADMIN_MAGASIN' %}ACCES MAGASIN{% elseif level == 'ACCES_PERSONNEL' %}ACCES PERSONNEL{% else %}{{ level|replace({'_': ' '}) }}{% endif %}
+                                                            </option>
+                                                        {% endif %}
+                                                    {% elseif key == 'rh_conge' %}
+                                                        {% if level in ['AUCUN_ACCES', 'ACCES_TOTAL', 'ADMIN_MAGASIN', 'ACCES_PERSONNEL'] %}
+                                                            <option value="{{ level }}" {{ currentAccess == level ? 'selected' : '' }}>
+                                                                {% if level == 'ACCES_TOTAL' %}ACCES TOTAL{% elseif level == 'ADMIN_MAGASIN' %}ACCES MAGASIN{% elseif level == 'ACCES_PERSONNEL' %}ACCES PERSONNEL{% else %}{{ level|replace({'_': ' '}) }}{% endif %}
+                                                            </option>
+                                                        {% endif %}
+                                                    {% elseif key not in ['rh_validation', 'rh_documents', 'rh_conge'] or level not in ['LECTURE_TOTALE', 'LECTURE_MAGASIN'] %}
+                                                        <option value="{{ level }}" {{ currentAccess == level ? 'selected' : '' }}>
+                                                            {% if level == 'ACCES_TOTAL' %}ACCES TOTAL{% elseif level == 'ADMIN_MAGASIN' %}ACCES MAGASIN{% elseif level == 'LECTURE_TOTALE' %}LECTURE TOTALE{% elseif level == 'LECTURE_MAGASIN' %}LECTURE MAGASIN{% elseif level == 'ACCES_PERSONNEL' %}ACCES PERSONNEL{% else %}{{ level|replace({'_': ' '}) }}{% endif %}
+                                                        </option>
+                                                    {% endif %}
+                                                {% endfor %}
+                                            </select>
+                                        </div>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        {# Roles Management Tab #}
+        <div x-show="activeTab === 'roles'" x-collapse class="px-3 sm:px-0">
+            <div class="bg-white rounded-lg shadow-sm border border-slate-200 overflow-hidden">
+                <div class="p-3 sm:p-4 border-b border-slate-100 bg-gradient-to-r from-slate-50 to-white">
+                    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                        <h2 class="text-sm font-bold text-slate-800">Liste des Rôles</h2>
+                        <button @click="showAddRoleModal = true" class="inline-flex items-center justify-center gap-1.5 px-3 py-2 bg-indigo-500 hover:bg-indigo-600 text-white rounded-lg text-[11px] font-bold uppercase tracking-wider transition-all">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                            Nouveau Rôle
+                        </button>
+                    </div>
+                </div>
+                <div class="divide-y divide-slate-100">
+                    {% for role in roles %}
+                        <div class="p-3 sm:p-4 flex items-center justify-between gap-3 hover:bg-slate-50 transition-colors">
+                            <div class="flex-1 min-w-0">
+                                <div class="flex items-center gap-2">
+                                    <span class="text-sm font-semibold text-slate-800">{{ role.label }}</span>
+                                    {% if role.name == 'ROLE_DIRECTEUR' or role.name == 'ROLE_USER' %}
+                                        <span class="px-1.5 py-0.5 bg-slate-100 text-slate-500 rounded text-[9px] font-bold">SYSTÈME</span>
+                                    {% endif %}
+                                    {% if role.isContact %}
+                                        <span class="px-1.5 py-0.5 bg-sky-100 text-sky-600 rounded text-[9px] font-bold">CONTACT MAGASIN</span>
+                                    {% endif %}
+                                </div>
+                                <div class="text-[10px] text-slate-400 font-mono mt-0.5">{{ role.name }}</div>
+                            </div>
+                            <div class="flex items-center gap-1">
+                                <button 
+                                    @click="editRoleId = {{ role.id }}; editRoleLabel = '{{ role.label }}'; editRoleContact = {{ role.isContact ? 'true' : 'false' }}; showEditRoleModal = true"
+                                    class="p-2 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-all"
+                                    title="Modifier">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                                </button>
+                                {% if role.name != 'ROLE_DIRECTEUR' and role.name != 'ROLE_USER' %}
+                                    <button 
+                                        @click="deleteRole({{ role.id }}, '{{ role.label }}')"
+                                        class="p-2 text-slate-400 hover:text-rose-500 hover:bg-rose-50 rounded-lg transition-all"
+                                        title="Supprimer">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                                    </button>
+                                {% endif %}
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        {# Magasins Management Tab #}
+        <div x-show="activeTab === 'magasins'" x-collapse class="px-3 sm:px-0">
+            <div class="bg-white rounded-lg shadow-sm border border-slate-200 overflow-hidden">
+                <div class="p-3 sm:p-4 border-b border-slate-100 bg-gradient-to-r from-slate-50 to-white">
+                    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                        <h2 class="text-sm font-bold text-slate-800">Liste des Magasins</h2>
+                        <button @click="showAddMagasinModal = true" class="inline-flex items-center justify-center gap-1.5 px-3 py-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg text-[11px] font-bold uppercase tracking-wider transition-all">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                            Nouveau Magasin
+                        </button>
+                    </div>
+                </div>
+                <div class="divide-y divide-slate-100">
+                    {% for magasin in magasins %}
+                        <div class="p-3 sm:p-4 flex items-center justify-between gap-3 hover:bg-slate-50 transition-colors">
+                            <div class="flex-1 min-w-0">
+                                <div class="text-sm font-semibold text-slate-800">{{ magasin.nom }}</div>
+                                <div class="text-[10px] text-slate-400 mt-0.5">{{ magasin.users|length }} utilisateurs</div>
+                            </div>
+                            <div class="flex items-center gap-1">
+                                <button 
+                                    @click="editMagasinId = {{ magasin.id }}; editMagasinNom = '{{ magasin.nom }}'; showEditMagasinModal = true"
+                                    class="p-2 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-all"
+                                    title="Modifier">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                                </button>
+                                <button 
+                                    @click="deleteMagasin({{ magasin.id }}, '{{ magasin.nom }}')"
+                                    class="p-2 text-slate-400 hover:text-rose-500 hover:bg-rose-50 rounded-lg transition-all"
+                                    title="Supprimer">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                                </button>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        {# Modals #}
+        {# Add Role Modal #}
+        <div x-show="showAddRoleModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4" x-cloak>
+            <div x-show="showAddRoleModal" x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100" x-transition:leave="transition ease-in duration-150" x-transition:leave-start="opacity-100 scale-100" x-transition:leave-end="opacity-0 scale-95" class="bg-white rounded-xl shadow-xl w-full max-w-md overflow-hidden">
+                <div class="p-4 border-b border-slate-100">
+                    <h3 class="text-lg font-bold text-slate-800">Nouveau Rôle</h3>
+                </div>
+                <form @submit.prevent="submitAddRole()" class="p-4 space-y-4">
+                    <div>
+                        <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1">Identifiant Technique</label>
+                        <input x-model="newRoleName" type="text" placeholder="Ex: MANAGER" required class="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-100 focus:border-indigo-400 outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1">Nom Affiché</label>
+                        <input x-model="newRoleLabel" type="text" placeholder="Ex: Manager de Magasin" required class="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-100 focus:border-indigo-400 outline-none">
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <input x-model="newRoleContact" type="checkbox" id="newRoleContact" class="w-4 h-4 text-indigo-600 bg-slate-100 border-slate-300 rounded focus:ring-indigo-500 focus:ring-2 cursor-pointer">
+                        <label for="newRoleContact" class="text-sm font-medium text-slate-700 cursor-pointer">Afficher sur la page de contact public</label>
+                    </div>
+                    <div class="flex gap-2 pt-2">
+                        <button type="button" @click="showAddRoleModal = false" class="flex-1 px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-sm font-semibold transition-colors">Annuler</button>
+                        <button type="submit" class="flex-1 px-4 py-2 bg-indigo-500 hover:bg-indigo-600 text-white rounded-lg text-sm font-semibold transition-colors">Créer</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        {# Edit Role Modal #}
+        <div x-show="showEditRoleModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4" x-cloak>
+            <div x-show="showEditRoleModal" x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100" x-transition:leave="transition ease-in duration-150" x-transition:leave-start="opacity-100 scale-100" x-transition:leave-end="opacity-0 scale-95" class="bg-white rounded-xl shadow-xl w-full max-w-md overflow-hidden">
+                <div class="p-4 border-b border-slate-100">
+                    <h3 class="text-lg font-bold text-slate-800">Modifier le Rôle</h3>
+                </div>
+                <form @submit.prevent="submitEditRole()" class="p-4 space-y-4">
+                    <div>
+                        <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1">Nom Affiché</label>
+                        <input x-model="editRoleLabel" type="text" required class="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-100 focus:border-indigo-400 outline-none">
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <input x-model="editRoleContact" type="checkbox" id="editRoleContact" class="w-4 h-4 text-indigo-600 bg-slate-100 border-slate-300 rounded focus:ring-indigo-500 focus:ring-2 cursor-pointer">
+                        <label for="editRoleContact" class="text-sm font-medium text-slate-700 cursor-pointer">Afficher sur la page de contact public</label>
+                    </div>
+                    <div class="flex gap-2 pt-2">
+                        <button type="button" @click="showEditRoleModal = false" class="flex-1 px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-sm font-semibold transition-colors">Annuler</button>
+                        <button type="submit" class="flex-1 px-4 py-2 bg-indigo-500 hover:bg-indigo-600 text-white rounded-lg text-sm font-semibold transition-colors">Mettre à jour</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        {# Add Magasin Modal #}
+        <div x-show="showAddMagasinModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4" x-cloak>
+            <div x-show="showAddMagasinModal" x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100" x-transition:leave="transition ease-in duration-150" x-transition:leave-start="opacity-100 scale-100" x-transition:leave-end="opacity-0 scale-95" class="bg-white rounded-xl shadow-xl w-full max-w-md overflow-hidden">
+                <div class="p-4 border-b border-slate-100">
+                    <h3 class="text-lg font-bold text-slate-800">Nouveau Magasin</h3>
+                </div>
+                <form @submit.prevent="submitAddMagasin()" class="p-4 space-y-4">
+                    <div>
+                        <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1">Nom du Magasin</label>
+                        <input x-model="newMagasinNom" type="text" placeholder="Ex: Paris Montparnasse" required class="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-emerald-100 focus:border-emerald-400 outline-none">
+                    </div>
+                    <div class="flex gap-2 pt-2">
+                        <button type="button" @click="showAddMagasinModal = false" class="flex-1 px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-sm font-semibold transition-colors">Annuler</button>
+                        <button type="submit" class="flex-1 px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg text-sm font-semibold transition-colors">Créer</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        {# Edit Magasin Modal #}
+        <div x-show="showEditMagasinModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4" x-cloak>
+            <div x-show="showEditMagasinModal" x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100" x-transition:leave="transition ease-in duration-150" x-transition:leave-start="opacity-100 scale-100" x-transition:leave-end="opacity-0 scale-95" class="bg-white rounded-xl shadow-xl w-full max-w-md overflow-hidden">
+                <div class="p-4 border-b border-slate-100">
+                    <h3 class="text-lg font-bold text-slate-800">Modifier le Magasin</h3>
+                </div>
+                <form @submit.prevent="submitEditMagasin()" class="p-4 space-y-4">
+                    <div>
+                        <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1">Nom du Magasin</label>
+                        <input x-model="editMagasinNom" type="text" required class="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-emerald-100 focus:border-emerald-400 outline-none">
+                    </div>
+                    <div class="flex gap-2 pt-2">
+                        <button type="button" @click="showEditMagasinModal = false" class="flex-1 px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-sm font-semibold transition-colors">Annuler</button>
+                        <button type="submit" class="flex-1 px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg text-sm font-semibold transition-colors">Mettre à jour</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+    </div>
+</div>
+{% endblock %}
+
+{% block stylesheets %}
+{{ parent() }}
+<style>
+    [x-cloak] { display: none !important; }
+</style>
+{% endblock %}
+
+{% block javascripts %}
+{{ parent() }}
+<script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+<script>
+    function accessManager() {
+        return {
+            activeTab: 'matrix',
+            moduleSearch: '',
+            showAddRoleModal: false,
+            showEditRoleModal: false,
+            showAddMagasinModal: false,
+            showEditMagasinModal: false,
+            newRoleName: '',
+            newRoleLabel: '',
+            newRoleContact: false,
+            editRoleId: null,
+            editRoleLabel: '',
+            editRoleContact: false,
+            newMagasinNom: '',
+            editMagasinId: null,
+            editMagasinNom: '',
+
+            async submitAddRole() {
+                try {
+                    const response = await fetch('{{ path('admin_access_role_add') }}', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ 
+                            name: this.newRoleName, 
+                            label: this.newRoleLabel,
+                            isContact: this.newRoleContact
+                        })
+                    });
+                    if (response.ok) {
+                        showToast('Rôle créé avec succès', 'success');
+                        setTimeout(() => window.location.reload(), 500);
+                    } else {
+                        const data = await response.json();
+                        showToast(data.error || 'Erreur lors de la création', 'error');
+                    }
+                } catch (e) {
+                    showToast('Erreur réseau', 'error');
+                }
+            },
+
+            async submitEditRole() {
+                try {
+                    const response = await fetch(`{{ path('admin_access_role_edit', {id: 'ROLE_ID'}) }}`.replace('ROLE_ID', this.editRoleId), {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ 
+                            label: this.editRoleLabel,
+                            isContact: this.editRoleContact
+                        })
+                    });
+                    if (response.ok) {
+                        showToast('Rôle mis à jour', 'success');
+                        setTimeout(() => window.location.reload(), 500);
+                    } else {
+                        showToast('Erreur lors de la mise à jour', 'error');
+                    }
+                } catch (e) {
+                    showToast('Erreur réseau', 'error');
+                }
+            },
+
+            async deleteRole(id, label) {
+                if (!confirm(`Supprimer le rôle "${label}" ?`)) return;
+                try {
+                    const response = await fetch(`{{ path('admin_access_role_delete', {id: 'ROLE_ID'}) }}`.replace('ROLE_ID', id), {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' }
+                    });
+                    if (response.ok) {
+                        showToast('Rôle supprimé', 'success');
+                        setTimeout(() => window.location.reload(), 500);
+                    } else {
+                        const data = await response.json();
+                        showToast(data.error || 'Erreur', 'error');
+                    }
+                } catch (e) {
+                    showToast('Erreur réseau', 'error');
+                }
+            },
+
+            async submitAddMagasin() {
+                try {
+                    const response = await fetch('{{ path('admin_access_magasin_add') }}', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ nom: this.newMagasinNom })
+                    });
+                    if (response.ok) {
+                        showToast('Magasin créé avec succès', 'success');
+                        setTimeout(() => window.location.reload(), 500);
+                    } else {
+                        const data = await response.json();
+                        showToast(data.error || 'Erreur lors de la création', 'error');
+                    }
+                } catch (e) {
+                    showToast('Erreur réseau', 'error');
+                }
+            },
+
+            async submitEditMagasin() {
+                try {
+                    const response = await fetch(`{{ path('admin_access_magasin_edit', {id: 'MAGASIN_ID'}) }}`.replace('MAGASIN_ID', this.editMagasinId), {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ nom: this.editMagasinNom })
+                    });
+                    if (response.ok) {
+                        showToast('Magasin mis à jour', 'success');
+                        setTimeout(() => window.location.reload(), 500);
+                    } else {
+                        showToast('Erreur lors de la mise à jour', 'error');
+                    }
+                } catch (e) {
+                    showToast('Erreur réseau', 'error');
+                }
+            },
+
+            async deleteMagasin(id, nom) {
+                if (!confirm(`Supprimer le magasin "${nom}" ?`)) return;
+                try {
+                    const response = await fetch(`{{ path('admin_access_magasin_delete', {id: 'MAGASIN_ID'}) }}`.replace('MAGASIN_ID', id), {
+                        method: 'POST'
+                    });
+                    if (response.ok) {
+                        showToast('Magasin supprimé', 'success');
+                        setTimeout(() => window.location.reload(), 500);
+                    } else {
+                        const data = await response.json();
+                        showToast(data.error || 'Erreur', 'error');
+                    }
+                } catch (e) {
+                    showToast('Erreur réseau', 'error');
+                }
+            }
+        }
+    }
+
+    async function updatePermission(moduleKey, roleName, accessLevel) {
+        const select = event.target;
+        const original = select.dataset.original;
+        
+        try {
+            const response = await fetch('{{ path('admin_access_update') }}', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ moduleKey, roleName, accessLevel })
+            });
+
+            if (response.ok) {
+                showToast('Permission mise à jour', 'success');
+                select.dataset.original = accessLevel;
+                updateSelectStyle(select, accessLevel);
+            } else {
+                const data = await response.json();
+                showToast(data.error || 'Erreur', 'error');
+                select.value = original;
+            }
+        } catch (e) {
+            showToast('Erreur réseau', 'error');
+            select.value = original;
+        }
+    }
+
+    function updateSelectStyle(select, level) {
+        const classes = {
+            'AUCUN_ACCES': 'bg-slate-100 text-slate-500 border-slate-200',
+            'ACCES_TOTAL': 'bg-emerald-50 text-emerald-600 border-emerald-200',
+            'ADMIN_MAGASIN': 'bg-indigo-50 text-indigo-600 border-indigo-200',
+            'LECTURE_TOTALE': 'bg-sky-50 text-sky-600 border-sky-200',
+            'LECTURE_MAGASIN': 'bg-teal-50 text-teal-600 border-teal-200',
+            'ACCES_PERSONNEL': 'bg-amber-50 text-amber-600 border-amber-200'
+        };
+        select.className = select.className.replace(/bg-\w+-50 text-\w+-600 border-\w+-200|bg-slate-100 text-slate-500 border-slate-200/, classes[level] || classes['AUCUN_ACCES']);
+    }
+</script>
+{% endblock %}

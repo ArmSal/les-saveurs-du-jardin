@@ -1,0 +1,251 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Panier Logistique | Plateforme LSDJ{% endblock %}
+
+{% block body %}
+	<!-- Enterprise Header -->
+	<div class="mb-8 flex flex-col md:flex-row md:items-end justify-between gap-4 pb-6 border-b border-slate-100 transition-all">
+		<div class="space-y-0.5">
+			<div class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-indigo-50 border-indigo-100 border mb-1">
+				<span class="w-1.5 h-1.5 rounded-full bg-indigo-500"></span>
+				<span class="text-[9px] font-black uppercase tracking-widest text-indigo-600">Logistique Interne</span>
+			</div>
+			<h1 class="text-2xl font-black text-slate-900 tracking-tight leading-none">
+				Manifeste de <span class="text-indigo-600">Transfert</span>
+			</h1>
+			<p class="text-slate-400 text-xs font-medium">Révision des volumes avant consolidation magasin.</p>
+		</div>
+
+		<a href="{{ path('app_produit_index') }}" class="group flex items-center gap-2 px-4 py-2.5 bg-white hover:bg-slate-50 text-slate-500 text-[10px] font-black uppercase tracking-widest rounded-lg transition-all border border-slate-200 cursor-pointer w-fit">
+			<svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path d="M12 4v16m8-8H4"></path></svg>
+			Catalogue
+		</a>
+	</div>
+
+	{% if items|length == 0 %}
+		<div class="bg-white border border-slate-100 rounded-xl p-16 text-center shadow-sm">
+			<div class="w-16 h-16 bg-slate-50 rounded-xl flex items-center justify-center mx-auto mb-6 text-slate-300">
+				<svg width="32" height="32" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path></svg>
+			</div>
+			<h2 class="text-lg font-black text-slate-900 mb-2">Panier Vide</h2>
+			<p class="text-slate-400 text-xs mb-8 max-w-xs mx-auto">Aucun article n'a été sélectionné pour le transfert logistique.</p>
+			<a class="inline-flex items-center gap-2 px-8 py-3.5 bg-indigo-600 hover:bg-indigo-700 text-white font-black text-[10px] uppercase tracking-widest rounded-lg transition-all" href="{{ path('app_produit_index') }}">
+				Explorer le catalogue
+			</a>
+		</div>
+	{% else %}
+		<div class="grid grid-cols-1 lg:grid-cols-[1fr_340px] gap-6 items-start pb-20">
+			<!-- Product List -->
+			<div class="space-y-2" id="cart-items-list">
+				<div class="hidden md:grid grid-cols-[1fr_100px_130px_100px_50px] gap-4 px-6 py-3 bg-slate-50/50 border-x border-t border-slate-100 rounded-t-xl items-center">
+					<span class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Désignation</span>
+					<span class="text-[9px] font-black text-slate-400 uppercase tracking-widest text-center">Unité</span>
+					<span class="text-[9px] font-black text-slate-400 uppercase tracking-widest text-center">Quantité</span>
+					<span class="text-[9px] font-black text-slate-400 uppercase tracking-widest text-right">Montant HT</span>
+					<span></span>
+				</div>
+
+				{% for row in items %}
+					<div class="cart-item group bg-white border border-slate-100 p-4 first:rounded-t-none last:rounded-b-xl hover:bg-slate-50/30 transition-all duration-200" 
+                         id="item-{{ row.item.id }}" 
+                         data-id="{{ row.item.id }}">
+						<div class="flex flex-col md:grid md:grid-cols-[1fr_100px_130px_100px_50px] gap-4 items-center">
+							<!-- Article -->
+							<div class="flex items-center gap-4 w-full min-w-0">
+								<div class="w-12 h-12 rounded-lg overflow-hidden bg-slate-50 border border-slate-100 shrink-0">
+									{% if row.item.imageUrl %}
+										<img src="{{ path('app_media_product', {filename: row.item.imageUrl}) }}" alt="{{ row.item.designation }}" class="w-full h-full object-cover grayscale-[0.2] group-hover:grayscale-0 transition-all">
+									{% else %}
+										<div class="w-full h-full flex items-center justify-center text-slate-200 bg-slate-50">
+											<svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-14L4 7m8 4v10M4 7v10l8 4"></path></svg>
+										</div>
+									{% endif %}
+								</div>
+								<div class="min-w-0">
+									<div class="flex items-center gap-2 mb-0.5">
+										<span class="text-[8px] font-black text-indigo-500 uppercase tracking-tighter">{{ row.item.categoryEntity.nom|default('AUTRE') }}</span>
+										<span class="text-[8px] font-bold text-slate-300 uppercase tracking-widest">{{ row.item.reference }}</span>
+									</div>
+									<h3 class="font-black text-slate-900 text-xs uppercase truncate leading-tight">{{ row.item.designation }}</h3>
+									<div class="text-[9px] font-bold text-slate-400 mt-0.5">{{ row.item.prix }}€ HT / {{ row.item.unite }}</div>
+								</div>
+							</div>
+
+							<!-- Unité -->
+							<div class="hidden md:flex justify-center uppercase text-[9px] font-black text-slate-500 bg-slate-100 px-2 py-1 rounded-md border border-slate-200/50 mx-auto">
+								{{ row.item.unite }}
+							</div>
+
+							<!-- Qty Controls -->
+							<div class="flex items-center justify-center bg-white rounded-lg p-0.5 gap-0.5 border border-slate-200 w-full md:w-fit">
+								<form method="post" action="{{ path('app_cart_update', {id: row.item.id}) }}" class="contents" onsubmit="handleQtySubmit(event, {{ row.item.id }}, -1)">
+									<input type="hidden" name="_token" value="{{ csrf_token('cart_update_' ~ row.item.id) }}">
+									<input type="hidden" name="qty" value="{{ row.qty - 1 }}">
+									<button type="submit" class="w-8 h-8 rounded-md hover:bg-slate-50 text-slate-400 hover:text-rose-500 border-0 transition-colors cursor-pointer">
+										<svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path d="M20 12H4"></path></svg>
+									</button>
+								</form>
+								<div class="qty-display w-10 text-center font-black text-slate-900 text-xs" id="qty-val-{{ row.item.id }}">{{ row.qty }}</div>
+								<form method="post" action="{{ path('app_cart_update', {id: row.item.id}) }}" class="contents" onsubmit="handleQtySubmit(event, {{ row.item.id }}, 1)">
+									<input type="hidden" name="_token" value="{{ csrf_token('cart_update_' ~ row.item.id) }}">
+									<input type="hidden" name="qty" value="{{ row.qty + 1 }}">
+									<button type="submit" class="w-8 h-8 rounded-md hover:bg-slate-50 text-slate-400 hover:text-indigo-600 border-0 transition-colors cursor-pointer">
+										<svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path d="M12 4v16m8-8H4"></path></svg>
+									</button>
+								</form>
+							</div>
+
+							<!-- Subtotal -->
+							<div class="text-right w-full md:w-auto">
+								<span class="line-subtotal text-sm font-black text-slate-900 tracking-tight" id="subtotal-{{ row.item.id }}">{{ (row.item.prix * row.qty)|number_format(2, ',', ' ') }}€</span>
+							</div>
+
+							<!-- Remove -->
+							<form method="post" action="{{ path('app_cart_remove', {id: row.item.id}) }}" onsubmit="return confirm('Supprimer cet article ?');" class="md:text-right">
+								<input type="hidden" name="_token" value="{{ csrf_token('cart_remove_' ~ row.item.id) }}">
+								<button type="submit" class="w-8 h-8 text-slate-200 hover:text-rose-500 rounded-md flex items-center justify-center transition-colors bg-white border-0 cursor-pointer">
+									<svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+								</button>
+							</form>
+						</div>
+					</div>
+				{% endfor %}
+			</div>
+
+			<!-- Order Summary -->
+			<div class="lg:sticky lg:top-6 space-y-4">
+				<div class="bg-white border border-slate-200 rounded-xl p-6 shadow-sm overflow-hidden relative">
+					<div class="flex items-center gap-3 mb-8 pb-4 border-b border-slate-100">
+						<div class="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center text-white text-xs">
+							<svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+						</div>
+						<h3 class="text-slate-900 font-black text-sm uppercase tracking-tight">Récapitulatif</h3>
+					</div>
+
+					{% set subtotal = 0 %}
+					{% set totalItemsNum = 0 %}
+					{% for row in items %}
+						{% set subtotal = subtotal + (row.item.prix * row.qty) %}
+						{% set totalItemsNum = totalItemsNum + row.qty %}
+					{% endfor %}
+					{% set tva = subtotal * 0.2 %}
+					{% set totalTTC = subtotal + tva %}
+
+					<div class="space-y-4 mb-8">
+						<div class="flex justify-between items-center text-[10px]">
+							<span class="font-black text-slate-400 uppercase tracking-widest text-[9px]">Total Unités (UVC)</span>
+							<span class="font-black text-slate-700 bg-slate-50 px-2 py-0.5 rounded border border-slate-100" id="summary-items-count">{{ totalItemsNum }}</span>
+						</div>
+						<div class="flex justify-between items-center text-[10px]">
+							<span class="font-black text-slate-400 uppercase tracking-widest text-[9px]">Sous-total HT</span>
+							<span class="font-black text-slate-700" id="summary-subtotal">{{ subtotal|number_format(2, ',', ' ') }}€</span>
+						</div>
+						<div class="flex justify-between items-center text-[10px]">
+							<span class="font-black text-slate-400 uppercase tracking-widest text-[9px]">Taxe (20%)</span>
+							<span class="font-black text-slate-700" id="summary-tva">{{ tva|number_format(2, ',', ' ') }}€</span>
+						</div>
+						<div class="pt-5 border-t border-slate-100 flex justify-between items-center">
+							<span class="text-[11px] font-black text-slate-900 uppercase tracking-widest">Total Net</span>
+							<div class="text-right">
+								<div class="text-xl font-black text-indigo-600 tracking-tighter" id="summary-total">{{ totalTTC|number_format(2, ',', ' ') }}€</div>
+							</div>
+						</div>
+					</div>
+
+					<form method="post" action="{{ path('app_cart_checkout') }}">
+						<input type="hidden" name="_token" value="{{ csrf_token('cart_checkout') }}">
+						<button class="w-full h-12 bg-indigo-600 hover:bg-slate-900 text-white font-black text-[10px] uppercase tracking-[0.2em] rounded-lg transition-all shadow-lg shadow-indigo-100 flex items-center justify-center gap-2 border-0 cursor-pointer" type="submit">
+							<span>Valider le bon</span>
+							<svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
+						</button>
+					</form>
+				</div>
+
+				<div class="p-4 bg-slate-50 border border-slate-100 rounded-xl flex items-start gap-3">
+					<div class="w-8 h-8 bg-white border border-slate-200 rounded-lg flex items-center justify-center text-slate-400 shrink-0 shadow-sm">
+						<svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+					</div>
+					<div class="text-[9px] font-bold text-slate-500 leading-normal uppercase tracking-wide">
+						La validation génère un manifeste officiel. Les stocks sont ajustés après approbation magasin.
+					</div>
+				</div>
+
+				<a href="{{ path('app_produit_index') }}" class="flex items-center justify-center gap-2 h-12 rounded-lg bg-white border border-slate-200 text-slate-400 font-black text-[9px] uppercase tracking-widest hover:bg-slate-50 transition-all active:scale-95 group">
+					<svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24" class="group-hover:-translate-x-0.5 transition-transform"><path d="M11 17l-5-5m0 0l5-5m-5 5h12"></path></svg>
+					Continuer catalogue
+				</a>
+			</div>
+		</div>
+	{% endif %}
+
+    <script>
+        async function handleQtySubmit(event, itemId, delta) {
+            event.preventDefault();
+            const form = event.currentTarget;
+            const displayEl = document.getElementById(`qty-val-${itemId}`);
+            const currentQty = parseInt(displayEl.innerText);
+            const newQty = Math.max(0, currentQty + delta);
+            
+            const itemRow = document.getElementById(`item-${itemId}`);
+            itemRow.style.opacity = '0.5';
+            itemRow.style.pointerEvents = 'none';
+
+            try {
+                const formData = new FormData(form);
+                formData.set('qty', newQty);
+
+                const response = await fetch(form.action, {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    if (data.removed) {
+                        itemRow.style.opacity = '0';
+                        setTimeout(() => {
+                            itemRow.remove();
+                            if (document.querySelectorAll('.cart-item').length === 0) {
+                                window.location.reload();
+                            }
+                        }, 200);
+                    } else {
+                        displayEl.innerText = data.qty;
+                        document.getElementById(`subtotal-${itemId}`).innerText = data.lineSubtotal + '€';
+                        
+                        const forms = itemRow.querySelectorAll('form');
+                        forms[0].querySelector('input[name="qty"]').value = data.qty - 1;
+                        forms[1].querySelector('input[name="qty"]').value = data.qty + 1;
+                    }
+
+                    document.getElementById('summary-items-count').innerText = data.totalItems;
+                    document.getElementById('summary-subtotal').innerText = data.subtotalHT + '€';
+                    document.getElementById('summary-tva').innerText = data.tva + '€';
+                    document.getElementById('summary-total').innerText = data.totalTTC + '€';
+
+                    // Sync Global Nav Badge
+                    const cartBadge = document.querySelector('nav .bg-rose-600') || document.querySelector('header .bg-rose-600');
+                    if (cartBadge) {
+                        cartBadge.innerText = data.uniqueCount;
+                        if (data.uniqueCount === 0) {
+                            cartBadge.closest('.relative').remove();
+                        }
+                    }
+                }
+            } catch (error) {
+                console.error('AJAX Error:', error);
+                window.location.reload();
+            } finally {
+                if (itemRow) {
+                    itemRow.style.opacity = '1';
+                    itemRow.style.pointerEvents = 'auto';
+                }
+            }
+        }
+    </script>
+{% endblock %}

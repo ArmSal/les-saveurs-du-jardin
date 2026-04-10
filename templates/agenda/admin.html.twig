@@ -1,0 +1,1597 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Agenda Employés
+{% endblock %}
+
+{% block stylesheets %}
+	{{ parent() }}
+	<link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/main.min.css" rel="stylesheet"/>
+	<style>
+		@media(max-width: 767px) {
+			.fc .fc-toolbar-title {
+				font-size: 0.95rem !important;
+				font-weight: 800 !important;
+				line-height: 1.2;
+			}
+			.fc .fc-toolbar {
+				flex-direction: column;
+				gap: 8px;
+			}
+			.fc .fc-toolbar-chunk {
+				display: flex;
+				justify-content: center;
+				width: 100%;
+			}
+		}
+
+		@media print {
+			@page {
+				size: landscape;
+				margin: 5mm;
+			}
+
+			/* Hide non-essential page elements */
+			nav, 
+			.mb-8,
+			.flex.flex-col.md\:flex-row.gap-4.mb-6,
+			aside.w-full.lg\:w-72,
+			#addHoraireModal,
+			#editHoraireModal,
+			#duplicateWeekModal,
+			#userColorPickerModal,
+			#toastContainer,
+			.mt-8.bg-white,
+			button {
+				display: none !important;
+			}
+
+			/* Reset body */
+			body {
+				background: white !important;
+				-webkit-print-color-adjust: exact !important;
+				print-color-adjust: exact !important;
+			}
+
+			/* Ensure containers visible */
+			.container, main, .flex.flex-col.lg\:flex-row.gap-6 {
+				display: block !important;
+				width: 100% !important;
+				max-width: 100% !important;
+				margin: 0 !important;
+				padding: 0 !important;
+			}
+
+			/* Calendar container */
+			#calendar {
+				display: block !important;
+				width: 100% !important;
+				visibility: visible !important;
+				overflow: visible !important;
+				background: white !important;
+				padding: 0 !important;
+				border: none !important;
+				box-shadow: none !important;
+			}
+
+			/* === AGGRESSIVE FULLCALENDAR PRINT FIXES === */
+			.fc,
+			.fc-view,
+			.fc-view-harness,
+			.fc-view-harness-active,
+			.fc-timegrid,
+			.fc-timegrid-body,
+			.fc-timegrid-slots,
+			.fc-timegrid-cols,
+			.fc-timegrid-col,
+			.fc-timegrid-col-frame,
+			.fc-timegrid-col-events,
+			.fc-timegrid-event-harness,
+			.fc-scrollgrid,
+			.fc-scrollgrid-section,
+			.fc-scroller,
+			.fc-scroller-liquid-absolute,
+			.fc-scroller-harness,
+			.fc-scroller-harness-liquid,
+			.fc-timegrid-slot,
+			.fc-timegrid-slot-label,
+			.fc-col-header-cell,
+			.fc-col-header-cell-cushion,
+			.fc-timegrid-axis,
+			.fc-timegrid-axis-frame,
+			.fc-timegrid-axis-cushion {
+				display: block !important;
+				visibility: visible !important;
+				opacity: 1 !important;
+				overflow: visible !important;
+				position: relative !important;
+				float: none !important;
+				clip: auto !important;
+				z-index: auto !important;
+			}
+
+			/* Force view harness to expand */
+			.fc-view-harness,
+			.fc-view-harness-active {
+				height: auto !important;
+				min-height: 800px !important;
+			}
+
+			/* Make tables visible */
+			.fc table,
+			.fc thead,
+			.fc tbody,
+			.fc tr,
+			.fc td,
+			.fc th {
+				display: table !important;
+				visibility: visible !important;
+				border-color: #999 !important;
+			}
+
+			.fc tr {
+				display: table-row !important;
+			}
+
+			.fc td,
+			.fc th {
+				display: table-cell !important;
+			}
+
+			/* Events */
+			.fc-event,
+			.fc-event-main,
+			.fc-event-main-frame,
+			.fc-v-event,
+			.fc-timegrid-event {
+				display: block !important;
+				visibility: visible !important;
+				opacity: 1 !important;
+				print-color-adjust: exact !important;
+				-webkit-print-color-adjust: exact !important;
+				position: relative !important;
+			}
+
+			/* Keep toolbar for context */
+			.fc-toolbar {
+				display: flex !important;
+				visibility: visible !important;
+				margin-bottom: 10px !important;
+				page-break-after: avoid !important;
+			}
+
+			.fc-toolbar-chunk {
+				display: inline-block !important;
+			}
+
+			/* Ensure proper sizing */
+			.fc-timegrid-col {
+				width: auto !important;
+				min-width: 100px !important;
+			}
+
+			/* Background colors for print */
+			.fc-event {
+				background-color: inherit !important;
+				border: 1px solid #333 !important;
+			}
+		}
+	</style>
+{% endblock %}
+
+{% block body %}
+	{% set palette_colors = ['#ef4444', '#f97316', '#f59e0b', '#eab308', '#84cc16', '#22c55e', '#10b981', '#14b8a6', '#06b6d4', '#0ea5e9', '#3b82f6', '#4f46e5', '#8b5cf6', '#a855f7', '#d946ef', '#ec4899', '#f43f5e', '#64748b', '#71717a', '#a1a1aa'] %}
+	<div class="mb-8 flex flex-col md:flex-row md:items-center justify-between gap-6">
+		<div>
+			<h1 class="text-3xl md:text-4xl font-black text-slate-900 mb-2 tracking-tight">Gestion des Horaires</h1>
+			<p class="text-slate-500 font-medium flex items-center gap-2">
+                <span class="w-2 h-2 bg-emerald-500 rounded-full"></span>
+                Planification et suivi du personnel par magasin
+            </p>
+		</div>
+	</div>
+	<div class="flex flex-col xl:flex-row gap-4 mb-6 bg-white p-4 md:p-6 rounded-xl shadow-sm border border-slate-200 items-stretch xl:items-end">
+		<div class="grid grid-cols-1 lg:grid-cols-2 xl:flex xl:flex-row flex-1 gap-4 items-end">
+			<div class="flex-1 min-w-[200px]" {{ isMagasinOnly ? 'style="display:none;"' : '' }}>
+				<label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5 ml-1">Magasin</label>
+				<select id="magasinFilter" class="w-full px-3 py-2.5 text-sm border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none bg-slate-50 transition-all font-semibold text-slate-700">
+					<option value="">Tous les magasins</option>
+					{% set magasins = [] %}
+					{% for employe in employes %}
+						{% if employe.magasin not in magasins %}
+							{% set magasins = magasins|merge([employe.magasin]) %}
+							<option value="{{ employe.magasin }}" {{ isMagasinOnly and employe.magasin == app.user.magasin ? 'selected' : '' }}>{{ employe.magasin }}</option>
+						{% endif %}
+					{% endfor %}
+				</select>
+			</div>
+
+			<div class="flex-1 min-w-[200px]">
+				<label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5 ml-1">Employé</label>
+				<select id="userFilter" class="w-full px-3 py-2.5 text-sm border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none bg-slate-50 transition-all font-semibold text-slate-700">
+					<option value="">Tous les employés</option>
+					{% for employe in employes %}
+						<option value="{{ employe.id }}" data-magasin="{{ employe.magasin }}">{{ employe.prenom }}
+							{{ employe.nom }}
+							({{ employe.magasin }})</option>
+					{% endfor %}
+				</select>
+			</div>
+
+			<div class="grid grid-cols-2 xl:flex xl:flex-row gap-4 flex-none items-end">
+				<div class="flex-1">
+					<label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5 ml-1">Affichage</label>
+					<div class="flex items-center bg-slate-100 p-1 rounded-xl w-full xl:w-fit">
+						<button type="button" id="timeRangeBusiness" onclick="toggleTimeRange('business')" class="flex-1 px-2 py-2 text-[10px] font-black uppercase tracking-widest rounded-lg transition-all bg-white text-indigo-600 shadow-sm border border-slate-200 whitespace-nowrap min-w-fit">
+							6H - 20H
+						</button>
+						<button type="button" id="timeRangeFull" onclick="toggleTimeRange('full')" class="flex-1 px-3 py-2 text-[10px] font-black uppercase tracking-widest rounded-lg transition-all text-slate-500 hover:text-slate-700 whitespace-nowrap min-w-fit">
+							24H
+						</button>
+					</div>
+				</div>
+
+				{% if canLockWeeks %}
+				<div class="flex-1" id="weekLockContainer">
+					<label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5 ml-1">Visibilité Planning</label>
+					<button type="button" id="weekLockToggle" class="w-full px-4 py-2 rounded-lg font-bold text-[10px] uppercase tracking-widest flex items-center justify-center gap-2 transition-all shadow-sm border h-[42px] bg-red-50 border-red-200 text-red-600" style="position: relative; z-index: 10;">
+						<span id="weekLockIcon">🔒</span>
+						<span id="weekLockText">Non Visible</span>
+					</button>
+				</div>
+				{% endif %}
+			</div>
+		</div>
+
+		<div class="flex flex-col gap-2 pt-4 xl:pt-0 border-t xl:border-t-0 border-slate-100 mt-2 xl:mt-0">
+			<div class="grid grid-cols-2 xl:flex xl:flex-row gap-2">
+				{% if canViewObservations %}
+					<a href="{{ path('app_user_observations_index') }}" class="w-full h-[42px] bg-amber-50 border border-amber-200 hover:bg-amber-100 text-amber-700 px-5 py-2 rounded-lg font-bold text-[10px] uppercase tracking-widest flex items-center justify-center gap-2 transition-all shadow-sm">
+						<svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+							<path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"></path>
+						</svg>
+						Observations
+					</a>
+				{% endif %}
+
+				<button class="w-full h-[42px] bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 px-5 py-2 rounded-lg font-bold text-[10px] uppercase tracking-widest flex items-center justify-center gap-2 transition-all shadow-sm" onclick="openPrintPdf()">
+					<svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+						<path stroke-linecap="round" stroke-linejoin="round" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path>
+					</svg>
+					Imprimer
+				</button>
+			</div>
+			
+			<div class="grid grid-cols-2 xl:flex xl:flex-row gap-2">
+				{% if canEdit %}
+					<button class="w-full h-[42px] bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2 rounded-lg font-bold text-[10px] uppercase tracking-widest flex items-center justify-center gap-2 transition-all shadow-lg shadow-indigo-200" onclick="openAddModalPopup()">
+						<svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+							<path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"></path>
+						</svg>
+						Ajouter un horaire
+					</button>
+				{% endif %}
+
+				{% if canEdit %}
+					<button class="w-full h-[42px] bg-slate-100 border border-slate-200 hover:bg-slate-200 text-slate-700 px-5 py-2 rounded-lg font-bold text-[10px] uppercase tracking-widest flex items-center justify-center gap-2 transition-all shadow-sm" onclick="openDuplicateModal()">
+						<svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+							<path stroke-linecap="round" stroke-linejoin="round" d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2"></path>
+						</svg>
+						Dupliquer
+					</button>
+				{% endif %}
+			</div>
+		</div>
+	</div>
+
+	<!-- Add Modal -->
+	<div id="addHoraireModal" style="display:none;" class="fixed inset-0 w-full h-full bg-black/50 backdrop-blur-sm z-[9999] items-center justify-center p-4">
+		<div class="bg-white p-5 md:p-6 rounded-xl w-full max-w-lg shadow-2xl max-h-[90vh] overflow-y-auto">
+			<h3 class="text-xl font-bold text-slate-900 mb-5">Ajouter un Horaire</h3>
+			<div>
+				<label class="block text-sm font-semibold mb-1 text-slate-700">Employé</label>
+				<select id="modalUser" class="w-full px-3 py-2 text-sm border border-slate-300 rounded-md focus:ring-2 focus:ring-indigo-500 outline-none bg-white mb-4">
+					{% for employe in employes %}
+						<option value="{{ employe.id }}" data-magasin="{{ employe.magasin }}" data-color="{{ employe.calendarColor ?: '#4f46e5' }}">{{ employe.prenom }}
+							{{ employe.nom }}
+							({{ employe.magasin }})</option>
+					{% endfor %}
+				</select>
+
+				<div class="mb-4 flex items-center gap-2">
+					<input type="checkbox" id="addAllDay" class="w-4 h-4 text-indigo-600 border-slate-300 rounded focus:ring-indigo-500">
+					<label for="addAllDay" class="text-sm font-medium text-slate-700 cursor-pointer">Toute la journée (En haut du planning)</label>
+				</div>
+
+				<label class="block text-xs font-semibold mb-1 text-slate-500 uppercase tracking-wide">Début</label>
+				<div class="grid grid-cols-[1fr_auto_auto] gap-1.5 mb-4">
+					<div>
+						<div class="text-[10px] text-slate-400 font-bold uppercase mb-0.5">Date</div>
+						<input type="date" id="modalStartDate" class="w-full h-9 px-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none text-sm">
+					</div>
+					<div style="min-width:60px;">
+						<div class="text-[10px] text-slate-400 font-bold uppercase mb-0.5">Heure</div>
+						<select id="modalStartHour" class="w-full h-9 px-1 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none text-sm bg-white">
+							{% for i in 0..23 %}
+								<option value="{{ '%02d'|format(i) }}">{{ '%02d'|format(i) }}h</option>
+							{% endfor %}
+						</select>
+					</div>
+					<div style="min-width:60px;">
+						<div class="text-[10px] text-slate-400 font-bold uppercase mb-0.5">Min</div>
+						<select id="modalStartMinute" class="w-full h-9 px-1 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none text-sm bg-white">
+							<option value="00">00</option>
+							<option value="15">15</option>
+							<option value="30">30</option>
+							<option value="45">45</option>
+						</select>
+					</div>
+				</div>
+
+				<label class="block text-xs font-semibold mb-1 text-slate-500 uppercase tracking-wide">Fin</label>
+				<div class="grid grid-cols-[1fr_auto_auto] gap-1.5 mb-4">
+					<div>
+						<div class="text-[10px] text-slate-400 font-bold uppercase mb-0.5">Date</div>
+						<input type="date" id="modalEndDate" class="w-full h-9 px-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none text-sm">
+					</div>
+					<div style="min-width:60px;">
+						<div class="text-[10px] text-slate-400 font-bold uppercase mb-0.5">Heure</div>
+						<select id="modalEndHour" class="w-full h-9 px-1 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none text-sm bg-white">
+							{% for i in 0..23 %}
+								<option value="{{ '%02d'|format(i) }}">{{ '%02d'|format(i) }}h</option>
+							{% endfor %}
+						</select>
+					</div>
+					<div style="min-width:60px;">
+						<div class="text-[10px] text-slate-400 font-bold uppercase mb-0.5">Min</div>
+						<select id="modalEndMinute" class="w-full h-9 px-1 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none text-sm bg-white">
+							<option value="00">00</option>
+							<option value="15">15</option>
+							<option value="30">30</option>
+							<option value="45">45</option>
+						</select>
+					</div>
+				</div>
+
+				<label class="block text-sm font-semibold mb-1 text-slate-700">Type d'absence / Statut</label>
+				<select id="modalStatus" class="w-full px-3 py-2 text-sm border border-slate-300 rounded-md focus:ring-2 focus:ring-indigo-500 outline-none bg-white mb-4">
+					<option value="Actif">Actif</option>
+					<option value="CFA - Ecole">CFA - Ecole</option>
+					<option value="Congé Payé">Congé Payé</option>
+					<option value="Congé sans solde">Congé sans solde</option>
+					<option value="Absence injustifiée">Absence injustifiée</option>
+					<option value="Arret de travail">Arret de travail</option>
+					<option value="Accident de travail">Accident de travail</option>
+					<option value="Congé Parental">Congé Parental</option>
+					<option value="Autre">Autre</option>
+				</select>
+
+				<label class="block text-sm font-semibold mb-1 text-slate-700">Note (ex: Caisse, Réserve...)</label>
+				<input type="text" id="modalNote" placeholder="Optionnel" class="w-full px-3 py-2 text-sm border border-slate-300 rounded-md focus:ring-2 focus:ring-indigo-500 outline-none mb-4">
+
+				<input type="hidden" id="modalColor" value="">
+
+				<div class="flex flex-col sm:flex-row gap-3 justify-end mt-4">
+					<button type="button" class="w-full sm:w-auto px-4 py-2 bg-white border border-slate-300 text-slate-700 rounded-md hover:bg-slate-50 font-semibold transition-colors" onclick="document.getElementById('addHoraireModal').style.display='none'">Annuler</button>
+					<button type="button" class="w-full sm:w-auto px-4 py-2 bg-indigo-600 border border-transparent text-white rounded-md hover:bg-indigo-700 font-semibold transition-colors shadow-sm" id="btnSaveHoraire">Enregistrer</button>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<!-- Edit Modal -->
+	<div id="editHoraireModal" style="display:none;" class="fixed inset-0 w-full h-full bg-black/50 backdrop-blur-sm z-[9999] items-center justify-center p-4">
+		<div class="bg-white p-5 md:p-6 rounded-xl w-full max-w-lg shadow-2xl">
+			<div class="flex justify-between items-center mb-5">
+				<h3 class="text-xl font-bold text-slate-900">Modifier l'horaire</h3>
+			</div>
+
+			<label class="block text-sm font-semibold mb-1 text-slate-700">Employé</label>
+			<select id="editModalUser" class="w-full px-3 py-2 text-sm border border-slate-300 rounded-md focus:ring-2 focus:ring-indigo-500 outline-none bg-white mb-4">
+				{% for employe in employes %}
+					<option value="{{ employe.id }}" data-magasin="{{ employe.magasin }}" data-color="{{ employe.calendarColor ?: '#4f46e5' }}">{{ employe.prenom }}
+						{{ employe.nom }}
+						({{ employe.magasin }})</option>
+				{% endfor %}
+			</select>
+
+			<input type="hidden" id="editModalColor" value="">
+
+			<div class="mb-4 flex items-center gap-2">
+				<input type="checkbox" id="editModalAllDay" class="w-4 h-4 text-indigo-600 border-slate-300 rounded focus:ring-indigo-500">
+				<label for="editModalAllDay" class="text-sm font-medium text-slate-700 cursor-pointer">Toute la journée (En haut du planning)</label>
+			</div>
+
+			<label class="block text-xs font-semibold mb-1 text-slate-500 uppercase tracking-wide">Début</label>
+			<div class="grid grid-cols-[1fr_auto_auto] gap-1.5 mb-4">
+				<div>
+					<div class="text-[10px] text-slate-400 font-bold uppercase mb-0.5">Date</div>
+					<input type="date" id="editModalStartDate" class="w-full h-9 px-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none text-sm">
+				</div>
+				<div style="min-width:60px;">
+					<div class="text-[10px] text-slate-400 font-bold uppercase mb-0.5">Heure</div>
+					<select id="editModalStartHour" class="w-full h-9 px-1 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none text-sm bg-white">
+						{% for i in 0..23 %}
+							<option value="{{ '%02d'|format(i) }}">{{ '%02d'|format(i) }}h</option>
+						{% endfor %}
+					</select>
+				</div>
+				<div style="min-width:60px;">
+					<div class="text-[10px] text-slate-400 font-bold uppercase mb-0.5">Min</div>
+					<select id="editModalStartMinute" class="w-full h-9 px-1 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none text-sm bg-white">
+						<option value="00">00</option>
+						<option value="15">15</option>
+						<option value="30">30</option>
+						<option value="45">45</option>
+					</select>
+				</div>
+			</div>
+
+			<label class="block text-xs font-semibold mb-1 text-slate-500 uppercase tracking-wide">Fin</label>
+			<div class="grid grid-cols-[1fr_auto_auto] gap-1.5 mb-4">
+				<div>
+					<div class="text-[10px] text-slate-400 font-bold uppercase mb-0.5">Date</div>
+					<input type="date" id="editModalEndDate" class="w-full h-9 px-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none text-sm">
+				</div>
+				<div style="min-width:60px;">
+					<div class="text-[10px] text-slate-400 font-bold uppercase mb-0.5">Heure</div>
+					<select id="editModalEndHour" class="w-full h-9 px-1 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none text-sm bg-white">
+						{% for i in 0..23 %}
+							<option value="{{ '%02d'|format(i) }}">{{ '%02d'|format(i) }}h</option>
+						{% endfor %}
+					</select>
+				</div>
+				<div style="min-width:60px;">
+					<div class="text-[10px] text-slate-400 font-bold uppercase mb-0.5">Min</div>
+					<select id="editModalEndMinute" class="w-full h-9 px-1 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none text-sm bg-white">
+						<option value="00">00</option>
+						<option value="15">15</option>
+						<option value="30">30</option>
+						<option value="45">45</option>
+					</select>
+				</div>
+			</div>
+
+			<label class="block text-sm font-semibold mb-1 text-slate-700">Type d'absence / Statut</label>
+			<select id="editModalStatus" class="w-full px-3 py-2 text-sm border border-slate-300 rounded-md focus:ring-2 focus:ring-indigo-500 outline-none bg-white mb-4">
+				<option value="Actif">Actif</option>
+				<option value="CFA - Ecole">CFA - Ecole</option>
+				<option value="Congé Payé">Congé Payé</option>
+				<option value="Congé sans solde">Congé sans solde</option>
+				<option value="Absence injustifiée">Absence injustifiée</option>
+				<option value="Arret de travail">Arret de travail</option>
+				<option value="Accident de travail">Accident de travail</option>
+				<option value="Congé Parental">Congé Parental</option>
+				<option value="Autre">Autre</option>
+			</select>
+
+			<label class="block text-sm font-semibold mb-1 text-slate-700">Note</label>
+			<input type="text" id="editModalNote" class="w-full px-3 py-2 text-sm border border-slate-300 rounded-md focus:ring-2 focus:ring-indigo-500 outline-none mb-6">
+
+			<div class="flex flex-col sm:flex-row justify-between items-center gap-3">
+				<button type="button" class="w-full sm:w-auto px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 font-semibold transition-colors shadow-sm order-2 sm:order-1" id="btnInitDelete">Supprimer</button>
+				<div class="flex flex-col sm:flex-row gap-3 w-full sm:w-auto order-1 sm:order-2">
+					<button type="button" class="w-full sm:w-auto px-4 py-2 bg-white border border-slate-300 text-slate-700 rounded-md hover:bg-slate-50 font-semibold transition-colors" onclick="document.getElementById('editHoraireModal').style.display='none'">Annuler</button>
+					<button type="button" class="w-full sm:w-auto px-4 py-2 bg-indigo-600 border border-transparent text-white rounded-md hover:bg-indigo-700 font-semibold transition-colors shadow-sm" id="btnUpdateHoraire">Enregistrer</button>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<!-- Duplicate Modal -->
+	<div id="duplicateWeekModal" style="display:none;" class="fixed inset-0 w-full h-full bg-black/50 backdrop-blur-sm z-[9999] items-center justify-center p-4">
+		<div class="bg-white p-5 md:p-6 rounded-xl w-full max-w-md shadow-2xl">
+			<h3 class="text-xl font-bold text-slate-900 mb-5">Dupliquer une semaine</h3>
+			
+            <label class="block text-sm font-semibold mb-1 text-slate-700">Magasin</label>
+			<select id="duplicateModalMagasin" class="w-full px-3 py-2 text-sm border border-slate-300 rounded-md focus:ring-2 focus:ring-indigo-500 outline-none bg-white mb-4">
+				{% set d_magasins = [] %}
+				{% for employe in employes %}
+					{% if employe.magasin not in d_magasins and employe.magasin %}
+						{% set d_magasins = d_magasins|merge([employe.magasin]) %}
+						<option value="{{ employe.magasin }}">{{ employe.magasin }}</option>
+					{% endif %}
+				{% endfor %}
+			</select>
+
+			<label class="block text-sm font-semibold mb-1 text-slate-700">De la semaine (Source)</label>
+			<input type="week" id="duplicateModalSource" class="w-full px-3 py-2 text-sm border border-slate-300 rounded-md focus:ring-2 focus:ring-indigo-500 outline-none mb-4">
+
+            <label class="block text-sm font-semibold mb-1 text-slate-700">Vers la semaine (Cible)</label>
+			<input type="week" id="duplicateModalTarget" class="w-full px-3 py-2 text-sm border border-slate-300 rounded-md focus:ring-2 focus:ring-indigo-500 outline-none mb-6">
+
+			<div class="flex justify-end gap-3">
+				<button type="button" class="w-full sm:w-auto px-4 py-2 bg-white border border-slate-300 text-slate-700 rounded-md hover:bg-slate-50 font-semibold transition-colors" onclick="document.getElementById('duplicateWeekModal').style.display='none'">Annuler</button>
+				<button type="button" class="w-full sm:w-auto px-4 py-2 bg-indigo-600 border border-transparent text-white rounded-md hover:bg-indigo-700 font-semibold transition-colors shadow-sm" id="btnSubmitDuplicate">Dupliquer</button>
+			</div>
+		</div>
+	</div>
+
+
+	<div class="flex flex-col lg:flex-row gap-6">
+		<!-- Left Sidebar: Employees -->
+		<aside class="w-full lg:w-72 shrink-0">
+			<div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden sticky top-20">
+				<div class="p-4 border-b border-slate-100 bg-slate-50/50">
+					<h3 class="text-sm font-bold text-slate-900 uppercase tracking-widest">Personnel</h3>
+					<p class="text-[10px] text-slate-500 font-medium">Cliquez pour changer la couleur</p>
+				</div>
+				<div id="employeeSidebarList" class="p-2 space-y-1 max-h-[600px] overflow-y-auto">
+					{% for employe in employes %}
+						<div class="employee-item p-2 rounded-lg hover:bg-slate-50 transition-colors flex items-center gap-3 group cursor-pointer" 
+							 data-user-id="{{ employe.id }}" 
+							 data-magasin="{{ employe.magasin }}"
+							 onclick="{{ canEdit ? 'openUserColorPicker(this, event)' : '' }}">
+							<div class="w-3 h-3 rounded-full shrink-0 shadow-sm border border-white" style="background-color: {{ employe.calendarColor ?: '#4f46e5' }};"></div>
+							<div class="min-w-0 flex-1">
+								<div class="text-sm font-bold text-slate-700 group-hover:text-indigo-600 truncate transition-colors">{{ employe.prenom }} {{ employe.nom }}</div>
+								<div class="text-[10px] text-slate-400 font-medium uppercase tracking-tight">{{ employe.magasin }}</div>
+							</div>
+							<div class="text-xs font-bold text-indigo-600 employee-hours" data-user-id="{{ employe.id }}">0h00</div>
+						</div>
+					{% endfor %}
+				</div>
+			</div>
+		</aside>
+
+		<!-- Main Calendar -->
+		<div id="calendar" class="flex-1 bg-white p-3 md:p-6 rounded-xl shadow-sm border border-slate-200 overflow-x-auto min-w-0"></div>
+	</div>
+
+	<!-- Tiny Color Picker Modal for Employees -->
+	<div id="userColorPickerModal" class="fixed z-[10001] hidden bg-white shadow-2xl rounded-xl border border-slate-200 p-3 w-48 animate-in fade-in zoom-in duration-200">
+		<div class="grid grid-cols-5 gap-1.5" id="userColorGrid">
+			{% for color in palette_colors %}
+				<div class="w-7 h-7 rounded cursor-pointer hover:scale-110 transition-transform shadow-sm border border-slate-100" 
+					 style="background-color: {{ color }};" 
+					 data-color="{{ color }}"
+					 onclick="applyUserColor(this)"></div>
+			{% endfor %}
+		</div>
+	</div>
+
+	<!-- Toast Notification Container -->
+	<div id="toastContainer" class="fixed top-5 right-5 z-[10002] flex flex-col gap-3 pointer-events-none"></div>
+
+	<div class="mt-8 bg-white p-4 md:p-6 rounded-lg shadow-sm border border-slate-200">
+		<h2 class="text-lg md:text-xl font-bold text-slate-900 mb-2">Analyse des Horaires</h2>
+		<p class="text-sm text-slate-500 mb-4">Heures de travail par employé - Mois en cours</p>
+		<div class="w-full overflow-x-auto">
+			<div class="min-w-[600px] md:min-w-0">
+				<canvas id="horairesChart" style="max-height: 400px;"></canvas>
+			</div>
+		</div>
+	</div>
+
+{% endblock %}
+
+{% block javascripts %}
+	<script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.js"></script>
+	<script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/locales/fr.global.min.js"></script>
+	<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+	<script>
+		document.addEventListener('DOMContentLoaded', function () {
+var calendarEl = document.getElementById('calendar');
+var userFilter = document.getElementById('userFilter');
+var magasinFilter = document.getElementById('magasinFilter');
+var chart = null;
+var currentEvents = [];
+var canLockWeeks = {{ canLockWeeks ? 'true' : 'false' }};
+var isMagasinOnly = {{ isMagasinOnly ? 'true' : 'false' }};
+
+
+function setModalTimeInputs(dtStr, prefix) {
+    if (!dtStr) return;
+    var dt = new Date(dtStr);
+    var yyyy = dt.getFullYear();
+    var mm = String(dt.getMonth() + 1).padStart(2, '0');
+    var dd = String(dt.getDate()).padStart(2, '0');
+    var h = String(dt.getHours()).padStart(2, '0');
+    var min = String(dt.getMinutes()).padStart(2, '0');
+    if (!['00', '15', '30', '45'].includes(min)) min = '00';
+
+    document.getElementById(prefix + 'Date').value = yyyy + '-' + mm + '-' + dd;
+    document.getElementById(prefix + 'Hour').value = h;
+    document.getElementById(prefix + 'Minute').value = min;
+}
+
+function getCustomWeekNumber(date) {
+    const d = new Date(date);
+    d.setHours(0,0,0,0);
+    // Find Monday of current week
+    d.setDate(d.getDate() - (d.getDay() || 7) + 1);
+    
+    // Effective year: the year of the Sunday of this week
+    const sun = new Date(d);
+    sun.setDate(d.getDate() + 6);
+    const year = sun.getFullYear();
+
+    const jan1 = new Date(year, 0, 1);
+    const mondayW1 = new Date(jan1);
+    mondayW1.setDate(jan1.getDate() - (jan1.getDay() || 7) + 1);
+    
+    const diff = d - mondayW1;
+    return 1 + Math.round(diff / (7 * 86400000));
+}
+
+// Week lock state
+var currentWeekLock = { week: null, year: null, isLocked: true, magasin: null };
+
+function updateWeekLockUI() {
+    const container = document.getElementById('weekLockContainer');
+    const toggleBtn = document.getElementById('weekLockToggle');
+    const icon = document.getElementById('weekLockIcon');
+    const text = document.getElementById('weekLockText');
+
+    if (!container || !toggleBtn) return;
+
+    // The button is now always shown, but its clickability and appearance change
+    // Allow interactivity in both Week and Day views (useful for mobile)
+    const isWeekOrDayView = window.calendar.view.type === 'timeGridWeek' || window.calendar.view.type === 'timeGridDay';
+    const hasMagasin = !!document.getElementById('magasinFilter').value;
+    const isInteractive = isWeekOrDayView && hasMagasin;
+
+    if (currentWeekLock.isLocked) {
+        icon.textContent = '🔒';
+        text.textContent = 'Non Visible';
+        toggleBtn.className = 'w-full px-4 py-2 rounded-lg font-bold text-[10px] uppercase tracking-widest flex items-center justify-center gap-2 transition-all shadow-sm border h-[42px] bg-red-50 border-red-200 text-red-600' + (isInteractive ? ' cursor-pointer hover:bg-red-100' : ' grayscale opacity-60 cursor-not-allowed');
+    } else {
+        icon.textContent = '👁️';
+        text.textContent = 'Visible';
+        toggleBtn.className = 'w-full px-4 py-2 rounded-lg font-bold text-[10px] uppercase tracking-widest flex items-center justify-center gap-2 transition-all shadow-sm border h-[42px] bg-emerald-50 border-emerald-200 text-emerald-600' + (isInteractive ? ' cursor-pointer hover:bg-emerald-100' : ' grayscale opacity-60 cursor-not-allowed');
+    }
+    
+    toggleBtn.style.pointerEvents = isInteractive ? 'auto' : 'none';
+}
+
+function fetchWeekLockStatus(week, year, magasin) {
+    if (!magasin) return;
+
+    const cleanMagasin = magasin.trim();
+    const url = '{{ path("app_agenda_api_week_lock_status") }}?week=' + week + '&year=' + year + '&magasin=' + encodeURIComponent(cleanMagasin);
+    fetch(url)
+        .then(response => response.json())
+        .then(data => {
+            currentWeekLock.week = week;
+            currentWeekLock.year = year;
+            currentWeekLock.magasin = magasin;
+            currentWeekLock.isLocked = data.isLocked || false;
+            updateWeekLockUI();
+        })
+        .catch(err => console.error('Failed to fetch week lock status:', err));
+}
+
+function toggleWeekLock() {
+    if (!currentWeekLock.week || !currentWeekLock.magasin) {
+        showToast('Veuillez sélectionner un magasin et être en vue semaine', 'error');
+        return;
+    }
+
+    const cleanMagasin = currentWeekLock.magasin.trim();
+    const url = '{{ path("app_agenda_api_week_lock_toggle") }}';
+    
+    fetch(url, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            week: currentWeekLock.week,
+            year: currentWeekLock.year,
+            magasin: cleanMagasin
+        })
+    })
+    .then(response => {
+        if (!response.ok) throw new Error('Network response was not ok');
+        return response.json();
+    })
+    .then(data => {
+        if (data.success) {
+            currentWeekLock.isLocked = data.isLocked;
+            updateWeekLockUI();
+            showToast(data.isLocked ? 'Planning désormais Non Visible' : 'Planning désormais Visible', 'success');
+            // Refresh calendar to hide/show events for read-only users
+            window.calendar.refetchEvents();
+        } else {
+            showToast(data.error || 'Erreur', 'error');
+        }
+    })
+    .catch(err => {
+        console.error('Failed to toggle week lock:', err);
+        showToast('Erreur lors du verrouillage', 'error');
+    });
+}
+
+window.calendar = new FullCalendar.Calendar(calendarEl, {
+localeDefs: [
+{
+code: 'fr'
+}
+],
+locale: 'fr',
+firstDay: 1, // Lundi
+weekNumberCalculation: getCustomWeekNumber,
+buttonText: {
+today: "Aujourd'hui",
+month: 'Mois',
+week: 'Semaine',
+day: 'Jour',
+list: 'Agenda'
+},
+initialView: window.innerWidth < 768 ? 'timeGridDay' : 'timeGridWeek',
+headerToolbar: {
+left: window.innerWidth < 768 ? 'prev,next' : 'prev,next today',
+center: 'title',
+right: window.innerWidth < 768 ? 'dayGridMonth,timeGridDay' : 'dayGridMonth,timeGridWeek,timeGridDay'
+},
+datesSet: function (info) {
+    if (typeof updateChart === 'function') setTimeout(updateChart, 50);
+
+    setTimeout(() => {
+        const titleEl = document.querySelector('.fc-toolbar-title');
+        if (titleEl) {
+            let text = info.view.title;
+            if (info.view.type === 'timeGridWeek' || info.view.type === 'timeGridDay') {
+                const weekNo = getCustomWeekNumber(info.view.currentStart);
+                text = text + ' (S' + weekNo + ')';
+            }
+            text = text.replace(/\b(janvier|février|mars|avril|mai|juin|juillet|août|septembre|octobre|novembre|décembre)\b/gi, function(match) {
+                return match.charAt(0).toUpperCase() + match.slice(1);
+            });
+            titleEl.innerText = text;
+        }
+    }, 10);
+
+    // Fetch week lock status for week or day views
+    if (canLockWeeks && (info.view.type === 'timeGridWeek' || info.view.type === 'timeGridDay')) {
+        const weekNo = getCustomWeekNumber(info.view.currentStart);
+        
+        // Effective year should be based on Sunday of that week
+        const sun = new Date(info.view.currentStart);
+        sun.setDate(sun.getDate() + 6);
+        const year = sun.getFullYear();
+
+        let currentMagasin = document.getElementById('magasinFilter').value;
+        {% if isMagasinOnly %}
+        if (!currentMagasin) {
+            const firstOption = document.querySelector('#magasinFilter option:not([value=""])');
+            currentMagasin = firstOption ? firstOption.value : '';
+        }
+        {% endif %}
+        
+        if (currentMagasin) {
+            fetchWeekLockStatus(weekNo, year, currentMagasin);
+        } else {
+            updateWeekLockUI();
+        }
+    } else if (canLockWeeks) {
+        updateWeekLockUI();
+    }
+},
+eventContent: function(arg) {
+    if (arg.event.extendedProps.isBirthday || arg.event.extendedProps.isHoliday) {
+        return {
+            html: `<div class="fc-content p-1 text-[11px] leading-tight text-white overflow-hidden text-center font-bold">
+                ${arg.event.title}
+            </div>`
+        };
+    }
+
+    const formatTime = (date) => {
+        if (!date) return '';
+        const h = String(date.getHours()).padStart(2, '0');
+        const m = String(date.getMinutes()).padStart(2, '0');
+        return `${h}h${m}`;
+    };
+    let startTime = formatTime(arg.event.start);
+    let endTime = formatTime(arg.event.end);
+    let name = (arg.event.extendedProps.prenom || '') + ' ' + (arg.event.extendedProps.nom || '');
+    let status = arg.event.extendedProps.status;
+    let note = arg.event.extendedProps.note;
+
+    let timeHtml = arg.event.allDay ? '' : `<div class="font-bold border-b border-white/20 mb-0.5 pb-0.5">${startTime} - ${endTime}</div>`;
+
+    let isLocked = arg.event.extendedProps.isLocked;
+    let html = `
+        <div class="fc-content p-1 text-[10px] leading-tight text-slate-900 overflow-hidden ${isLocked ? 'opacity-50 cursor-not-allowed' : ''}">
+            ${timeHtml}
+            <div class="truncate font-medium flex items-center gap-1">
+                ${name}${(status && status !== 'Actif') ? ` - <span class="italic opacity-90">${status}</span>` : ''}
+                ${isLocked ? '<svg class="w-2 h-2 text-slate-400" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clip-rule="evenodd"></path></svg>' : ''}
+            </div>
+            ${note ? `<div class="opacity-75 text-[9px] mt-0.5 italic truncate">${note}</div>` : ''}
+        </div>
+    `;
+    return { html: html };
+},
+slotMinTime: '06:00:00',
+slotMaxTime: '20:00:00',
+slotDuration: '00:15:00',
+slotLabelInterval: '01:00',
+snapDuration: '00:15:00',
+allDaySlot: true,
+editable: {{ canEdit ? 'true' : 'false' }},
+selectable: {{ canEdit ? 'true' : 'false' }},
+selectMirror: true,
+height: 'auto',
+contentHeight: 'auto',
+windowResize: function (arg) {
+if (window.innerWidth < 768) {
+calendar.changeView('timeGridDay');
+calendar.setOption('headerToolbar', {
+left: 'prev,next',
+center: 'title',
+right: 'dayGridMonth,timeGridDay'
+});
+} else {
+calendar.changeView('timeGridWeek');
+calendar.setOption('headerToolbar', {
+left: 'prev,next today',
+center: 'title',
+right: 'dayGridMonth,timeGridWeek,timeGridDay'
+});
+}
+},
+events: function (info, successCallback, failureCallback) {
+var url = '{{ path("app_agenda_api_events") }}';
+var params = new URLSearchParams();
+if (userFilter.value) 
+params.append('user_id', userFilter.value);
+
+
+
+if (magasinFilter.value) 
+params.append('magasin', magasinFilter.value);
+
+params.append('start', info.startStr);
+params.append('end', info.endStr);
+
+fetch(url + '?' + params.toString()).then(response => response.json()).then(data => {
+            currentEvents = data;
+            successCallback(data);
+            setTimeout(updateChart, 50);
+        }).catch(error => failureCallback(error));
+},
+select: function (info) {
+    let startStr = info.startStr;
+    let endStr = info.endStr;
+
+    // For all-day selections, FullCalendar gives us an exclusive end date (next day).
+    // We adjust it here so the modal shows the intuitive inclusive date range.
+    if (info.allDay) {
+        let endDt = new Date(info.end);
+        endDt.setDate(endDt.getDate() - 1);
+        
+        let yyyy = endDt.getFullYear();
+        let mm = String(endDt.getMonth() + 1).padStart(2, '0');
+        let dd = String(endDt.getDate()).padStart(2, '0');
+        endStr = yyyy + '-' + mm + '-' + dd;
+    }
+
+    setModalTimeInputs(startStr, 'modalStart');
+    setModalTimeInputs(endStr, 'modalEnd');
+    openAddModalPopup();
+    calendar.unselect();
+},
+eventClick: function (info) {
+    if (!{{ canEdit ? 'true' : 'false' }}) 
+        return;
+
+    if (info.event.extendedProps.isLocked) {
+        showToast('Cet horaire est verrouillé.', 'error');
+        return;
+    }
+
+
+
+window.eventToEdit = info.event;
+
+var currentMagasin = document.getElementById('magasinFilter').value;
+filterSelectByMagasin('editModalUser', currentMagasin);
+
+document.getElementById('editModalUser').value = info.event.extendedProps.user_id;
+
+// Fill Date/Time fields
+setModalTimeInputs(info.event.start, 'editModalStart');
+setModalTimeInputs(info.event.end, 'editModalEnd');
+
+// If the selected user was hidden by the filter (because magasin doesn't match), make sure we still show it so we don't change it accidentally to someone else just by clicking
+var opt = document.getElementById('editModalUser').options[document.getElementById('editModalUser').selectedIndex];
+if (opt && opt.style.display === 'none') {
+    opt.style.display = '';
+}
+
+var currentColor = info.event.backgroundColor || info.event.extendedProps.color || '#4f46e5';
+document.getElementById('editModalColor').value = currentColor;
+document.getElementById('editModalAllDay').checked = !!info.event.allDay;
+document.getElementById('editModalStatus').querySelector('option[value="Actif"]').disabled = !!info.event.allDay;
+document.querySelectorAll('.edit-modal-swatch').forEach(s => {
+s.classList.remove('ring-2', 'ring-slate-900', 'ring-offset-2', 'scale-110');
+if (s.dataset.val.toLowerCase() === currentColor.toLowerCase()) {
+s.classList.add('ring-2', 'ring-slate-900', 'ring-offset-2', 'scale-110');
+}
+});
+var isLocked = !!info.event.extendedProps.isLocked;
+document.getElementById('editModalStatus').value = info.event.extendedProps.status || 'Actif';
+document.getElementById('editModalNote').value = info.event.extendedProps.note || '';
+
+// Handle Lock State
+const btnUpdate = document.getElementById('btnUpdateHoraire');
+const btnDelete = document.getElementById('btnInitDelete');
+
+btnUpdate.style.display = '';
+btnDelete.style.display = '';
+document.querySelectorAll('#editHoraireModal input, #editHoraireModal select').forEach(el => el.disabled = false);
+
+document.getElementById('editHoraireModal').style.display = 'flex';
+},
+eventDrop: function (info) {
+
+    // Auto-change status if dragged to all-day and currently Actif
+    if (info.event.allDay && info.event.extendedProps.status === 'Actif') {
+        info.event.setExtendedProp('status', 'Autre');
+    }
+
+    updateEventApi(info.event, info);
+},
+eventResize: function (info) {
+    updateEventApi(info.event, info);
+}
+});
+
+window.toggleTimeRange = function(mode) {
+    const btnBusiness = document.getElementById('timeRangeBusiness');
+    const btnFull = document.getElementById('timeRangeFull');
+    
+    if (mode === 'business') {
+        calendar.setOption('slotMinTime', '06:00:00');
+        calendar.setOption('slotMaxTime', '20:00:00');
+        btnBusiness.className = 'flex-1 px-2 py-2 text-[10px] font-black uppercase tracking-widest rounded-lg transition-all bg-white text-indigo-600 shadow-sm border border-slate-200 whitespace-nowrap min-w-fit';
+        btnFull.className = 'flex-1 px-3 py-2 text-[10px] font-black uppercase tracking-widest rounded-lg transition-all text-slate-500 hover:text-slate-700 whitespace-nowrap min-w-fit';
+    } else {
+        calendar.setOption('slotMinTime', '00:00:00');
+        calendar.setOption('slotMaxTime', '24:00:00');
+        btnFull.className = 'flex-1 px-3 py-2 text-[10px] font-black uppercase tracking-widest rounded-lg transition-all bg-white text-indigo-600 shadow-sm border border-slate-200 whitespace-nowrap min-w-fit';
+        btnBusiness.className = 'flex-1 px-2 py-2 text-[10px] font-black uppercase tracking-widest rounded-lg transition-all text-slate-500 hover:text-slate-700 whitespace-nowrap min-w-fit';
+    }
+};
+
+function updateEventApi(event, info = null) {
+    const payload = {
+        start: event.startStr, 
+        end: event.endStr,
+        status: event.extendedProps.status
+    };
+
+    fetch('{{ path("app_agenda_api_update", {id: "ID_PLACEHOLDER"}) }}'.replace('ID_PLACEHOLDER', event.id), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+        }).then(response => response.json()).then(data => {
+            if (!data.success) {
+                showToast(data.error || 'Erreur lors de la mise à jour');
+                if (info && info.revert) info.revert();
+                calendar.refetchEvents();
+            } else {
+                setTimeout(updateChart, 50);
+            }
+        });
+}
+
+calendar.render();
+
+// Attach click event listener to week lock toggle button
+document.getElementById('weekLockToggle')?.addEventListener('click', function(e) {
+    toggleWeekLock();
+});
+
+// Initialize week lock status after calendar render
+if (canLockWeeks && (calendar.view.type === 'timeGridWeek' || calendar.view.type === 'timeGridDay')) {
+    const weekNo = getCustomWeekNumber(calendar.view.currentStart);
+    
+    // Effective year should be based on Sunday of that week
+    const sun = new Date(calendar.view.currentStart);
+    sun.setDate(sun.getDate() + 6);
+    const year = sun.getFullYear();
+
+    let currentMagasin = document.getElementById('magasinFilter').value;
+    {% if isMagasinOnly %}
+    if (!currentMagasin) {
+        const firstOption = document.querySelector('#magasinFilter option:not([value=""])');
+        currentMagasin = firstOption ? firstOption.value : '';
+    }
+    {% endif %}
+    if (currentMagasin) {
+        fetchWeekLockStatus(weekNo, year, currentMagasin);
+    } else {
+        updateWeekLockUI();
+    }
+}
+
+window.filterSelectByMagasin = function (selectId, magasinValue) {
+var select = document.getElementById(selectId);
+if (! select) 
+return;
+
+
+
+for (var i = 0; i < select.options.length; i++) {
+var opt = select.options[i];
+var optMagasin = opt.getAttribute('data-magasin');
+if (! magasinValue || optMagasin === magasinValue) {
+opt.style.display = '';
+} else {
+opt.style.display = 'none';
+}
+}
+var currentSelected = select.options[select.selectedIndex];
+if (currentSelected && currentSelected.style.display === 'none') {
+for (var i = 0; i < select.options.length; i++) {
+if (select.options[i].style.display !== 'none') {
+select.selectedIndex = i;
+break;
+}
+}
+}
+};
+
+window.applyColorToModal = function (selectId, inputId) {
+    const select = document.getElementById(selectId);
+    const input = document.getElementById(inputId);
+    if (!select || !input) return;
+    
+    const selectedOption = select.options[select.selectedIndex];
+    if (!selectedOption) return;
+    
+    const color = selectedOption.getAttribute('data-color');
+    if (!color) return;
+    
+    input.value = color;
+};
+
+document.getElementById('modalUser').addEventListener('change', function() {
+    window.applyColorToModal('modalUser', 'modalColor');
+});
+document.getElementById('editModalUser').addEventListener('change', function() {
+    window.applyColorToModal('editModalUser', 'editModalColor');
+});
+
+window.openAddModalPopup = function () {
+var currentMagasin = document.getElementById('magasinFilter').value;
+filterSelectByMagasin('modalUser', currentMagasin);
+
+// Auto-select based on userFilter if active
+var currentUserId = document.getElementById('userFilter').value;
+if (currentUserId) {
+document.getElementById('modalUser').value = currentUserId;
+}
+
+// Set initial color based on selected user
+window.applyColorToModal('modalUser', 'modalColor');
+document.getElementById('addAllDay').checked = false;
+document.getElementById('modalStatus').querySelector('option[value="Actif"]').disabled = false;
+
+if (!document.getElementById('modalStartDate').value) {
+var today = new Date();
+var yyyy = today.getFullYear();
+var mm = String(today.getMonth() + 1).padStart(2, '0');
+var dd = String(today.getDate()).padStart(2, '0');
+document.getElementById('modalStartDate').value = yyyy + '-' + mm + '-' + dd;
+document.getElementById('modalEndDate').value = yyyy + '-' + mm + '-' + dd;
+document.getElementById('modalStartHour').value = "08";
+document.getElementById('modalStartMinute').value = "00";
+document.getElementById('modalEndHour').value = "19";
+document.getElementById('modalEndMinute').value = "30";
+}
+
+document.getElementById('addHoraireModal').style.display = 'flex';
+};
+
+// Handle All Day Checkboxes
+document.getElementById('addAllDay').addEventListener('change', function() {
+    const statusSelect = document.getElementById('modalStatus');
+    if (this.checked) {
+        document.getElementById('modalStartHour').value = "00";
+        document.getElementById('modalStartMinute').value = "00";
+        
+        let startDt = document.getElementById('modalStartDate').value;
+        if (startDt) {
+            document.getElementById('modalEndDate').value = startDt;
+        }
+        
+        document.getElementById('modalEndHour').value = "00";
+        document.getElementById('modalEndMinute').value = "00";
+
+        // Prevent 'Actif' status
+        if (statusSelect.value === 'Actif') {
+            statusSelect.value = 'Congé';
+        }
+        statusSelect.querySelector('option[value="Actif"]').disabled = true;
+    } else {
+        statusSelect.querySelector('option[value="Actif"]').disabled = false;
+    }
+});
+
+document.getElementById('editModalAllDay').addEventListener('change', function() {
+    const statusSelect = document.getElementById('editModalStatus');
+    if (this.checked) {
+        document.getElementById('editModalStartHour').value = "00";
+        document.getElementById('editModalStartMinute').value = "00";
+        
+        let startDt = document.getElementById('editModalStartDate').value;
+        if (startDt) {
+            document.getElementById('editModalEndDate').value = startDt;
+        }
+        
+        document.getElementById('editModalEndHour').value = "00";
+        document.getElementById('editModalEndMinute').value = "00";
+
+        // Prevent 'Actif' status
+        if (statusSelect.value === 'Actif') {
+            statusSelect.value = 'Congé';
+        }
+        statusSelect.querySelector('option[value="Actif"]').disabled = true;
+    } else {
+        statusSelect.querySelector('option[value="Actif"]').disabled = false;
+    }
+});
+
+document.getElementById('btnInitDelete').addEventListener('click', function () {
+if (window.eventToEdit) {
+var btn = this;
+btn.disabled = true;
+btn.textContent = 'Suppression...';
+
+fetch('{{ path("app_agenda_api_delete", {id: "ID_PLACEHOLDER"}) }}'.replace('ID_PLACEHOLDER', window.eventToEdit.id), {method: 'DELETE'}).then(response => response.json()).then(data => {
+btn.disabled = false;
+btn.textContent = 'Supprimer';
+
+if (data.success) {
+window.eventToEdit.remove();
+calendar.refetchEvents();
+document.getElementById('editHoraireModal').style.display = 'none';
+window.eventToEdit = null;
+showToast('Horaire supprimé', 'success');
+}
+}).catch(err => {
+btn.disabled = false;
+btn.textContent = 'Supprimer';
+showToast('Erreur lors de la suppression.');
+});
+}
+});
+
+document.getElementById('btnUpdateHoraire').addEventListener('click', function () {
+if (!window.eventToEdit) 
+return;
+
+
+
+var userId = document.getElementById('editModalUser').value;
+var color = document.getElementById('editModalColor').value;
+var note = document.getElementById('editModalNote').value;
+var status = document.getElementById('editModalStatus').value;
+
+// Updated DateTime
+var startDateStr = document.getElementById('editModalStartDate').value;
+var startHour = document.getElementById('editModalStartHour').value;
+var startMin = document.getElementById('editModalStartMinute').value;
+var endDateStr = document.getElementById('editModalEndDate').value;
+var endHour = document.getElementById('editModalEndHour').value;
+var endMin = document.getElementById('editModalEndMinute').value;
+
+var start = startDateStr + 'T' + startHour + ':' + startMin;
+var end = endDateStr + 'T' + endHour + ':' + endMin;
+
+var btn = this;
+btn.disabled = true;
+btn.textContent = 'Enregistrement...';
+
+fetch('{{ path("app_agenda_api_update", {id: "ID_PLACEHOLDER"}) }}'.replace('ID_PLACEHOLDER', window.eventToEdit.id), {
+method: 'POST',
+headers: {
+'Content-Type': 'application/json'
+},
+body: JSON.stringify(
+{user_id: userId, color: color, note: note, status: status, start: start, end: end}
+)
+}).then(response => response.json()).then(data => {
+btn.disabled = false;
+btn.textContent = 'Enregistrer';
+
+if (data.success) {
+calendar.refetchEvents();
+document.getElementById('editHoraireModal').style.display = 'none';
+window.eventToEdit = null;
+showToast('Horaire mis à jour avec succès', 'success');
+} else {
+showToast(data.error || 'Mise à jour impossible');
+}
+}).catch(err => {
+btn.disabled = false;
+btn.textContent = 'Enregistrer';
+showToast('Erreur de connexion');
+});
+});
+
+document.getElementById('btnSaveHoraire').addEventListener('click', function () {
+var userId = document.getElementById('modalUser').value;
+
+var startDateStr = document.getElementById('modalStartDate').value;
+var startHour = document.getElementById('modalStartHour').value;
+var startMin = document.getElementById('modalStartMinute').value;
+
+var endDateStr = document.getElementById('modalEndDate').value;
+var endHour = document.getElementById('modalEndHour').value;
+var endMin = document.getElementById('modalEndMinute').value;
+var note = document.getElementById('modalNote').value;
+var color = document.getElementById('modalColor').value;
+var status = document.getElementById('modalStatus').value;
+
+if (! userId || ! startDateStr || ! endDateStr) {
+showToast("Veuillez remplir tous les champs obligatoires (Employé, Début, Fin).");
+return;
+}
+
+var start = startDateStr + 'T' + startHour + ':' + startMin;
+var end = endDateStr + 'T' + endHour + ':' + endMin;
+
+var startIso = start;
+var endIso = end;
+
+document.getElementById('btnSaveHoraire').disabled = true;
+document.getElementById('btnSaveHoraire').textContent = 'Enregistrement...';
+
+fetch('{{ path("app_agenda_api_save") }}', {
+method: 'POST',
+body: JSON.stringify(
+{
+user_id: userId,
+start: startIso,
+end: endIso,
+note: note,
+color: color,
+status: status
+}
+),
+headers: {
+'Content-Type': 'application/json'
+}
+}).then(response => response.json()).then(data => {
+document.getElementById('btnSaveHoraire').disabled = false;
+document.getElementById('btnSaveHoraire').textContent = 'Enregistrer';
+
+if (data.success) {
+document.getElementById('addHoraireModal').style.display = 'none';
+// Reset fields
+document.getElementById('modalStartDate').value = '';
+document.getElementById('modalEndDate').value = '';
+document.getElementById('modalNote').value = '';
+calendar.refetchEvents();
+showToast('Horaire ajouté avec succès', 'success');
+} else {
+showToast(data.error || 'Erreur lors de l\'enregistrement');
+}
+}).catch(err => {
+document.getElementById('btnSaveHoraire').disabled = false;
+document.getElementById('btnSaveHoraire').textContent = 'Enregistrer';
+showToast("Une erreur de connexion est survenue.");
+});
+});
+
+window.openDuplicateModal = function () {
+    var magFilter = document.getElementById('magasinFilter').value;
+    if (magFilter) {
+        document.getElementById('duplicateModalMagasin').value = magFilter;
+    }
+    document.getElementById('duplicateWeekModal').style.display = 'flex';
+};
+
+document.getElementById('btnSubmitDuplicate').addEventListener('click', function () {
+    var mag = document.getElementById('duplicateModalMagasin').value;
+    var src = document.getElementById('duplicateModalSource').value;
+    var tgt = document.getElementById('duplicateModalTarget').value;
+    if (!mag || !src || !tgt) {
+        showToast('Veuillez remplir tous les champs obligatoires.');
+        return;
+    }
+    
+    var btn = this;
+    btn.disabled = true;
+    btn.innerHTML = 'Duplication...';
+    
+    fetch('{{ path("app_agenda_api_duplicate_week") }}', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ magasin: mag, source_week: src, target_week: tgt })
+    }).then(res => res.json()).then(data => {
+        btn.disabled = false;
+        btn.innerHTML = 'Dupliquer';
+        if (data.success) {
+            document.getElementById('duplicateWeekModal').style.display = 'none';
+            showToast(data.copied + ' horaires trouvés et copiés, (' + data.skipped + ' conflits ignorés).', 'success');
+            calendar.refetchEvents();
+        } else {
+            showToast(data.error || 'Erreur lors de la duplication');
+        }
+    }).catch(err => {
+        btn.disabled = false;
+        btn.innerHTML = 'Dupliquer';
+        showToast('Erreur de connexion ' + err);
+    });
+});
+
+userFilter.addEventListener('change', function () {
+var selectedOption = this.options[this.selectedIndex];
+if (selectedOption.value) {
+magasinFilter.value = selectedOption.getAttribute('data-magasin');
+}
+calendar.refetchEvents();
+});
+
+magasinFilter.addEventListener('change', function () {
+    const val = this.value;
+
+    // Filter User Filter options
+    for (let i = 0; i < userFilter.options.length; i++) {
+        let opt = userFilter.options[i];
+        if (!opt.value) continue;
+        let optMagasin = opt.getAttribute('data-magasin');
+        if (!val || optMagasin === val) {
+            opt.style.display = '';
+        } else {
+            opt.style.display = 'none';
+        }
+    }
+
+    // Reset userFilter if current selection is hidden
+    if (userFilter.value) {
+        let currentOpt = userFilter.options[userFilter.selectedIndex];
+        if (currentOpt.style.display === 'none') {
+            userFilter.value = '';
+        }
+    }
+
+    // Filter Sidebar Personnel
+    document.querySelectorAll('.employee-item').forEach(item => {
+        if (!val || item.dataset.magasin === val) {
+            item.style.display = 'flex';
+        } else {
+            item.style.display = 'none';
+        }
+    });
+
+    calendar.refetchEvents();
+
+    // Update week lock status for new magasin selection
+    if (canLockWeeks && (window.calendar.view.type === 'timeGridWeek' || window.calendar.view.type === 'timeGridDay')) {
+        const weekNo = getCustomWeekNumber(window.calendar.view.currentStart);
+        
+        // Effective year
+        const sun = new Date(window.calendar.view.currentStart);
+        sun.setDate(sun.getDate() + 6);
+        const year = sun.getFullYear();
+
+        if (val) {
+            fetchWeekLockStatus(weekNo, year, val);
+        } else {
+            updateWeekLockUI();
+        }
+    }
+});
+
+// Initial Sidebar and User Filter
+if (magasinFilter.value) {
+    const initialMag = magasinFilter.value;
+    document.querySelectorAll('.employee-item').forEach(item => {
+        if (item.dataset.magasin !== initialMag) item.style.display = 'none';
+    });
+    for (let i = 0; i < userFilter.options.length; i++) {
+        let opt = userFilter.options[i];
+        if (opt.value && opt.getAttribute('data-magasin') !== initialMag) {
+            opt.style.display = 'none';
+        }
+    }
+}
+
+// ===== USER COLOR PICKER LOGIC =====
+let activeUserIdForColor = null;
+let activeItemForColor = null;
+
+window.openUserColorPicker = function(item, e) {
+    e.stopPropagation();
+    activeUserIdForColor = item.dataset.userId;
+    activeItemForColor = item;
+    
+    const modal = document.getElementById('userColorPickerModal');
+    modal.classList.remove('hidden');
+    
+    // Position it near the click
+    modal.style.top = (e.clientY + 10) + 'px';
+    modal.style.left = Math.min(e.clientX, window.innerWidth - 200) + 'px';
+};
+
+window.applyUserColor = function(swatch) {
+    const color = swatch.dataset.color;
+    if (!activeUserIdForColor) return;
+    
+    fetch('{{ path("app_agenda_api_user_color", {id: "ID_PLACEHOLDER"}) }}'.replace('ID_PLACEHOLDER', activeUserIdForColor), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ color: color })
+    }).then(r => r.json()).then(data => {
+        if (data.success) {
+            // Update UI Sidebar
+            activeItemForColor.querySelector('.w-3.h-3').style.backgroundColor = color;
+            
+            // Update data-color in Selects
+            document.querySelectorAll('#modalUser option, #editModalUser option').forEach(opt => {
+                if (opt.value === activeUserIdForColor) {
+                    opt.setAttribute('data-color', color);
+                }
+            });
+            
+            // If current modal is open and shows this user, update its color
+            if (document.getElementById('addHoraireModal').style.display === 'flex' && document.getElementById('modalUser').value === activeUserIdForColor) {
+                window.applyColorToModal('modalUser', 'modalColor');
+            }
+            if (document.getElementById('editHoraireModal').style.display === 'flex' && document.getElementById('editModalUser').value === activeUserIdForColor) {
+                window.applyColorToModal('editModalUser', 'editModalColor');
+            }
+
+            document.getElementById('userColorPickerModal').classList.add('hidden');
+            calendar.refetchEvents();
+        }
+    });
+};
+
+document.addEventListener('click', (e) => {
+    const modal = document.getElementById('userColorPickerModal');
+    if (modal && !modal.contains(e.target)) {
+        modal.classList.add('hidden');
+    }
+});
+
+function updateChart() {
+    if (typeof calendar === 'undefined' || !calendar) return;
+
+    var hoursByUser = {};
+    var hoursByUserId = {};
+
+    var viewStart = calendar.view.activeStart;
+    var viewEnd = calendar.view.activeEnd;
+
+    calendar.getEvents().forEach(function (event) {
+        const status = event.extendedProps.status;
+        // Only count 'Actif' or empty status
+        if (status && status !== 'Actif') return;
+
+        var evStart = event.start;
+        var evEnd = event.end || event.start;
+        if (!evStart || !evEnd) return;
+
+        var calcStart = evStart > viewStart ? evStart : viewStart;
+        var calcEnd = evEnd < viewEnd ? evEnd : viewEnd;
+
+        if (calcStart < calcEnd) {
+            var hours = (calcEnd - calcStart) / (1000 * 60 * 60);
+            var userName = (event.extendedProps.prenom || '') + ' ' + (event.extendedProps.nom || '');
+            var userId = event.extendedProps.user_id;
+
+            if (hoursByUser[userName]) {
+                hoursByUser[userName] += hours;
+            } else {
+                hoursByUser[userName] = hours;
+            }
+            
+            if (hoursByUserId[userId]) {
+                hoursByUserId[userId] += hours;
+            } else {
+                hoursByUserId[userId] = hours;
+            }
+        }
+    });
+
+document.querySelectorAll('.employee-hours').forEach(el => {
+    let uid = el.dataset.userId;
+    let totalH = hoursByUserId[uid] || 0;
+    let dH = Math.floor(totalH);
+    let dM = Math.round((totalH - dH) * 60);
+    if (dM === 60) { dH++; dM = 0; }
+    el.textContent = dH + 'h' + (dM < 10 ? '0' : '') + dM;
+});
+
+var labels = Object.keys(hoursByUser);
+var chartData = Object.values(hoursByUser);
+
+var ctx = document.getElementById('horairesChart').getContext('2d');
+
+if (chart) {
+chart.destroy();
+}
+
+chart = new Chart(ctx, {
+type: 'bar',
+data: {
+labels: labels,
+datasets: [
+{
+label: 'Heures planifiées',
+data: chartData,
+backgroundColor: 'rgba(79, 70, 229, 0.5)',
+borderColor: 'rgb(79, 70, 229)',
+borderWidth: 1
+}
+]
+},
+options: {
+responsive: true,
+maintainAspectRatio: false,
+scales: {
+y: {
+beginAtZero: true,
+title: {
+display: true,
+text: 'Heures'
+}
+}
+}
+}
+});
+}
+});
+	window.openPrintPdf = function() {
+    try {
+        console.log('openPrintPdf called');
+        
+        // Get current filters
+        const magasin = document.getElementById('magasinFilter').value;
+        const userId = document.getElementById('userFilter').value;
+        
+        console.log('Filters:', { magasin, userId });
+        console.log('Calendar:', calendar);
+        console.log('Calendar view:', calendar ? calendar.view : null);
+        
+        // Get current calendar view dates - format as YYYY-MM-DD in local timezone
+        const viewStart = calendar.view.activeStart;
+        const viewEnd = calendar.view.activeEnd;
+        
+        console.log('View dates:', { viewStart, viewEnd });
+        
+        // Format dates using local timezone to avoid UTC conversion issues
+        const formatDateLocal = (date) => {
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
+        };
+        
+        const startStr = formatDateLocal(viewStart);
+        const endStr = formatDateLocal(viewEnd);
+        
+        // Build URL with filters
+        let url = '{{ path("app_agenda_export_calendar") }}';
+        const params = new URLSearchParams();
+        params.append('start', startStr);
+        params.append('end', endStr);
+        
+        if (magasin) {
+            params.append('magasin', magasin);
+        }
+        if (userId) {
+            params.append('user_id', userId);
+        }
+        
+        url += '?' + params.toString();
+        console.log('Opening URL:', url);
+        
+        // Open PDF in new tab
+        window.open(url, '_blank');
+    } catch (err) {
+        console.error('Error in openPrintPdf:', err);
+        alert('Erreur: ' + err.message);
+    }
+};
+
+</script>
+{% endblock %}
+

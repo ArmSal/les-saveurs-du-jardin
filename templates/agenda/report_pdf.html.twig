@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <style>
+        @page { margin: 5mm; size: A4 landscape; }
+        body { font-family: Arial, sans-serif; font-size: 8px; color: #222; line-height: 1.1; margin: 0; }
+        
+        /* Layout Slimming */
+        .page-header { width: 100%; border-bottom: 2px solid #4f46e5; margin-bottom: 2px; padding-bottom: 2px; }
+        .page-header table { width: 100%; border-collapse: collapse; }
+        .header-logo-area { width: 25%; font-weight: bold; font-size: 10px; }
+        .header-logo-area img { height: 16px; vertical-align: middle; margin-right: 4px; }
+        .header-title-area { width: 50%; text-align: center; font-size: 11px; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; }
+        .header-magasin-area { width: 25%; text-align: right; }
+        
+        .magasin-badge { display: inline-block; background: #e0e7ff; border: 1px solid #a5b4fc; border-left: 3px solid #4f46e5; padding: 2px 8px; }
+        .month-heading { text-align: right; font-size: 8px; font-weight: bold; color: #6b7280; margin: 1px 0; text-transform: uppercase; }
+
+        /* Employee Table Optimization */
+        .employee-block { width: 100%; border-collapse: collapse; margin-bottom: 12px; page-break-inside: avoid; table-layout: fixed; }
+        .employee-block td { border: 0.5px solid #c7d0e0; text-align: center; height: 16px; overflow: hidden; }
+        
+        .cell-label { width: 140px; text-align: left !important; padding: 0 4px; font-style: italic; color: #475569; font-size: 7px; background: #f8fafc; }
+        .cell-total { width: 26px; font-weight: bold; background: #f1f5f9; }
+
+        .row-emp-title td { background: #3b5bdb; color: #fff; font-weight: bold; font-size: 9px; text-align: left; padding: 3px 8px; border: none; }
+        .row-name td { background: #dbeafe; font-weight: bold; color: #1e3a5f; border-color: #93c5fd; }
+        
+        /* Indicators */
+        .bg-out { background: #f1f5f9 !important; color: #94a3b8; }
+        .day-sun { color: #2563eb; text-decoration: underline; }
+        .row-hours .cell-total { background: #dcfce7; color: #15803d; border: 1px solid #86efac; }
+        .t-m { font-size: 6px; vertical-align: super; }
+        .t-m-bold { font-size: 6px; font-weight: bold; vertical-align: super; }
+        .zero { color: #e2e8f0; }
+
+        /* Status & Weeks */
+        .abs-text { font-size: 6.5px; font-weight: bold; }
+        .week-badge-single { text-align: left; padding-left: 3px; font-size: 7px; font-weight: bold; }
+        .week-badge-single-out { text-align: left; padding-left: 3px; font-size: 6.5px; color: #94a3b8; font-style: italic; }
+
+        /* Footer Rows */
+        .row-obs { background: #fffbeb; font-size: 7.5px; }
+        .obs-label, .ticket-label { font-weight: bold; color: #92400e; font-style: italic; text-align: right !important; padding-right: 4px; border-right: none !important; }
+        .obs-text, .ticket-value { font-style: italic; color: #166534; text-align: left !important; padding-left: 4px; border-left: none !important; }
+
+        .legend-area { margin-top: 4px; padding: 3px 8px; background: #f1f5f9; border-left: 3px solid #4f46e5; font-size: 7px; }
+        .legend-key { font-weight: bold; color: #fff; background: #4f46e5; padding: 0 2px; border-radius: 2px; margin-right: 2px; }
+        .footer { position: fixed; bottom: 0; width: 100%; text-align: right; font-size: 6px; color: #94a3b8; border-top: 0.5px solid #e2e8f0; }
+    </style>
+</head>
+<body>
+
+{% macro renderHeader(logoBase64, magasin, monthName) %}
+    <div class="page-header">
+        <table>
+            <tr>
+                <td class="header-logo-area"><img src="{{ logoBase64 }}"> <span>LSDJ</span></td>
+                <td class="header-title-area">RAPPORT HORAIRES</td>
+                <td class="header-magasin-area"><div class="magasin-badge"><b>{{ magasin }}</b></div></td>
+            </tr>
+        </table>
+    </div>
+    <div class="month-heading">{{ monthName }}</div>
+{% endmacro %}
+
+{% import _self as pdf %}
+
+{# Logical Pre-processing #}
+{% set weekSegments = [] %}{% set prevW = null %}
+{% for dd in displayDays %}
+    {% if dd.weekNum != prevW %}
+        {% set weekSegments = weekSegments|merge([{weekNum: dd.weekNum, count: 1, hasIn: dd.isCurrentMonth}]) %}
+        {% set prevW = dd.weekNum %}
+    {% else %}
+        {% set last = weekSegments|last %}
+        {% set weekSegments = weekSegments|slice(0, -1)|merge([{weekNum: last.weekNum, count: last.count + 1, hasIn: last.hasIn or dd.isCurrentMonth}]) %}
+    {% endif %}
+{% endfor %}
+
+{% if reportData is not empty %}
+    {% for magasin, employees in reportData %}
+        {% for pageChunk in employees|batch(5) %}
+            {% if not loop.first or not loop.parent.loop.first %}<div style="page-break-before: always;"></div>{% endif %}
+            {{ pdf.renderHeader(logoBase64, magasin, monthName) }}
+
+            {% for userId, data in pageChunk %}
+                {% set obs = observationsMap[userId] ?? null %}
+                <table class="employee-block">
+                    <colgroup><col style="width:145px;">{% for dd in displayDays %}<col>{% endfor %}<col style="width:28px;"></colgroup>
+                    <tr class="row-emp-title"><td colspan="{{ totalDisplayDays + 2 }}">{{ data.user.prenom }} {{ data.user.nom|upper }}</td></tr>
+                    
+                    <tr class="row-name">
+                        <td class="cell-label">Date</td>
+                        {% for dd in displayDays %}
+                            <td class="{{ not dd.isCurrentMonth ? 'bg-out' : (dd.dow == 7 ? 'day-sun' : '') }}" style="background:{{ dd.isCurrentMonth ? weekColorsMap[dd.weekNum] : '' }}">{{ dd.day }}</td>
+                        {% endfor %}
+                        <td class="cell-total">Tot.</td>
+                    </tr>
+
+                    <tr class="row-hours">
+                        <td class="cell-label">Heures travaillées</td>
+                        {% for idx, dd in displayDays %}
+                            {% set h = data.days[idx].hours %}
+                            <td class="{{ not dd.isCurrentMonth ? 'bg-out' : '' }}" style="background:{{ dd.isCurrentMonth ? weekColorsMap[dd.weekNum] : '' }}">
+                                {% if h > 0 %}{% set dH = h|round(0,'floor') %}{% set dM = ((h - dH) * 60)|round %}<span class="t-h">{{ '%02d'|format(dH) }}</span><span class="{{ dM == 0 ? 't-m' : 't-m-bold' }}">{{ '%02d'|format(dM) }}</span>{% else %}-{% endif %}
+                            </td>
+                        {% endfor %}
+                        <td class="cell-total">
+                            {% set tH = data.total|round(0,'floor') %}{% set tM = ((data.total - tH)*60)|round %}<span class="t-h">{{ '%02d'|format(tH) }}</span><span class="{{ tM == 0 ? 't-m' : 't-m-bold' }}">{{ '%02d'|format(tM) }}</span>
+                        </td>
+                    </tr>
+
+                    <tr class="row-abs">
+                        <td class="cell-label">Absences Autres</td>
+                        {% for idx, dd in displayDays %}
+                            <td class="{{ not dd.isCurrentMonth ? 'bg-out' : '' }}" style="background:{{ dd.isCurrentMonth ? weekColorsMap[dd.weekNum] : '' }}">
+                                {% for s in data.days[idx].statuses %}<div class="abs-text">{{ statusAcronyms[s.label] ?? s.label }}</div>{% endfor %}
+                            </td>
+                        {% endfor %}
+                        <td class="cell-total">-</td>
+                    </tr>
+
+                    <tr class="row-weeks">
+                        <td class="cell-label">Semaines</td>
+                        {% for seg in weekSegments %}
+                            {% set wH = data.weeks[seg.weekNum] ?? 0 %}
+                            <td colspan="{{ seg.count }}" class="{{ seg.hasIn ? 'week-badge-single' : 'week-badge-single-out' }}" style="background:{{ weekColorsMap[seg.weekNum] }}">
+                                {% if wH > 0 %}{% set wHr = wH|round(0,'floor') %}{% set wMi = ((wH - wHr) * 60)|round %}{{ weeksList[seg.weekNum] }} = {{ '%02d'|format(wHr) }}h<span class="{{ wMi == 0 ? 't-m' : 't-m-bold' }}">{{ '%02d'|format(wMi) }}</span>{% else %}{{ weeksList[seg.weekNum] }}{% endif %}
+                            </td>
+                        {% endfor %}
+                        <td class="cell-total">-</td>
+                    </tr>
+
+                    <tr class="row-obs">
+                        <td class="obs-label" colspan="3">Obs :</td>
+                        <td class="obs-text" colspan="{{ totalDisplayDays - 6 }}">{{ obs.observation ?? '' }}</td>
+                        <td class="ticket-label" colspan="3">Ticket Resto :</td>
+                        <td class="ticket-value">{{ obs.ticketRestaurant ?? '' }}</td>
+                    </tr>
+                </table>
+            {% endfor %}
+
+            <div class="legend-area">
+                <b>LÉGENDE :</b>
+                {% for acro, full in legend %}
+                    <span style="margin-right:8px;"><span class="legend-key">{{ acro }}</span> {{ full }}</span>
+                {% endfor %}
+            </div>
+        {% endfor %}
+    {% endfor %}
+{% else %}
+    <div style="text-align:center; padding:20px;">Aucune donnée.</div>
+{% endif %}
+
+<div class="footer">Généré le {{ "now"|date("d/m/Y H:i") }} | LSDJ</div>
+</body>
+</html>

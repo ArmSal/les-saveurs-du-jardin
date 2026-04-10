@@ -12,7 +12,6 @@ RUN apk add --no-cache \
     libpng-dev \
     libjpeg-turbo-dev \
     freetype-dev \
-    postgresql-dev \
     git \
     unzip
 
@@ -20,7 +19,7 @@ RUN apk add --no-cache \
 RUN docker-php-ext-configure gd --with-freetype --with-jpeg \
     && docker-php-ext-install -j$(nproc) \
     intl \
-    pdo_pgsql \
+    pdo_mysql \
     zip \
     gd \
     opcache
@@ -30,6 +29,10 @@ COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
 # Set working directory
 WORKDIR /var/www/html
+
+# Copy entrypoint script
+COPY docker/app/docker-entrypoint.sh /usr/local/bin/docker-entrypoint
+RUN chmod +x /usr/local/bin/docker-entrypoint
 
 # --- Stage 2: Development ---
 FROM base AS dev
@@ -43,7 +46,7 @@ COPY composer.* ./
 # Install dev dependencies
 RUN composer install --no-scripts --no-autoloader
 
-# Entrypoint for Dev
+ENTRYPOINT ["docker-entrypoint"]
 CMD ["php-fpm"]
 
 # --- Stage 3: Production Builds ---
@@ -65,4 +68,5 @@ RUN composer install --no-dev --optimize-autoloader --no-scripts
 # Create var directory and set permissions
 RUN mkdir -p /var/www/html/var && chown -R www-data:www-data /var/www/html/var
 
+ENTRYPOINT ["docker-entrypoint"]
 CMD ["php-fpm"]

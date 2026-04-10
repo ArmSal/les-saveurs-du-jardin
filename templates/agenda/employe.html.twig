@@ -1,0 +1,269 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Mon Horaire
+{% endblock %}
+
+{% block stylesheets %}
+	{{ parent() }}
+	<link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/main.min.css" rel="stylesheet"/>
+	<style>
+		@media(max-width: 767px) {
+			.fc .fc-toolbar-title {
+				font-size: 0.95rem !important;
+				font-weight: 800 !important;
+				line-height: 1.2;
+			}
+			.fc .fc-toolbar {
+				flex-direction: column;
+				gap: 8px;
+			}
+			.fc .fc-toolbar-chunk {
+				display: flex;
+				justify-content: center;
+				width: 100%;
+			}
+		}
+	</style>
+{% endblock %}
+
+{% block body %}
+	<div class="mb-8 flex flex-col md:flex-row md:items-center justify-between gap-6">
+		<div>
+			<h1 class="text-3xl md:text-4xl font-black text-slate-900 mb-2 tracking-tight">Mon Planning</h1>
+			<p class="text-slate-500 font-medium flex items-center gap-2">
+                <span class="w-2 h-2 bg-indigo-500 rounded-full"></span>
+                Consultez vos horaires et organisez votre temps
+            </p>
+		</div>
+
+		<div class="flex flex-wrap items-center gap-3 self-start">
+			{# View Mode Toggle - Removed for self-only view #}
+			<div class="hidden flex items-center bg-slate-100 p-1 rounded-xl w-fit">
+				<button type="button" id="viewSelf" onclick="toggleView('self')" class="px-4 py-2 text-xs font-black uppercase tracking-widest rounded-lg transition-all bg-white text-indigo-600 shadow-sm border border-slate-200">
+					Moi Uniquement
+				</button>
+				<button type="button" id="viewMagasin" onclick="toggleView('magasin')" class="px-4 py-2 text-xs font-black uppercase tracking-widest rounded-lg transition-all text-slate-500 hover:text-slate-700">
+					Tout le Magasin ({{ magasin }})
+				</button>
+			</div>
+
+			{# Time Range Toggle #}
+			<div class="flex items-center bg-slate-100 p-1 rounded-xl w-fit">
+				<button type="button" id="timeRangeBusiness" onclick="toggleTimeRange('business')" class="px-3 py-2 text-[10px] font-black uppercase tracking-widest rounded-lg transition-all bg-white text-indigo-600 shadow-sm border border-slate-200">
+					6h - 20h
+				</button>
+				<button type="button" id="timeRangeFull" onclick="toggleTimeRange('full')" class="px-3 py-2 text-[10px] font-black uppercase tracking-widest rounded-lg transition-all text-slate-500 hover:text-slate-700">
+					24h
+				</button>
+			</div>
+
+			{# Imprimer Button for ACCES_PERSONNEL #}
+			<a href="{{ path('app_agenda_export_calendar') }}" class="h-[42px] bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 px-5 py-2 rounded-lg font-bold text-[10px] uppercase tracking-widest flex items-center justify-center gap-2 transition-all shadow-sm">
+				<svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+					<path stroke-linecap="round" stroke-linejoin="round" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path>
+				</svg>
+				Imprimer
+			</a>
+		</div>
+	</div>
+
+	<div id="calendar" class="bg-white p-3 md:p-6 rounded-lg shadow-sm border border-slate-200 overflow-x-auto min-w-full"></div>
+
+{% endblock %}
+
+{% block javascripts %}
+	<script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.js"></script>
+	<script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/locales/fr.global.min.js"></script>
+	<script>
+		let currentViewMode = '{{ is_granted("ROLE_ADMINISTRATEUR") or not is_granted("ROLE_RESPONSABLE") ? "self" : "magasin" }}';
+const userMagasin = "{{ magasin }}";
+
+window.toggleView = function (view) {
+currentViewMode = view;
+
+// Update UI buttons
+const btnSelf = document.getElementById('viewSelf');
+const btnMagasin = document.getElementById('viewMagasin');
+
+if (view === 'self') {
+btnSelf.className = 'px-4 py-2 text-xs font-black uppercase tracking-widest rounded-lg transition-all bg-white text-indigo-600 shadow-sm border border-slate-200';
+btnMagasin.className = 'px-4 py-2 text-xs font-black uppercase tracking-widest rounded-lg transition-all text-slate-500 hover:text-slate-700';
+} else {
+btnMagasin.className = 'px-4 py-2 text-xs font-black uppercase tracking-widest rounded-lg transition-all bg-white text-indigo-600 shadow-sm border border-slate-200';
+btnSelf.className = 'px-4 py-2 text-xs font-black uppercase tracking-widest rounded-lg transition-all text-slate-500 hover:text-slate-700';
+}
+
+// Refetch events
+window.fullCalendar.refetchEvents();
+};
+
+// Initialize UI based on default view mode
+document.addEventListener('DOMContentLoaded', function () {
+if (currentViewMode === 'magasin') {
+const btnSelf = document.getElementById('viewSelf');
+const btnMagasin = document.getElementById('viewMagasin');
+if (btnSelf && btnMagasin) {
+btnMagasin.className = 'px-4 py-2 text-xs font-black uppercase tracking-widest rounded-lg transition-all bg-white text-indigo-600 shadow-sm border border-slate-200';
+btnSelf.className = 'px-4 py-2 text-xs font-black uppercase tracking-widest rounded-lg transition-all text-slate-500 hover:text-slate-700';
+}
+}
+});
+
+document.addEventListener('DOMContentLoaded', function () {
+var calendarEl = document.getElementById('calendar');
+
+function getCustomWeekNumber(date) {
+    const d = new Date(date);
+    d.setHours(0,0,0,0);
+    // Find Monday of current week
+    d.setDate(d.getDate() - (d.getDay() || 7) + 1);
+    
+    // Effective year: the year of the Sunday of this week
+    const sun = new Date(d);
+    sun.setDate(d.getDate() + 6);
+    const year = sun.getFullYear();
+
+    const jan1 = new Date(year, 0, 1);
+    const mondayW1 = new Date(jan1);
+    mondayW1.setDate(jan1.getDate() - (jan1.getDay() || 7) + 1);
+    
+    const diff = d - mondayW1;
+    return 1 + Math.round(diff / (7 * 86400000));
+}
+
+window.fullCalendar = new FullCalendar.Calendar(calendarEl, {
+localeDefs: [
+{
+code: 'fr'
+}
+],
+locale: 'fr',
+firstDay: 1,
+weekNumberCalculation: getCustomWeekNumber,
+buttonText: {
+today: "Aujourd'hui",
+month: 'Mois',
+week: 'Semaine',
+day: 'Jour',
+list: 'Agenda'
+},
+initialView: window.innerWidth < 650 ? 'timeGridDay' : 'timeGridWeek',
+headerToolbar: {
+left: window.innerWidth < 650 ? 'prev,next' : 'prev,next today',
+center: 'title',
+right: window.innerWidth < 650 ? 'dayGridMonth,timeGridDay' : 'dayGridMonth,timeGridWeek,timeGridDay'
+},
+eventContent: function(arg) {
+    if (arg.event.extendedProps.isBirthday) {
+        return {
+            html: `<div class="fc-content p-1 text-[11px] leading-tight text-white overflow-hidden text-center font-bold">
+                ${arg.event.title}
+            </div>`
+        };
+    }
+
+    const formatTime = (date) => {
+        if (!date) return '';
+        const h = String(date.getHours()).padStart(2, '0');
+        const m = String(date.getMinutes()).padStart(2, '0');
+        return `${h}h${m}`;
+    };
+    let startTime = formatTime(arg.event.start);
+    let endTime = formatTime(arg.event.end);
+    let name = (arg.event.extendedProps.prenom || '') + ' ' + (arg.event.extendedProps.nom || '');
+    let status = arg.event.extendedProps.status;
+    let note = arg.event.extendedProps.note;
+
+    let timeHtml = arg.event.allDay ? '' : `<div class="font-bold border-b border-white/20 mb-0.5 pb-0.5">${startTime} - ${endTime}</div>`;
+
+    let html = `
+        <div class="fc-content p-1 text-[10px] leading-tight text-slate-900 overflow-hidden">
+            ${timeHtml}
+            <div class="truncate font-medium">
+                ${name}${(status && status !== 'Actif') ? ` - <span class="italic opacity-90">${status}</span>` : ''}
+            </div>
+            ${note ? `<div class="opacity-75 text-[9px] mt-0.5 italic truncate">${note}</div>` : ''}
+        </div>
+    `;
+    return { html: html };
+},
+slotMinTime: '06:00:00',
+slotMaxTime: '20:00:00',
+slotDuration: '00:15:00',
+slotLabelInterval: '01:00',
+snapDuration: '00:15:00',
+allDaySlot: true,
+height: 'auto',
+contentHeight: 'auto',
+datesSet: function (info) {
+    setTimeout(() => {
+        const titleEl = document.querySelector('.fc-toolbar-title');
+        if (titleEl) {
+            let text = info.view.title;
+            if (info.view.type === 'timeGridWeek' || info.view.type === 'timeGridDay') {
+                const weekNo = getCustomWeekNumber(info.view.currentStart);
+                text = text + ' (S' + weekNo + ')';
+            }
+            text = text.replace(/\b(janvier|février|mars|avril|mai|juin|juillet|août|septembre|octobre|novembre|décembre)\b/gi, function(match) {
+                return match.charAt(0).toUpperCase() + match.slice(1);
+            });
+            titleEl.innerText = text;
+        }
+    }, 10);
+},
+windowResize: function (arg) {
+    if (window.innerWidth < 650) {
+        window.fullCalendar.changeView('timeGridDay');
+        window.fullCalendar.setOption('headerToolbar', {
+            left: 'prev,next',
+            center: 'title',
+            right: 'dayGridMonth,timeGridDay'
+        });
+    } else {
+        window.fullCalendar.changeView('timeGridWeek');
+        window.fullCalendar.setOption('headerToolbar', {
+            left: 'prev,next today',
+            center: 'title',
+            right: 'dayGridMonth,timeGridWeek,timeGridDay'
+        });
+    }
+},
+editable: false,
+selectable: false,
+events: function (info, successCallback, failureCallback) {
+var url = '{{ path("app_agenda_api_events") }}';
+var params = new URLSearchParams();
+
+if (currentViewMode === 'magasin') {
+params.append('magasin', userMagasin);
+}
+
+params.append('start', info.startStr);
+params.append('end', info.endStr);
+
+fetch(url + '?' + params.toString()).then(response => response.json()).then(data => successCallback(data)).catch(error => failureCallback(error));
+}
+});
+
+window.toggleTimeRange = function(mode) {
+    const btnBusiness = document.getElementById('timeRangeBusiness');
+    const btnFull = document.getElementById('timeRangeFull');
+    
+    if (mode === 'business') {
+        window.fullCalendar.setOption('slotMinTime', '06:00:00');
+        window.fullCalendar.setOption('slotMaxTime', '20:00:00');
+        btnBusiness.className = 'px-3 py-2 text-[10px] font-black uppercase tracking-widest rounded-lg transition-all bg-white text-indigo-600 shadow-sm border border-slate-200';
+        btnFull.className = 'px-3 py-2 text-[10px] font-black uppercase tracking-widest rounded-lg transition-all text-slate-500 hover:text-slate-700';
+    } else {
+        window.fullCalendar.setOption('slotMinTime', '00:00:00');
+        window.fullCalendar.setOption('slotMaxTime', '24:00:00');
+        btnFull.className = 'px-3 py-2 text-[10px] font-black uppercase tracking-widest rounded-lg transition-all bg-white text-indigo-600 shadow-sm border border-slate-200';
+        btnBusiness.className = 'px-3 py-2 text-[10px] font-black uppercase tracking-widest rounded-lg transition-all text-slate-500 hover:text-slate-700';
+    }
+};
+
+window.fullCalendar.render();
+});
+	</script>
+{% endblock %}
+

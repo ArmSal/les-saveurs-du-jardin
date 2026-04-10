@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Base de données inaccessible - LSDJ</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Plus Jakarta Sans', sans-serif; }
+        .gradient-bg {
+            background: radial-gradient(circle at top right, #f8fafc 0%, #ffffff 100%);
+        }
+        .lsdj-green { color: #a9df51; }
+        .lsdj-bg-green { background-color: #a9df51; }
+        .lsdj-dark { color: #234954; }
+    </style>
+</head>
+<body class="gradient-bg min-h-screen flex items-center justify-center p-6">
+    <div class="max-w-md w-full text-center">
+        <!-- Logo / Icon -->
+        <div class="mb-12 flex justify-center">
+            <div class="relative w-24 h-24 flex items-center justify-center">
+                <div class="absolute inset-0 bg-emerald-50 rounded-3xl rotate-6 animate-pulse"></div>
+                <div class="absolute inset-0 bg-emerald-100/50 rounded-3xl -rotate-3"></div>
+                <svg class="relative w-12 h-12 lsdj-green" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M20.25 6.375c0 2.278-3.694 4.125-8.25 4.125S3.75 8.653 3.75 6.375m16.5 0c0-2.278-3.694-4.125-8.25-4.125S3.75 4.097 3.75 6.375m16.5 0v11.25c0 2.278-3.694 4.125-8.25 4.125s-8.25-1.847-8.25-4.125V6.375m16.5 0v3.75m-16.5-3.75v3.75m16.5 0v3.75C20.25 16.153 16.556 18 12 18s-8.25-1.847-8.25-4.125v-3.75m16.5 0c0 2.278-3.694 4.125-8.25 4.125s-8.25-1.847-8.25-4.125" />
+                </svg>
+                <div class="absolute -bottom-1 -right-1 bg-white p-1.5 rounded-full shadow-lg">
+                    <svg class="w-5 h-5 text-rose-500" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 3.75h.008v.008H12v-.008Z" />
+                    </svg>
+                </div>
+            </div>
+        </div>
+
+        <h1 class="text-3xl font-800 lsdj-dark mb-4 tracking-tight">Oups ! Connexion perdue.</h1>
+        <p class="text-slate-500 mb-10 leading-relaxed font-medium">
+            La base de données est actuellement inaccessible.<br>
+            Nos équipes techniques sont probablement déjà sur le coup.
+        </p>
+
+        <div class="space-y-4">
+            <button onclick="window.location.reload()" class="w-full lsdj-bg-green hover:bg-[#98c948] text-white font-bold py-4 px-8 rounded-2xl transition-all transform hover:scale-[1.02] active:scale-[0.98] shadow-xl shadow-emerald-200/50">
+                Réessayer la connexion
+            </button>
+            
+            <p class="text-[11px] font-bold text-slate-400 uppercase tracking-widest">
+                Service : LSDJ Portal
+            </p>
+        </div>
+
+        <div class="mt-16 pt-8 border-t border-slate-100">
+            <p class="text-xs text-slate-400 font-medium">
+                &copy; {{ "now"|date("Y") }} Les Saveurs du Jardin. Tous droits réservés.
+            </p>
+        </div>
+    </div>
+</body>
+</html>

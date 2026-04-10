@@ -1,0 +1,146 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Gestion des Raccourcis | Plateforme LSDJ{% endblock %}
+
+{% block body %}
+<div class="min-h-screen bg-slate-50 py-4 sm:py-8 px-0 sm:px-4 lg:px-8">
+    <div class="max-w-7xl mx-auto">
+        
+        {# Header matching dashboard style #}
+        <div class="mb-6 px-3 sm:px-0">
+            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                <div>
+                    <h1 class="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">Gestion des Raccourcis</h1>
+                    <p class="text-xs text-slate-500 mt-1">Personnalisez les accès rapides du tableau de bord</p>
+                </div>
+                
+                <div class="flex items-center gap-2">
+                    <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mr-2">Positions:</span>
+                    {% for i in 1..10 %}
+                        <div class="w-7 h-7 rounded-md flex items-center justify-center text-[9px] font-bold {{ i in takenOrders ? 'bg-indigo-600 text-white shadow-sm' : 'bg-white text-slate-400 border border-slate-200' }}" title="{{ i in takenOrders ? 'Occupé' : 'Libre' }}">{{ i }}</div>
+                    {% endfor %}
+                </div>
+                
+                <button onclick="toggleNewForm()" class="h-10 px-5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg flex items-center gap-2 transition-all shadow-sm text-[11px] font-bold uppercase tracking-wider">
+                    <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M12 4v16m8-8H4"></path></svg>
+                    <span>Nouveau</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- New Shortcut Form (Hidden by default) -->
+        <div id="new-shortcut-form" class="hidden mb-6 bg-white border border-slate-200 rounded-lg p-6 shadow-sm animate-in fade-in slide-in-from-top-2 duration-200">
+            <h2 class="text-sm font-bold text-slate-800 uppercase tracking-wider mb-4 flex items-center gap-2 pb-3 border-b border-slate-100">
+                <span class="w-1.5 h-5 bg-indigo-500 rounded-full"></span>
+                Nouvelle Entrée Rapide
+            </h2>
+            <form action="{{ path('admin_shortcuts_new') }}" method="POST" enctype="multipart/form-data" class="grid grid-cols-1 md:grid-cols-4 gap-4" onsubmit="return validateNewForm()">
+                <div class="md:col-span-2">
+                    <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">Libellé du Bouton <span class="text-rose-500">*</span></label>
+                    <input type="text" name="label" required class="w-full h-10 px-3 text-sm font-semibold text-slate-800 bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-100 focus:border-indigo-400 outline-none transition-all" placeholder="Ex: Catalogue">
+                </div>
+                <div class="md:col-span-2">
+                    <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">URL de destination <span class="text-rose-500">*</span></label>
+                    <input type="text" name="url" required class="w-full h-10 px-3 text-sm font-semibold text-slate-700 bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-100 focus:border-indigo-400 outline-none transition-all" placeholder="/admin/produits">
+                </div>
+                <div class="md:col-span-2">
+                    <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">Icône / Photo <span class="text-rose-500">*</span></label>
+                    <input type="file" name="iconFile" class="hidden" id="new-icon-file" accept="image/*,.svg" onchange="updateNewHint(this)" required>
+                    <div class="flex gap-2">
+                        <button type="button" onclick="document.getElementById('new-icon-file').click()" class="h-10 px-4 bg-slate-100 hover:bg-slate-200 rounded-lg text-[10px] font-bold uppercase text-slate-600 transition-all flex items-center gap-2 border border-slate-200">
+                            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
+                            Choisir fichier
+                        </button>
+                        <input type="text" name="icon" id="new-icon-text" class="flex-1 h-10 px-3 text-xs font-mono bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-100 focus:border-indigo-400 outline-none" placeholder="<svg...> ou https://...">
+                    </div>
+                    <span id="new-hint" class="text-[10px] font-semibold text-indigo-600 mt-1.5 block"></span>
+                    <p class="text-[9px] text-slate-400 mt-1">L'icône est obligatoire. Formats acceptés: SVG, PNG, JPG</p>
+                </div>
+                <div class="md:col-span-1">
+                    <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">Ordre (1-10) <span class="text-rose-500">*</span></label>
+                    <select name="displayOrder" required class="w-full h-10 px-3 text-sm font-semibold text-slate-800 bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-100 focus:border-indigo-400 outline-none transition-all">
+                        {% for i in 1..10 %}
+                            <option value="{{ i }}" {{ i in takenOrders ? 'disabled class="text-slate-300"' : '' }}>Position {{ i }} {{ i in takenOrders ? '(Occupé)' : '' }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="md:col-span-4 flex justify-end gap-3 mt-2 pt-3 border-t border-slate-100">
+                    <button type="button" onclick="toggleNewForm()" class="h-10 px-6 text-[11px] font-bold uppercase tracking-wider text-slate-500 hover:text-slate-800 transition-all">Annuler</button>
+                    <button type="submit" class="h-10 px-8 bg-indigo-600 hover:bg-indigo-700 text-white text-[11px] font-bold uppercase tracking-wider rounded-lg transition-all shadow-sm">Créer le raccourci</button>
+                </div>
+            </form>
+        </div>
+
+        <!-- shortcuts Grid -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 px-3 sm:px-0">
+            {% for s in shortcuts %}
+                <div class="bg-white border border-slate-200 rounded-lg p-4 hover:border-indigo-300 hover:shadow-md transition-all group relative shadow-sm">
+                    <div class="flex items-center gap-3 mb-4">
+                        <div class="w-12 h-12 bg-slate-50 rounded-lg flex items-center justify-center {{ s.colorClass|default('text-slate-600') }} group-hover:scale-105 transition-transform border border-slate-100">
+                            {% if s.icon %}
+                                {% if '<svg' in s.icon %}
+                                    {{ s.icon|raw }}
+                                {% else %}
+                                    <img src="{{ path('app_media_shortcut', {filename: s.icon}) }}" class="w-7 h-7 object-contain">
+                                {% endif %}
+                            {% else %}
+                                <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                            {% endif %}
+                        </div>
+                        <div class="min-w-0 flex-1">
+                            <h3 class="font-bold text-slate-900 text-sm truncate">{{ s.label }}</h3>
+                            <p class="text-[10px] font-semibold text-slate-400 truncate">{{ s.url }}</p>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center justify-between pt-3 border-t border-slate-100">
+                        <div class="flex gap-2">
+                            <form action="{{ path('admin_shortcuts_delete', {id: s.id}) }}" method="POST" onsubmit="return confirm('Supprimer ce raccourci ?')">
+                                <button class="w-8 h-8 bg-rose-50 text-rose-500 rounded-lg flex items-center justify-center hover:bg-rose-500 hover:text-white transition-all">
+                                    <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                                </button>
+                            </form>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">#{{ s.displayOrder }}</span>
+                            <a href="{{ path('admin_shortcuts_edit', {id: s.id}) }}" class="w-8 h-8 bg-indigo-600 text-white rounded-lg flex items-center justify-center hover:bg-indigo-700 transition-all shadow-sm">
+                                <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            {% else %}
+                <div class="col-span-full bg-white border-2 border-dashed border-slate-200 rounded-lg p-12 text-center">
+                    <div class="w-12 h-12 bg-slate-50 rounded-lg mx-auto mb-3 flex items-center justify-center">
+                        <svg width="24" height="24" fill="none" stroke="#94a3b8" stroke-width="1.5" viewBox="0 0 24 24"><path d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"></path></svg>
+                    </div>
+                    <p class="text-sm font-bold text-slate-400">Aucun raccourci configuré</p>
+                    <p class="text-[10px] text-slate-400 mt-1">Cliquez sur "Nouveau" pour créer un raccourci</p>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<script>
+    function toggleNewForm() {
+        document.getElementById('new-shortcut-form').classList.toggle('hidden');
+    }
+    function updateNewHint(input) {
+        if (input.files && input.files[0]) {
+            document.getElementById('new-hint').innerText = 'Fichier prêt: ' + input.files[0].name;
+            document.getElementById('new-icon-text').value = '';
+        }
+    }
+    function validateNewForm() {
+        const fileInput = document.getElementById('new-icon-file');
+        const textInput = document.getElementById('new-icon-text');
+        if (!fileInput.value && !textInput.value.trim()) {
+            alert('Veuillez sélectionner une icône ou saisir un code SVG/URL.');
+            return false;
+        }
+        return true;
+    }
+</script>
+{% endblock %}
+

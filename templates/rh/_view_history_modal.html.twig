@@ -1,0 +1,42 @@
+{# View History Modal #}
+<div id="view-history-modal" class="fixed inset-0 bg-slate-950/50 backdrop-blur-sm z-[500] hidden items-center justify-center p-4">
+	<div class="bg-white rounded-xl w-full max-w-md overflow-hidden shadow-xl">
+		<div class="p-5 pb-3 flex justify-between items-center border-b border-slate-100">
+			<h3 class="text-lg font-bold text-slate-900">Historique du congé</h3>
+			<button type="button" class="text-slate-400 hover:text-slate-600 transition-colors" onclick="closeModal('view-history-modal')">
+				<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+			</button>
+		</div>
+		<div class="p-5 space-y-4">
+			<div class="bg-slate-50 rounded-lg p-3">
+				<div class="flex items-center gap-2 mb-2">
+					<div id="history-user-avatar" class="w-8 h-8 bg-slate-200 rounded-full flex items-center justify-center text-slate-600 font-bold text-xs"></div>
+					<div>
+						<div id="history-user-name" class="font-bold text-slate-900"></div>
+						<div id="history-magasin" class="text-xs text-slate-500"></div>
+					</div>
+				</div>
+				<div class="flex items-center gap-2 text-sm text-slate-600">
+					<span class="font-bold" id="history-dates"></span>
+					<span class="text-slate-400">|</span>
+					<span id="history-type" class="bg-slate-100 px-2 py-0.5 rounded text-xs font-bold uppercase text-slate-600"></span>
+				</div>
+				<div id="history-status" class="mt-2 inline-flex items-center px-2 py-0.5 rounded text-xs font-bold uppercase"></div>
+			</div>
+			<div class="border-t border-slate-100 pt-3">
+				<h4 class="text-xs font-bold text-slate-500 uppercase mb-3">Chronologie</h4>
+				<div id="history-timeline" class="space-y-3 max-h-60 overflow-y-auto"></div>
+			</div>
+			
+			{# Delete form for archived congés - only for users with canEdit permission #}
+			<form id="delete-conge-form" method="post" action="" class="hidden mt-4 pt-4 border-t border-slate-200">
+				<input type="hidden" name="action" value="DELETE">
+				<button type="button" onclick="confirmDeleteConge()" class="w-full bg-rose-600 hover:bg-rose-700 text-white font-bold py-2.5 px-4 rounded-lg text-xs uppercase tracking-wider transition-all flex items-center justify-center gap-2">
+					<svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+					Supprimer des archives
+				</button>
+				<p class="text-[10px] text-slate-400 text-center mt-2">Cette action supprimera également l'entrée du planning</p>
+			</form>
+		</div>
+	</div>
+</div>

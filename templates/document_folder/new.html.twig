@@ -1,0 +1,57 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Nouveau Dossier | Documents LSDJ{% endblock %}
+
+{% block body %}
+<div class="min-h-screen bg-slate-50 py-4 sm:py-8 px-0 sm:px-4 lg:px-8">
+    <div class="max-w-3xl mx-auto">
+        
+        {# Breadcrumb & Back Navigation #}
+        <nav class="mb-4 sm:mb-8 px-4 sm:px-0">
+            <a href="{{ path('app_document_index') }}" 
+               class="inline-flex items-center gap-2 text-[11px] font-black text-slate-400 uppercase tracking-widest hover:text-indigo-600 transition-all duration-300 group">
+                <div class="w-6 h-6 rounded bg-slate-200 group-hover:bg-indigo-100 flex items-center justify-center transition-colors">
+                    <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" class="group-hover:-translate-x-0.5 transition-transform">
+                        <path d="M19 12H5M12 19l-7-7 7-7"/>
+                    </svg>
+                </div>
+                Retour aux documents
+            </a>
+        </nav>
+
+        {# Main Card #}
+        <div class="bg-white shadow-sm sm:shadow-[0_8px_40px_-12px_rgba(0,0,0,0.08)] border-0 sm:border border-slate-100 overflow-hidden">
+            
+            {# Header Section #}
+            <div class="relative bg-gradient-to-r from-slate-900 via-slate-800 to-indigo-900 px-4 sm:px-8 py-6 sm:py-10 lg:px-12">
+                <div class="absolute inset-0 bg-[url('data:image/svg+xml,%3Csvg width=\'60\' height=\'60\' viewBox=\'0 0 60 60\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cg fill=\'none\' fill-rule=\'evenodd\'%3E%3Cg fill=\'%23ffffff\' fill-opacity=\'0.03\'%3E%3Cpath d=\'M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z\'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E')] opacity-50"></div>
+                
+                <div class="relative flex flex-col sm:flex-row items-start gap-4 sm:gap-5">
+                    <div class="w-12 h-12 sm:w-16 sm:h-16 bg-white/10 backdrop-blur-sm rounded flex items-center justify-center border border-white/20 shadow-lg shrink-0">
+                        <svg width="24" height="24" class="sm:w-7 sm:h-7" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" class="text-white">
+                            <path d="M3 7a2 2 0 012-2h4l2 2h8a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V7z"/>
+                            <path d="M12 11v6M8 14v3M16 11v6"/>
+                        </svg>
+                    </div>
+                    <div class="flex-1 pt-0 sm:pt-1 min-w-0">
+                        <h1 class="text-xl sm:text-2xl lg:text-3xl font-black text-white tracking-tight">Nouveau Dossier</h1>
+                        <p class="text-[10px] sm:text-[11px] font-semibold text-slate-300 mt-1 sm:mt-2 tracking-wide">Créez une nouvelle catégorie pour organiser vos documents partagés</p>
+                    </div>
+                </div>
+            </div>
+
+            {# Form Section #}
+            <div class="p-4 sm:p-8 lg:p-12">
+                {{ include('document_folder/_form.html.twig', {'button_label': 'Créer le dossier'}) }}
+            </div>
+        </div>
+
+        {# Help Text #}
+        <div class="mt-4 sm:mt-6 text-center px-4 sm:px-0">
+            <p class="text-[9px] sm:text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                Les dossiers permettent d'organiser les documents par rôle d'accès
+            </p>
+        </div>
+    </div>
+</div>
+{% endblock %}

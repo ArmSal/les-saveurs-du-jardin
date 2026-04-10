@@ -1,0 +1,79 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Nouvelle tournée | Transport & Logistique{% endblock %}
+
+{% block body %}
+<div class="min-h-screen bg-slate-50 py-2 sm:py-4 px-0 sm:px-4 lg:px-8">
+    <div class="max-w-3xl mx-auto">
+        
+        {# Header #}
+        <div class="mb-6 px-3 sm:px-0">
+            <a href="{{ path('app_transport_logistique') }}" class="inline-flex items-center gap-2 text-[11px] font-bold text-slate-500 hover:text-slate-700 transition-colors mb-3">
+                <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M19 12H5m7 7l-7-7 7-7"></path></svg>
+                Retour à la liste
+            </a>
+            <h1 class="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">Nouvelle tournée</h1>
+            <p class="text-xs text-slate-500 mt-0.5">Enregistrer une nouvelle tournée de livraison</p>
+        </div>
+
+        {# Form Card #}
+        <div class="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
+            <div class="p-6">
+                {{ form_start(form, {'attr': {'class': 'space-y-6'}}) }}
+                    
+                    {# Date #}
+                    <div>
+                        {{ form_label(form.date, null, {'label_attr': {'class': 'block text-[10px] font-black text-slate-600 uppercase tracking-widest mb-2'}}) }}
+                        {{ form_widget(form.date) }}
+                        {{ form_errors(form.date, {'attr': {'class': 'text-xs text-rose-500 mt-1'}}) }}
+                    </div>
+
+                    {# Camion #}
+                    <div>
+                        {{ form_label(form.camion, null, {'label_attr': {'class': 'block text-[10px] font-black text-slate-600 uppercase tracking-widest mb-2'}}) }}
+                        {{ form_widget(form.camion) }}
+                        {{ form_errors(form.camion, {'attr': {'class': 'text-xs text-rose-500 mt-1'}}) }}
+                    </div>
+
+                    {# Magasins #}
+                    <div>
+                        {{ form_label(form.magasins, null, {'label_attr': {'class': 'block text-[10px] font-black text-slate-600 uppercase tracking-widest mb-3'}}) }}
+                        <div class="bg-slate-50 border border-slate-200 rounded-xl p-4">
+                            <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                                {% for magasin in form.magasins %}
+                                    <label class="flex items-center gap-2 cursor-pointer group">
+                                        {{ form_widget(magasin, {'attr': {'class': 'w-4 h-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer'}}) }}
+                                        <span class="text-[11px] font-semibold text-slate-700 group-hover:text-slate-900 transition-colors">{{ magasin.vars.label }}</span>
+                                    </label>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        {{ form_errors(form.magasins, {'attr': {'class': 'text-xs text-rose-500 mt-1'}}) }}
+                    </div>
+
+                    {# Observation #}
+                    <div>
+                        {{ form_label(form.observation, null, {'label_attr': {'class': 'block text-[10px] font-black text-slate-600 uppercase tracking-widest mb-2'}}) }}
+                        {{ form_widget(form.observation) }}
+                        <div class="flex justify-between items-center mt-1">
+                            {{ form_errors(form.observation, {'attr': {'class': 'text-xs text-rose-500'}}) }}
+                            <span class="text-[10px] text-slate-400">Max. 200 caractères</span>
+                        </div>
+                    </div>
+
+                    {# Actions #}
+                    <div class="flex items-center justify-end gap-3 pt-4 border-t border-slate-100">
+                        <a href="{{ path('app_transport_logistique') }}" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-[11px] font-bold uppercase tracking-wider rounded-lg transition-all">
+                            Annuler
+                        </a>
+                        <button type="submit" class="px-6 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-[11px] font-black uppercase tracking-wider rounded-lg transition-all">
+                            Enregistrer
+                        </button>
+                    </div>
+
+                {{ form_end(form) }}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

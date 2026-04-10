@@ -1,0 +1,304 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}S'identifier | Plateforme LSDJ
+{% endblock %}
+
+{% block body %}
+	<div class="w-full max-w-md mx-auto p-4 sm:p-6 pt-2 sm:pt-4">
+		<style>
+			@import url('https://fonts.googleapis.com/css2?family=Dancing+Script:wght@600 &display=swap');
+			/* Prevent scrolling entirely on the login page */
+			html,
+			body,
+			.main-content,
+			.auth-layout {
+				height: 100% !important;
+				min-height: 100% !important;
+				max-height: 100% !important;
+				overflow: hidden !important;
+				margin: 0;
+				padding: 0;
+			}
+
+			.login-brand-container {
+				position: relative;
+				width: 100%;
+				height: 240px;
+				margin-bottom: -10px; /* Negative margin to pull form up */
+				margin-top: 25px; /* Increased top margin as requested */
+				padding: 0;
+				display: flex;
+				flex-direction: column;
+				align-items: center;
+				justify-content: center;
+				overflow: visible; /* Prevent clipping during pulse */
+			}
+			.login-line {
+				position: absolute;
+				width: 90%;
+				height: 2px;
+				background: #a9df51;
+				top: 60%; /* Moved down to give more space above */
+				left: 5%;
+				transform: scaleX(0);
+				transform-origin: center;
+				animation: drawLine 1.2s cubic-bezier(0.65, 0, 0.35, 1) forwards;
+			}
+
+			/* Container for above the line */
+			.brand-top-content {
+				position: absolute;
+				bottom: 40%; /* Adjusted to match the line at top: 60% */
+				display: flex;
+				align-items: flex-end;
+				gap: 15px;
+			}
+
+			/* Phase 2: Logo raise (Increased duration) */
+			.login-logo {
+				width: 80px;
+				height: auto;
+				opacity: 0;
+				transform: translateY(40px);
+				animation: logoRaise 0.8s cubic-bezier(0.22, 1, 0.36, 1) 1.2s forwards, pulse 3s ease-in-out 6.5s infinite; /* Keeping the pulse but without shadow */
+			}
+
+			.text-stack {
+				display: flex;
+				flex-direction: column;
+				align-items: flex-start;
+				overflow: visible;
+			}
+
+			/* Phase 3: LES slide out (Increased duration) */
+			.les-container {
+				overflow: hidden;
+			}
+			.stack-les {
+				font-size: 28px;
+				font-weight: 800;
+				color: #234954;
+				text-transform: uppercase;
+				line-height: 1;
+				margin-bottom: 2px;
+				opacity: 0;
+				transform: translateX(-50px);
+				animation: slideFromLeft 0.8s cubic-bezier(0.22, 1, 0.36, 1) 2s forwards;
+			}
+
+			/* Phase 4: SAVEURS raise (Increased duration) */
+			.saveurs-container {
+				overflow: hidden;
+			}
+			.stack-saveurs {
+				font-size: 46px;
+				font-weight: 950;
+				color: #234954;
+				text-transform: uppercase;
+				line-height: 0.85;
+				letter-spacing: -2px;
+				opacity: 0;
+				transform: translateY(50px);
+				animation: textRaise 0.8s cubic-bezier(0.22, 1, 0.36, 1) 2.6s forwards;
+			}
+
+			/* Phase 5 & 6: DU raise and rotate (Increased duration) */
+			.du-jardin-wrapper {
+				display: flex;
+				align-items: center;
+				gap: 4px;
+				margin-top: 5px;
+			}
+			.du-container {
+				display: inline-block;
+				overflow: visible;
+			}
+			.text-du {
+				display: inline-block;
+				font-size: 26px;
+				font-weight: 900;
+				color: #234954;
+				text-transform: uppercase;
+				line-height: 1;
+				opacity: 0;
+				transform-origin: center;
+				transform: translateY(30px) rotate(-90deg);
+				animation: duSequence 1.5s cubic-bezier(0.45, 0, 0.55, 1) 3.2s forwards;
+			}
+
+			/* Phase 7: JARDIN slide out (Increased duration) */
+			.jardin-container {
+				overflow: hidden;
+				padding-left: 0;
+			}
+			.text-jardin {
+				display: inline-block;
+				font-size: 46px;
+				font-weight: 950;
+				color: #234954;
+				text-transform: uppercase;
+				line-height: 0.85;
+				letter-spacing: 2px;
+				opacity: 0;
+				transform: translateX(-150px);
+				animation: slideFromLeft 0.8s cubic-bezier(0.22, 1, 0.36, 1) 4.5s forwards;
+			}
+
+			/* Phase 8: Slogan (Increased duration) */
+			.slogan-row {
+				position: absolute;
+				top: calc(60% + 20px); /* Lower under the line */
+				left: 0;
+				right: 0;
+				text-align: center;
+				font-family: 'Dancing Script', cursive;
+				font-size: 24px;
+				color: #a9df51;
+				opacity: 0;
+				transform: translateY(0);
+				white-space: nowrap;
+				animation: fadeIn 1s ease-out 5.2s forwards;
+			}
+
+			/* Keyframes (Refined for fluidity) */
+			@keyframes drawLine {
+				to {
+					transform: scaleX(1);
+				}
+			}
+			@keyframes logoRaise {
+				to {
+					opacity: 1;
+					transform: translateY(0);
+				}
+			}
+			@keyframes slideFromLeft {
+				to {
+					opacity: 1;
+					transform: translateX(0);
+				}
+			}
+			@keyframes textRaise {
+				to {
+					opacity: 1;
+					transform: translateY(0);
+				}
+			}
+			@keyframes duSequence {
+				0% {
+					opacity: 0;
+					transform: translateY(30px) rotate(0deg);
+				}
+				40% {
+					opacity: 1;
+					transform: translateY(0) rotate(0deg);
+				}
+				100% {
+					opacity: 1;
+					transform: translateY(0) rotate(-90deg);
+				}
+			}
+			@keyframes fadeIn {
+				to {
+					opacity: 1;
+				}
+			}
+			@keyframes pulse {
+				0% {
+					transform: translateY(0);
+				}
+				50% {
+					transform: translateY(-6px); /* Moves only upward */
+				}
+				100% {
+					transform: translateY(0);
+				}
+			}
+		</style>
+
+		<div class="login-brand-container">
+			<div class="login-line"></div>
+
+			<div class="brand-top-content">
+				<img src="{{ asset('logo.svg') }}" class="login-logo" alt="Logo">
+				<div class="text-stack">
+					<div class="les-container">
+						<div class="stack-les">Les</div>
+					</div>
+					<div class="saveurs-container">
+						<div class="stack-saveurs">Saveurs</div>
+					</div>
+					<div class="du-jardin-wrapper">
+						<div class="du-container">
+							<span class="text-du">Du</span>
+						</div>
+						<div class="jardin-container">
+							<span class="text-jardin">Jardin</span>
+						</div>
+					</div>
+				</div>
+			</div>
+
+			<div class="slogan-row">
+				fruits & légumes en toute saison !
+			</div>
+		</div>
+
+		{% if error %}
+			<div class="flex items-center gap-3 bg-red-50 border border-red-200 text-red-700 rounded-lg px-4 py-3 mb-6 text-sm font-semibold">
+				<svg width="18" height="18" fill="currentColor" viewbox="0 0 20 20" class="shrink-0">
+					<path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
+				</svg>
+				{{ error.messageKey|trans(error.messageData, 'security') }}
+			</div>
+		{% endif %}
+
+		<form method="post" class="space-y-6">
+			<div class="flex flex-col items-center space-y-4">
+				<div class="w-full max-w-[250px]">
+					<input type="email" value="{{ last_username }}" name="email" id="username" autocomplete="email" required autofocus placeholder="EMAIL" class="w-full h-8 border border-slate-300 rounded-lg px-4 text-xs font-bold text-slate-900 text-center outline-none focus:ring-2 focus:ring-[#234954]/10 focus:border-[#234954] transition-all bg-white/80 backdrop-blur-sm shadow-sm leading-none">
+				</div>
+
+				<div class="w-full max-w-[250px]">
+					<div class="relative group">
+						<input type="password" name="password" id="password" autocomplete="current-password" required placeholder="MOT DE PASSE" class="w-full h-8 border border-slate-300 rounded-lg px-8 text-xs font-bold text-slate-900 text-center outline-none focus:ring-2 focus:ring-[#234954]/10 focus:border-[#234954] transition-all bg-white/80 backdrop-blur-sm shadow-sm leading-none">
+						<button type="button" onclick="togglePasswordVisibility()" class="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-[#234954] transition-colors" aria-label="Afficher le mot de passe">
+							<svg id="eye-icon" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24">
+								<path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+								<path d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+							</svg>
+						</button>
+					</div>
+				</div>
+			</div>
+
+			<script>
+				function togglePasswordVisibility() {
+const passwordField = document.getElementById('password');
+const eyeIcon = document.getElementById('eye-icon');
+
+if (passwordField.type === 'password') {
+passwordField.type = 'text';
+eyeIcon.innerHTML = `
+							<path d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88L4.34 4.34m11.18 11.18l5.14 5.14"></path>
+							<path d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+						`;
+} else {
+passwordField.type = 'password';
+eyeIcon.innerHTML = `
+							<path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+							<path d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+						`;
+}
+}
+			</script>
+
+			<input type="hidden" name="_csrf_token" value="{{ csrf_token('authenticate') }}">
+
+			<button class="w-full bg-transparent hover:opacity-80 text-[#234954] font-black text-xl tracking-[0.2em] transition-all mt-4" type="submit">
+				LOGIN
+			</button>
+		</form>
+	</div>
+{% endblock %}
+

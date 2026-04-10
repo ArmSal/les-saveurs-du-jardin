@@ -1,37 +1,67 @@
-### Symfony ###
-/vendor/
-/var/
+###> symfony/framework-bundle ###
 /.env.local
 /.env.local.php
-/.env.test.local
-/public/bundles/
-/public/build/
-/public/uploads/
+/.env.*.local
 /config/secrets/prod/prod.decrypt.private.php
-/public/storage/
+/public/bundles/
+/var/
+/vendor/
+###< symfony/framework-bundle ###
 
-### Docker ###
-/.docker/
-/db-data/
+###> symfony/phpunit-bridge ###
+/.phpunit.result.cache
+###< symfony/phpunit-bridge ###
 
-### OS / IDE ###
-.DS_Store
+###> phpunit/phpunit ###
+/phpunit.xml
+/.phpunit.cache/
+###< phpunit/phpunit ###
+
+# Custom application data
+/storage/*
+!/storage/.gitignore
+/public/uploads/*
+!/public/uploads/.gitignore
+
+# Development & Local Config
+.env.*.local
+.env.local
+.env.local.php
+phpcs.xml
+phpmd.xml
+phpunit.xml.dist
+seed.sql
+*.sql
+*.sqlite
+
+# IDEs
 .idea/
 .vscode/
-.env.php
-Thumbs.db
+*.swp
+*.swo
+.project
+.settings/
+.buildpath
+
+# Node / JS
 node_modules/
+npm-debug.log
+yarn-error.log
+public/build/
 
-### Project Specific ###
-/tmp/
-/tmp_docx/
+# OS
+.DS_Store
+Thumbs.db
 
-### Infrastructure & DevOps ###
-.terraform/
-*.tfstate
-*.tfstate.backup
-*.tfvars
-*.tfvars.json
-.terraform.lock.hcl
-*.retry
-infra/ansible/inventory.ini
+# Docker local overrides
+compose.override.yaml
+
+# Backup and temp files
+*.bak
+*.tmp
+*.temp
+
+###> symfony/asset-mapper ###
+/public/assets/
+/assets/vendor/
+###< symfony/asset-mapper ###
