@@ -1,0 +1,76 @@
+{{ form_start(form, {'attr': {'class': 'space-y-5', 'novalidate': 'novalidate'}}) }}
+
+{# --- Titre + Dossier --- #}
+<div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+	<div class="space-y-1">
+		{{ form_label(form.title, null, {'label_attr': {'class': 'block text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1'}}) }}
+		{{ form_widget(form.title, {'attr': {'class': 'w-full bg-slate-50 border-2 border-slate-100 rounded-xl py-3 px-4 text-xs font-bold text-slate-900 outline-none focus:bg-white focus:border-indigo-500 transition-all', 'placeholder': 'Titre du document...'}}) }}
+		<div class="text-[10px] text-rose-500 font-bold ml-1">{{ form_errors(form.title) }}</div>
+	</div>
+	<div class="space-y-1">
+		{{ form_label(form.folder, null, {'label_attr': {'class': 'block text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1'}}) }}
+		{{ form_widget(form.folder, {'attr': {'class': 'w-full bg-slate-50 border-2 border-slate-100 rounded-xl py-3 px-4 text-xs font-bold text-slate-900 outline-none focus:bg-white focus:border-indigo-500 transition-all cursor-pointer'}}) }}
+		<div class="text-[10px] text-rose-500 font-bold ml-1">{{ form_errors(form.folder) }}</div>
+	</div>
+</div>
+
+{# --- Fichier --- #}
+<div class="relative group bg-slate-50 border-2 border-dashed border-slate-200 hover:border-indigo-400 hover:bg-white rounded-2xl transition-all overflow-hidden font-sans">
+	{% if document is defined and document.filename %}
+		<div class="flex items-center gap-3 px-5 py-3 border-b border-slate-100 bg-white">
+			<svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" class="text-indigo-400 shrink-0"><path d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg>
+			<span class="text-[10px] font-black text-slate-500 italic">Actuel : <strong class="text-indigo-600">{{ document.originalFilename }}</strong></span>
+		</div>
+	{% endif %}
+	<div class="relative px-5 py-6 text-center">
+		{# Symfony widget used directly in the drop-and-drop zone with absolute/opacity-0 to handle clicks #}
+		{{ form_widget(form.file, {'attr': {
+			'class': 'absolute inset-0 opacity-0 cursor-pointer z-10 w-full h-full',
+			'required': (form.file.vars.required and not (document is defined and document.filename))
+		}}) }}
+		<div class="flex flex-col items-center gap-1 pointer-events-none">
+			<div class="w-8 h-8 bg-indigo-100 rounded-xl flex items-center justify-center mb-1">
+				<svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" class="text-indigo-600"><path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
+			</div>
+			<p class="text-[10px] font-black text-slate-500 uppercase tracking-widest">{{ document is defined and document.filename ? 'Remplacer le document' : 'Choisir un document' }}</p>
+			<p class="text-[9px] font-bold text-slate-400 italic">PDF, Word, Image — max 10Mo</p>
+		</div>
+	</div>
+	<div class="text-[10px] text-rose-500 font-bold ml-5 pb-2">{{ form_errors(form.file) }}</div>
+</div>
+
+{# --- Description --- #}
+<div class="space-y-1">
+	{{ form_label(form.description, null, {'label_attr': {'class': 'block text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1'}}) }}
+	{{ form_widget(form.description, {'attr': {'class': 'w-full bg-slate-50 border-2 border-slate-100 rounded-xl py-3 px-4 text-xs font-bold text-slate-900 outline-none focus:bg-white focus:border-indigo-500 transition-all resize-none', 'rows': '2', 'placeholder': 'Description optionnelle...'}}) }}
+</div>
+
+{# --- Rôles --- #}
+<div class="bg-slate-50 border border-slate-100 rounded-2xl p-5">
+	<div class="flex items-center gap-2 mb-4">
+		<div class="w-6 h-6 bg-indigo-100 rounded-lg flex items-center justify-center">
+			<svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" class="text-indigo-600"><path d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
+		</div>
+		<span class="text-[9px] font-black text-slate-600 uppercase tracking-widest">Visible par les rôles</span>
+	</div>
+	<div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+		{% for child in form.rolesPermitted %}
+			<label class="flex items-center gap-2 p-3 bg-white border-2 border-slate-100 rounded-xl cursor-pointer hover:border-indigo-400 transition-all has-[:checked]:border-indigo-500 has-[:checked]:bg-indigo-50 group">
+				{{ form_widget(child, {'attr': {'class': 'w-3.5 h-3.5 accent-indigo-600 cursor-pointer shrink-0'}}) }}
+				<span class="text-[9px] font-black uppercase tracking-widest text-slate-500 group-hover:text-indigo-700 transition-colors leading-none">{{ child.vars.label }}</span>
+			</label>
+		{% endfor %}
+	</div>
+	<p class="text-[9px] font-bold text-slate-400 mt-3 italic leading-relaxed">Au moins un rôle doit être sélectionné pour accéder à ce document.</p>
+</div>
+
+{# --- Actions --- #}
+<div class="flex items-center justify-between pt-3 border-t border-slate-100">
+	<a href="{{ path('app_document_index') }}" class="text-[9px] font-black text-slate-400 uppercase tracking-widest hover:text-slate-700 transition-colors">← Annuler</a>
+	<button type="submit" class="bg-slate-950 text-white font-black py-3 px-8 rounded-xl hover:bg-indigo-600 transition-all text-[9px] uppercase tracking-widest shadow-lg">
+		{{ button_label|default('Enregistrer') }} ✓
+	</button>
+</div>
+
+{{ form_end(form) }}
+

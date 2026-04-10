@@ -1,0 +1,202 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}{% if isReadOnly %}Voir{% else %}Modifier{% endif %} fiche | Suivi intervention{% endblock %}
+
+{% block body %}
+<div class="min-h-screen bg-slate-50 py-2 sm:py-4 px-0 sm:px-4 lg:px-8">
+    <div class="max-w-3xl mx-auto">
+        
+        {# Header #}
+        <div class="mb-6 px-3 sm:px-0">
+            <a href="{{ path('app_maintenance_suivi') }}" class="inline-flex items-center gap-2 text-[11px] font-bold text-slate-500 hover:text-slate-700 transition-colors mb-3">
+                <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M19 12H5m7 7l-7-7 7-7"></path></svg>
+                Retour à la liste
+            </a>
+            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                <div>
+                    <h1 class="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
+                        {% if isReadOnly %}Fiche de tâches{% else %}Modifier la fiche{% endif %}
+                    </h1>
+                    <p class="text-xs text-slate-500 mt-0.5">{{ task.magasin.nom }} - {{ task.date|date('d/m/Y') }}</p>
+                </div>
+                {% if task.isApproved %}
+                    <span class="inline-flex items-center gap-2 px-3 py-2 bg-emerald-100 text-emerald-700 rounded-xl text-[11px] font-black uppercase tracking-wide border border-emerald-200 w-fit">
+                        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"></path></svg>
+                        <span class="hidden sm:inline">Approuvé le {{ task.approvedAt|date('d/m/Y H:i') }}</span>
+                        <span class="sm:hidden">Approuvé</span>
+                    </span>
+                {% endif %}
+            </div>
+        </div>
+
+        {# Form Card #}
+        <div class="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
+            <div class="p-6">
+                {{ form_start(form, {'attr': {'class': 'space-y-6', 'id': 'cleaning-form'}}) }}
+                    
+                    {# Date and Magasin #}
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            {{ form_label(form.date, null, {'label_attr': {'class': 'block text-[10px] font-black text-slate-600 uppercase tracking-widest mb-2'}}) }}
+                            {{ form_widget(form.date) }}
+                            {{ form_errors(form.date, {'attr': {'class': 'text-xs text-rose-500 mt-1'}}) }}
+                        </div>
+                        <div>
+                            {{ form_label(form.magasin, null, {'label_attr': {'class': 'block text-[10px] font-black text-slate-600 uppercase tracking-widest mb-2'}}) }}
+                            {{ form_widget(form.magasin) }}
+                            {{ form_errors(form.magasin, {'attr': {'class': 'text-xs text-rose-500 mt-1'}}) }}
+                        </div>
+                    </div>
+
+                    {# User info #}
+                    <div class="bg-slate-50 border border-slate-200 rounded-xl p-3">
+                        <span class="text-[10px] font-black text-slate-500 uppercase tracking-widest">Créé par</span>
+                        <span class="ml-2 text-[12px] font-semibold text-slate-700">{{ task.user.nom }} {{ task.user.prenom }}</span>
+                    </div>
+
+                    {# Tasks Section #}
+                    <div>
+                        <label class="block text-[10px] font-black text-slate-600 uppercase tracking-widest mb-3">Tâches effectuées</label>
+                        <div class="bg-slate-50 border border-slate-200 rounded-xl p-3 sm:p-4">
+                            <div id="tasks-container" data-prototype="{{ form_widget(form.items.vars.prototype)|e('html_attr') }}">
+                                {% for itemForm in form.items %}
+                                    <div class="task-row flex flex-col sm:flex-row sm:items-start gap-2 sm:gap-3 mb-3 p-2 sm:p-0 bg-white sm:bg-transparent rounded-lg sm:rounded-none border sm:border-0 border-slate-200">
+                                        <div class="flex-1 min-w-0">
+                                            {{ form_widget(itemForm.description) }}
+                                        </div>
+                                        <div class="flex items-center justify-between sm:justify-start gap-3 flex-shrink-0">
+                                            <label class="flex items-center gap-1.5 sm:gap-2 cursor-pointer whitespace-nowrap">
+                                                {{ form_widget(itemForm.completed) }}
+                                                <span class="text-[10px] sm:text-[11px] font-semibold text-slate-600">Terminé</span>
+                                            </label>
+                                            {% if not isReadOnly %}
+                                            <button type="button" class="remove-task-btn w-7 h-7 sm:w-8 sm:h-8 bg-rose-50 hover:bg-rose-100 text-rose-500 rounded-lg flex items-center justify-center transition-all flex-shrink-0" title="Supprimer">
+                                                <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12"></path></svg>
+                                            </button>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                            {% if not isReadOnly %}
+                            <button type="button" id="add-task-btn" class="mt-2 inline-flex items-center justify-center sm:justify-start gap-2 px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-[11px] font-bold rounded-lg transition-all w-full sm:w-auto">
+                                <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 4v16m8-8H4"></path></svg>
+                                Ajouter une tâche
+                            </button>
+                            {% endif %}
+                        </div>
+                        {{ form_errors(form.items) }}
+                    </div>
+
+                    {# Actions #}
+                    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between pt-4 border-t border-slate-100 gap-3">
+                        <div class="flex items-center gap-2 order-2 sm:order-1">
+                            {# Delete button: Full access can delete anything, Personal access can only delete non-approved #}
+                            {% if isFullAccess or (isPersonalAccess and not task.isApproved) %}
+                            <a href="{{ path('app_maintenance_suivi_delete', {id: task.id}) }}?_token={{ csrf_token('delete' ~ task.id) }}" onclick="showConfirmModal('Supprimer', 'Êtes-vous sûr de vouloir supprimer cette fiche ?', function() { window.location.href = this.href; }.bind(this)); return false;" class="inline-flex items-center justify-center gap-2 px-4 py-2 bg-rose-50 hover:bg-rose-100 text-rose-600 text-[11px] font-bold uppercase tracking-wider rounded-lg transition-all flex-1 sm:flex-none">
+                                <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                                <span class="sm:hidden">Suppr.</span>
+                                <span class="hidden sm:inline">Supprimer</span>
+                            </a>
+                            {% endif %}
+                        </div>
+                        <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3 order-1 sm:order-2">
+                            <a href="{{ path('app_maintenance_suivi') }}" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-[11px] font-bold uppercase tracking-wider rounded-lg transition-all text-center">
+                                {% if isReadOnly %}Retour{% else %}Annuler{% endif %}
+                            </a>
+                            {% if not isReadOnly %}
+                                {% if not task.isApproved and isFullAccess %}
+                                    <a href="{{ path('app_maintenance_suivi_approve', {id: task.id}) }}?_token={{ csrf_token('approve' ~ task.id) }}" onclick="showConfirmModal('Approuver', 'Êtes-vous sûr de vouloir approuver cette fiche ? Elle ne pourra plus être modifiée.', function() { window.location.href = this.href; }.bind(this)); return false;" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-[11px] font-black uppercase tracking-wider rounded-lg transition-all text-center">
+                                        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" class="inline mr-1"><path d="M5 13l4 4L19 7"></path></svg>
+                                        Approuver
+                                    </a>
+                                {% endif %}
+                                <button type="submit" class="px-6 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-[11px] font-black uppercase tracking-wider rounded-lg transition-all">
+                                    Enregistrer
+                                </button>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                {{ form_end(form) }}
+            </div>
+        </div>
+    </div>
+</div>
+
+{% if not isReadOnly %}
+<script>
+// Auto-resize textarea function
+function autoResize(textarea) {
+    textarea.style.height = 'auto';
+    textarea.style.height = textarea.scrollHeight + 'px';
+}
+
+// Setup auto-resize for all textareas
+function setupAutoResize(container) {
+    container.querySelectorAll('textarea').forEach(function(textarea) {
+        textarea.addEventListener('input', function() {
+            autoResize(this);
+        });
+        // Initial resize
+        autoResize(textarea);
+    });
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    const container = document.getElementById('tasks-container');
+    const addBtn = document.getElementById('add-task-btn');
+    const prototype = container.dataset.prototype;
+    let index = container.children.length;
+
+    // Setup existing textareas
+    setupAutoResize(container);
+
+    addBtn.addEventListener('click', function() {
+        const newRow = document.createElement('div');
+        newRow.className = 'task-row flex flex-col sm:flex-row sm:items-start gap-2 sm:gap-3 mb-3 p-2 sm:p-0 bg-white sm:bg-transparent rounded-lg sm:rounded-none border sm:border-0 border-slate-200';
+        newRow.innerHTML = prototype.replace(/__name__/g, index);
+
+        // Transform the prototype HTML to match our layout
+        const tempDiv = document.createElement('div');
+        tempDiv.innerHTML = newRow.innerHTML;
+
+        const descriptionWidget = tempDiv.querySelector('textarea');
+        const completedWidget = tempDiv.querySelector('input[type="checkbox"]');
+
+        newRow.innerHTML = `
+            <div class="flex-1">${descriptionWidget.outerHTML}</div>
+            <div class="flex items-center justify-between sm:justify-start gap-3 sm:pt-1">
+                <label class="flex items-center gap-2 cursor-pointer whitespace-nowrap">
+                    ${completedWidget.outerHTML}
+                    <span class="text-[11px] font-semibold text-slate-600">Terminé</span>
+                </label>
+                <button type="button" class="remove-task-btn w-8 h-8 bg-rose-50 hover:bg-rose-100 text-rose-500 rounded-lg flex items-center justify-center transition-all" title="Supprimer">
+                    <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+            </div>
+        `;
+
+        container.appendChild(newRow);
+        index++;
+
+        // Setup auto-resize for new textarea
+        const newTextarea = newRow.querySelector('textarea');
+        setupAutoResize(newRow);
+        newTextarea.focus();
+    });
+
+    container.addEventListener('click', function(e) {
+        if (e.target.closest('.remove-task-btn')) {
+            const row = e.target.closest('.task-row');
+            if (container.children.length > 1) {
+                row.remove();
+            } else {
+                alert('Vous devez avoir au moins une tâche.');
+            }
+        }
+    });
+});
+</script>
+{% endif %}
+{% endblock %}

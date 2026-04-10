@@ -1,0 +1,106 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Gestion des Camions | Transport & Logistique{% endblock %}
+
+{% block body %}
+<div class="min-h-screen bg-slate-50 py-2 sm:py-4 px-0 sm:px-4 lg:px-8">
+    <div class="max-w-5xl mx-auto">
+        
+        {# Header #}
+        <div class="mb-6 px-3 sm:px-0">
+            <a href="{{ path('app_transport_logistique') }}" class="inline-flex items-center gap-2 text-[11px] font-bold text-slate-500 hover:text-slate-700 transition-colors mb-3">
+                <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M19 12H5m7 7l-7-7 7-7"></path></svg>
+                Retour aux tournées
+            </a>
+            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                <div>
+                    <h1 class="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">Gestion des Camions</h1>
+                    <p class="text-xs text-slate-500 mt-0.5">Gérer les camions utilisés pour les livraisons</p>
+                </div>
+                {% if canEdit %}
+                <a href="{{ path('app_transport_logistique_camion_new') }}" class="inline-flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white text-[10px] font-black uppercase tracking-wider py-2 px-4 rounded-lg transition-all">
+                    <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 4v16m8-8H4"></path></svg>
+                    Nouveau camion
+                </a>
+                {% endif %}
+            </div>
+        </div>
+
+        {# Camions Table #}
+        <div class="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm">
+            <div class="overflow-x-auto">
+                <table class="w-full">
+                    <thead class="bg-slate-50 border-b border-slate-200">
+                        <tr>
+                            <th class="px-4 py-3 text-left text-[10px] font-black text-slate-600 uppercase tracking-widest">Nom</th>
+                            <th class="px-4 py-3 text-left text-[10px] font-black text-slate-600 uppercase tracking-widest">Immatriculation</th>
+                            <th class="px-4 py-3 text-left text-[10px] font-black text-slate-600 uppercase tracking-widest">Statut</th>
+                            {% if canEdit %}
+                            <th class="px-4 py-3 text-right text-[10px] font-black text-slate-600 uppercase tracking-widest">Actions</th>
+                            {% endif %}
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100">
+                        {% for camion in camions %}
+                        <tr class="hover:bg-slate-50/50 transition-colors">
+                            <td class="px-4 py-3">
+                                <div class="flex items-center gap-2">
+                                    <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" class="text-slate-400"><path d="M8 14h.01M16 14h.01M5 8h14M5 8a2 2 0 00-2 2v6a2 2 0 002 2h14a2 2 0 002-2v-6a2 2 0 00-2-2M5 8l1-3h12l1 3M9 14v1m6-1v1"></path></svg>
+                                    <span class="text-[12px] font-bold text-slate-700">{{ camion.nom }}</span>
+                                </div>
+                            </td>
+                            <td class="px-4 py-3">
+                                <span class="inline-flex items-center gap-1.5 px-2.5 py-1 bg-slate-100 text-slate-700 rounded-lg text-[11px] font-black uppercase tracking-wide">
+                                    <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M10 6H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2h-5m-4 0V5a2 2 0 114 0v1m-4 0a2 2 0 104 0m-5 8a2 2 0 100-4 2 2 0 000 4zm0 0c1.306 0 2.417.835 2.83 2M9 14a3 3 0 01-3-3m6 0a3 3 0 01-3-3m6 0a3 3 0 01-3-3"></path></svg>
+                                    {{ camion.immatriculation }}
+                                </span>
+                            </td>
+                            <td class="px-4 py-3">
+                                {% if camion.isActive %}
+                                    <span class="inline-flex items-center gap-1 px-2 py-1 bg-emerald-50 text-emerald-700 rounded-lg text-[10px] font-black uppercase tracking-wide border border-emerald-100">
+                                        <span class="w-1.5 h-1.5 bg-emerald-500 rounded-full"></span>
+                                        Actif
+                                    </span>
+                                {% else %}
+                                    <span class="inline-flex items-center gap-1 px-2 py-1 bg-slate-100 text-slate-500 rounded-lg text-[10px] font-black uppercase tracking-wide border border-slate-200">
+                                        <span class="w-1.5 h-1.5 bg-slate-400 rounded-full"></span>
+                                        Inactif
+                                    </span>
+                                {% endif %}
+                            </td>
+                            {% if canEdit %}
+                            <td class="px-4 py-3">
+                                <div class="flex items-center justify-end gap-1">
+                                    <a href="{{ path('app_transport_logistique_camion_edit', {id: camion.id}) }}" class="w-7 h-7 bg-indigo-50 hover:bg-indigo-100 text-indigo-600 rounded-lg flex items-center justify-center transition-all" title="Modifier">
+                                        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
+                                    </a>
+                                    <form method="post" action="{{ path('app_transport_logistique_camion_delete', {id: camion.id}) }}" class="inline" onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer ce camion ?');">
+                                        <input type="hidden" name="_token" value="{{ csrf_token('delete_camion' ~ camion.id) }}">
+                                        <button type="submit" class="w-7 h-7 bg-rose-50 hover:bg-rose-100 text-rose-600 rounded-lg flex items-center justify-center transition-all" title="Supprimer">
+                                            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                                        </button>
+                                    </form>
+                                </div>
+                            </td>
+                            {% endif %}
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="{% if canEdit %}4{% else %}3{% endif %}" class="px-4 py-12 text-center">
+                                <div class="w-16 h-16 bg-slate-50 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                                    <svg width="32" height="32" fill="none" stroke="currentColor" stroke-width="1.5" class="text-slate-300" viewBox="0 0 24 24">
+                                        <path d="M8 14h.01M16 14h.01M5 8h14M5 8a2 2 0 00-2 2v6a2 2 0 002 2h14a2 2 0 002-2v-6a2 2 0 00-2-2M5 8l1-3h12l1 3M9 14v1m6-1v1"></path>
+                                    </svg>
+                                </div>
+                                <p class="text-sm font-bold text-slate-700 mb-1">Aucun camion trouvé</p>
+                                <p class="text-xs text-slate-500">Ajoutez un nouveau camion pour commencer</p>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

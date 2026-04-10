@@ -1,0 +1,53 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Bienvenue | Plateforme LSDJ
+{% endblock %}
+
+{% block body %}
+	<div class="max-w-3xl mx-auto">
+		<div class="text-center mb-10 pt-4">
+			<div class="inline-flex items-center gap-2 px-4 py-2 bg-indigo-50 text-indigo-600 font-bold text-xs uppercase tracking-widest rounded-full mb-5">
+				<span class="w-1.5 h-1.5 bg-indigo-600 rounded-full"></span>
+				Opérations Unifiées v2.0
+			</div>
+			<h1 class="text-2xl sm:text-4xl md:text-5xl font-black leading-tight tracking-tighter text-slate-900 mb-4">L'avenir de la logistique artisanale est ici.</h1>
+			<p class="text-slate-500 text-sm sm:text-base leading-relaxed max-w-lg mx-auto">Approvisionnement et distribution simplifiés pour les épices, les fruits et les légumes de haute qualité.</p>
+		</div>
+
+		{% if app.user %}
+			<div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+				<div class="bg-white border-2 border-slate-900 rounded-xl p-5 shadow-sm">
+					<div class="text-2xl mb-3">🛒</div>
+					<h2 class="text-base font-bold text-slate-900 mb-1">Commencer un approvisionnement</h2>
+					<p class="text-slate-500 text-xs mb-4 leading-relaxed">Parcourez notre inventaire et soumettez de nouvelles demandes.</p>
+					<a href="{{ path('app_produit_index') }}" class="btn btn-primary w-full py-3 font-bold rounded-xl text-sm">
+						Explorer le Catalogue
+					</a>
+				</div>
+				<div class="bg-white border-2 border-slate-900 rounded-xl p-5 shadow-sm">
+					<div class="text-2xl mb-3">🧾</div>
+					<h2 class="text-base font-bold text-slate-900 mb-1">Consulter l'activité</h2>
+					<p class="text-slate-500 text-xs mb-4 leading-relaxed">Suivez l'état de vos commandes et examinez votre historique.</p>
+					{% if is_granted('ROLE_USER') %}
+						<a href="{{ path('app_commande_my') }}" class="btn w-full py-3 font-bold rounded-xl text-sm">
+							Voir l'historique
+						</a>
+					{% else %}
+						<a href="{{ path('app_dashboard') }}" class="btn w-full py-3 font-bold rounded-xl text-sm">
+							Centre de Commande
+						</a>
+					{% endif %}
+				</div>
+			</div>
+		{% else %}
+			<div class="text-center">
+				<a href="{{ path('app_login') }}" class="btn btn-primary px-8 py-3 text-sm font-bold rounded-xl">
+					S'identifier
+				</a>
+			</div>
+		{% endif %}
+
+
+	</div>
+{% endblock %}
+

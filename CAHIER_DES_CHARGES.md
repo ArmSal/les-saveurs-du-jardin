@@ -65,8 +65,8 @@ portal/
 ├── migrations/            # Migrations Doctrine
 ├── public/                # Point d'entrée web
 ├── src/
-│   ├── Controller/       # Contrôleurs 
-│   ├── Entity/          # Entités
+│   ├── Controller/       # Contrôleurs (15+ contrôleurs)
+│   ├── Entity/          # Entités (16 entités)
 │   ├── Form/            # Formulaires
 │   ├── Repository/      # Repositories
 │   ├── Service/         # Services métier
@@ -86,7 +86,7 @@ portal/
 ## 3. MODULES FONCTIONNELS
 
 ### 3.1 Module Authentification & Sécurité
-**Entités:** `User`, `Role`, `Magasin`, `ModulePermission`, `Article`, `Commande`,`Conge`, `Horaire`, 
+**Entités:** `User`, `Role`, `Magasin`, `ModulePermission`
 
 **Fonctionnalités:**
 - Authentification email/mot de passe
@@ -109,7 +109,8 @@ portal/
 - Sélecteur de semaines pour rapports
 
 ### 3.3 Module Agenda (Planning)
-
+**Entité:** `PortalHoraire`  
+**Contrôleur:** `AgendaController`
 
 **Fonctionnalités:**
 - Vue calendrier des horaires de travail
@@ -120,6 +121,8 @@ portal/
 - Vue quotidienne, hebdomadaire, mensuelle
 
 ### 3.4 Module RH - Congés
+**Entité:** `PortalConge`  
+**Contrôleur:** `RHController`
 
 **Fonctionnalités:**
 - **Employé:**
@@ -143,6 +146,7 @@ PENDING → MODIFIED → ACCEPTED_BY_EMPLOYEE → APPROVED
 ```
 
 ### 3.5 Module RH - Validation Mensuelle
+**Entité:** `PortalMonthlyValidation`
 
 **Fonctionnalités:**
 - Validation mensuelle des horaires par employé
@@ -152,6 +156,8 @@ PENDING → MODIFIED → ACCEPTED_BY_EMPLOYEE → APPROVED
 - Vue récapitulative par semaine et par mois
 
 ### 3.6 Module Produits
+**Entités:** `PortalProduct`, `PortalCategorieProduit`  
+**Contrôleur:** `ProduitController`
 
 **Fonctionnalités:**
 - CRUD complet des produits
@@ -170,6 +176,8 @@ PENDING → MODIFIED → ACCEPTED_BY_EMPLOYEE → APPROVED
 - Quantité stock, Description, Image
 
 ### 3.7 Module Commandes
+**Entités:** `Commande`, `CommandeItem`, `CommandeHistory`  
+**Contrôleurs:** `CommandeController`, `CartController`
 
 **Fonctionnalités:**
 - **Panier d'achat:**
@@ -185,6 +193,8 @@ PENDING → MODIFIED → ACCEPTED_BY_EMPLOYEE → APPROVED
   - Notifications automatiques
 
 ### 3.8 Module Documents
+**Entités:** `PortalDocument`, `PortalDocumentFolder`  
+**Contrôleurs:** `PortalDocumentController`, `DocumentFolderController`
 
 **Fonctionnalités:**
 - Gestion hiérarchique avec dossiers
@@ -198,6 +208,8 @@ PENDING → MODIFIED → ACCEPTED_BY_EMPLOYEE → APPROVED
   - Envoi ciblé par employé
 
 ### 3.9 Module Notifications
+**Entité:** `PortalNotification`  
+**Contrôleur:** `NotificationController`
 
 **Fonctionnalités:**
 - Système de notification en temps réel
@@ -207,6 +219,7 @@ PENDING → MODIFIED → ACCEPTED_BY_EMPLOYEE → APPROVED
 - Marquage comme lu
 
 ### 3.10 Module Paramètres
+**Contrôleur:** `SettingsController`
 
 **Fonctionnalités:**
 - Gestion des raccourcis (création, ordre d'affichage)
@@ -253,6 +266,105 @@ Le système implémente 6 niveaux d'accès par module:
 ## 5. MODÈLE DE DONNÉES
 
 ### 5.1 Entités Principales
+
+#### User (Utilisateur)
+```php
+- id, email, roles[], password
+- civility, nom, prenom
+- date_naissance, code_postal, adresse, telephone
+- client_number (unique)
+- is_active, magasin
+- photo, calendar_color, signature
+- validation_horaire, demande_conge, documents_rh (booléens)
+- Relations: roleEntity, magasinEntity, commandes[]
+```
+
+#### Role
+```php
+- id, name (unique), label, priority
+- Relations: users[], permissions[]
+```
+
+#### ModulePermission
+```php
+- id, moduleKey, roleName, accessLevel, roleLabel
+- Relation: roleEntity
+- Contrainte: Unique (moduleKey, roleName)
+```
+
+#### PortalProduct (Produit)
+```php
+- id, reference, code_barre, designation
+- unite, categories, tva, prix
+- image_url, description, qte_stock
+- Relation: categoryEntity
+```
+
+#### PortalCategorieProduit
+```php
+- id, nom
+- Relation: products[]
+```
+
+#### Commande
+```php
+- id, slug (unique), createdAt, status
+- Relations: user, items[], histories[]
+- Statuts: pending, updated, confirmed, processing, processed, delivered, archived, canceled
+```
+
+#### PortalConge (Congé)
+```php
+- id, user, startDate, endDate, type
+- employeeComment, adminComment, status
+- history[], createdAt, updatedAt
+- approvedSignature, approvedAt, approvedBy
+- paidDays, unpaidDays, totalDays
+- Statuts: PENDING, MODIFIED, ACCEPTED_BY_EMPLOYEE, APPROVED, REJECTED, CANCELLED
+```
+
+#### PortalHoraire (Horaire)
+```php
+- id, user, startTime, endTime
+- note, color, status, isLocked
+```
+
+#### PortalDocument
+```php
+- id, title, description, filename, originalFilename
+- folder, rolesPermitted[], uploadedAt
+- targetUser, sender, type, status
+- message, signature, signedAt
+- Types: GLOBAL, CONTRACT, EMPLOYEE_DOC
+- Statuts: NONE, PENDING_SIGNATURE, SIGNED
+```
+
+#### PortalNotification
+```php
+- id, user, title, content, link
+- type, isRead, createdAt
+```
+
+### 5.2 Relations Clés
+
+```
+User 1--N Commande
+User 1--N PortalConge
+User 1--N PortalHoraire
+User 1--N PortalNotification
+User N--1 Role
+User N--1 Magasin
+
+Role 1--N ModulePermission
+
+PortalCategorieProduit 1--N PortalProduct
+PortalDocumentFolder 1--N PortalDocument
+
+Commande 1--N CommandeItem
+Commande 1--N CommandeHistory
+```
+
+---
 
 ## 6. INTERFACES UTILISATEUR
 
@@ -318,11 +430,11 @@ templates/
 
 ### 7.1 Gestion des Accès (AccessHelper)
 Le service `AccessHelper` fournit les méthodes suivantes:
-- `canView`
-- `canEdit`
-- `isFullAccess`
-- `isMagasinOnly`
-- `isFullView`
+- `canView(string $module): bool`
+- `canEdit(string $module): bool`
+- `isFullAccess(string $module): bool`
+- `isMagasinOnly(string $module): bool`
+- `isFullView(string $module): bool`
 
 ### 7.2 Workflow des Congés
 1. Employé soumet une demande (PENDING)
@@ -392,5 +504,40 @@ APP_SECRET=<clé_secrète_32_caractères>
 DATABASE_URL="mysql://user:pass@host:3306/dbname?serverVersion=8.0&charset=utf8mb4"
 MAILER_DSN=null://null
 ```
+
+---
+
+## ANNEXES
+
+### A. Routes Principales
+| Route | Nom | Description |
+|-------|-----|-------------|
+| `/login` | `app_login` | Connexion |
+| `/dashboard` | `app_dashboard` | Tableau de bord |
+| `/agenda` | `app_agenda` | Planning |
+| `/rh/conge` | `app_rh_conge` | Gestion congés |
+| `/rh/validation` | `app_rh_validation` | Validation mensuelle |
+| `/produits` | `app_produit_index` | Catalogue produits |
+| `/cart` | `app_cart_index` | Panier |
+| `/commandes` | `app_commande_index` | Liste commandes |
+| `/documents` | `app_documents_index` | Documents |
+| `/settings` | `app_settings` | Paramètres |
+
+### B. Commandes Disponibles
+```bash
+# Préparation production
+php bin/prepare-for-production.php
+
+# Export base de données
+php bin/export-database.php
+
+# Reset production
+php bin/reset-prod.php
+
+# Vider les produits
+php bin/clear-products.php
+```
+
+---
 
 **Fin du Cahier des Charges**

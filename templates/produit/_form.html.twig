@@ -1,0 +1,94 @@
+{{ form_start(form, {'attr': {'id': 'product-form', 'enctype': 'multipart/form-data'}}) }}
+<div class="space-y-4 sm:space-y-6">
+	<!-- Row 1: Reference & Code-barre -->
+	<div class="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+		<div>
+			<label class="text-[10px] font-black text-slate-500 uppercase tracking-wider mb-1.5 block">Référence</label>
+			{{ form_widget(form.reference, {'attr': {'class': 'w-full h-11 sm:h-12 border border-slate-200 bg-white rounded-xl px-4 text-sm font-bold text-slate-800 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all placeholder:text-slate-300', 'placeholder': 'REF-001'}}) }}
+		</div>
+		<div>
+			<label class="text-[10px] font-black text-slate-500 uppercase tracking-wider mb-1.5 block">Code-barre (EAN)</label>
+			{{ form_widget(form.code_barre, {'attr': {'class': 'w-full h-11 sm:h-12 border border-slate-200 bg-white rounded-xl px-4 text-sm font-bold text-slate-800 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all placeholder:text-slate-300', 'placeholder': '1234567890123'}}) }}
+		</div>
+	</div>
+
+	<!-- Row 2: Designation -->
+	<div>
+		<label class="text-[10px] font-black text-slate-500 uppercase tracking-wider mb-1.5 block">Désignation</label>
+		{{ form_widget(form.designation, {'attr': {'class': 'w-full h-11 sm:h-12 border border-slate-200 bg-white rounded-xl px-4 text-sm font-black text-slate-900 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all placeholder:text-slate-300', 'placeholder': 'Nom du produit'}}) }}
+	</div>
+
+	<!-- Row 3: Categorie & Unite -->
+	<div class="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+		<div>
+			<label class="text-[10px] font-black text-slate-500 uppercase tracking-wider mb-1.5 block">Catégorie</label>
+			{{ form_widget(form.categoryEntity, {'attr': {'class': 'w-full h-11 sm:h-12 border border-slate-200 bg-white rounded-xl px-4 text-sm font-bold text-slate-800 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 cursor-pointer transition-all'}}) }}
+		</div>
+		<div>
+			<label class="text-[10px] font-black text-slate-500 uppercase tracking-wider mb-1.5 block">Unité</label>
+			{{ form_widget(form.unite, {'attr': {'class': 'w-full h-11 sm:h-12 border border-slate-200 bg-white rounded-xl px-4 text-sm font-bold text-slate-800 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all placeholder:text-slate-300', 'placeholder': 'Pcs, Kg, Colis...'}}) }}
+		</div>
+	</div>
+
+	<!-- Row 4: Stock, TVA, Prix -->
+	<div class="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4">
+		<div>
+			<label class="text-[10px] font-black text-slate-500 uppercase tracking-wider mb-1.5 block">Stock</label>
+			{{ form_widget(form.qte_stock, {'attr': {'class': 'w-full h-11 sm:h-12 border border-slate-200 bg-white rounded-xl px-4 text-sm font-bold text-slate-800 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all', 'placeholder': '0'}}) }}
+		</div>
+		<div>
+			<label class="text-[10px] font-black text-slate-500 uppercase tracking-wider mb-1.5 block">TVA (%)</label>
+			{{ form_widget(form.tva, {'attr': {'class': 'w-full h-11 sm:h-12 border border-slate-200 bg-white rounded-xl px-4 text-sm font-bold text-slate-800 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all', 'placeholder': '20'}}) }}
+		</div>
+		<div class="col-span-2 sm:col-span-1">
+			<label class="text-[10px] font-black text-slate-500 uppercase tracking-wider mb-1.5 block">Prix HT (€)</label>
+			{{ form_widget(form.prix, {'attr': {'class': 'w-full h-11 sm:h-12 border border-slate-200 bg-white rounded-xl px-4 text-sm font-black text-indigo-600 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all', 'placeholder': '0.00'}}) }}
+		</div>
+	</div>
+
+	<!-- Hidden file input -->
+	<div style="display:none;">
+		{{ form_widget(form.image_file, {'id': 'portal_product_image_file', 'attr': {'onchange': 'handleProductPhotoSelect(this)'}}) }}
+	</div>
+
+	<!-- Description -->
+	<div>
+		<label class="text-[10px] font-black text-slate-500 uppercase tracking-wider mb-1.5 block">Description</label>
+		{{ form_widget(form.description, {'attr': {'class': 'w-full border border-slate-200 bg-white rounded-xl px-4 py-3 text-sm font-medium text-slate-700 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all resize-y min-h-[80px] sm:min-h-[100px]', 'placeholder': 'Description du produit...', 'rows': '3'}}) }}
+	</div>
+
+	<!-- Submit Button -->
+	<button class="w-full h-12 sm:h-14 bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white text-xs font-black uppercase tracking-widest rounded-xl hover:shadow-lg hover:shadow-indigo-200 transition-all active:scale-[0.98] mt-2" type="submit">
+		{{ button_label|default('Enregistrer') }}
+	</button>
+</div>
+{{ form_end(form) }}
+
+<script>
+	function handleProductPhotoSelect(input) {
+		if (input.files && input.files[0]) {
+			const reader = new FileReader();
+			const fileName = input.files[0].name;
+			const photoHint = document.getElementById('upload-hint');
+			
+			reader.onload = function (e) {
+				const previewImg = document.getElementById('preview-img-header');
+				const previewSvg = document.getElementById('preview-svg-header');
+				const trigger = document.getElementById('header-photo-trigger');
+				
+				if (previewImg) {
+					previewImg.src = e.target.result;
+					previewImg.classList.remove('hidden');
+					trigger.classList.add('ring-2', 'ring-indigo-500');
+				}
+				if (previewSvg) previewSvg.classList.add('hidden');
+				if (photoHint) {
+					photoHint.innerText = fileName;
+					photoHint.classList.remove('text-slate-400');
+					photoHint.classList.add('text-indigo-600');
+				}
+			};
+			reader.readAsDataURL(input.files[0]);
+		}
+	}
+</script>

@@ -1,0 +1,301 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Manifeste #{{ commande.id }} | LSDJ{% endblock %}
+
+{% block body %}
+
+{% set sc = {
+    'delivered': {'text': 'text-emerald-700', 'bg': 'bg-emerald-50', 'border': 'border-emerald-100', 'dot': 'bg-emerald-500', 'label': 'Livrée'},
+    'canceled':  {'text': 'text-rose-700',    'bg': 'bg-rose-50',    'border': 'border-rose-100',    'dot': 'bg-rose-500',    'label': 'Annulée'},
+    'pending':   {'text': 'text-amber-700',   'bg': 'bg-amber-50',   'border': 'border-amber-100',   'dot': 'bg-amber-500',   'label': 'En Attente'},
+    'updated':   {'text': 'text-orange-700',  'bg': 'bg-orange-50',  'border': 'border-orange-100',  'dot': 'bg-orange-500',  'label': 'Modifiée'},
+    'processing':{'text': 'text-indigo-700',  'bg': 'bg-indigo-50',  'border': 'border-indigo-100',  'dot': 'bg-indigo-500',  'label': 'Préparation'},
+    'confirmed': {'text': 'text-sky-700',     'bg': 'bg-sky-50',     'border': 'border-sky-100',     'dot': 'bg-sky-500',     'label': 'Confirmée'},
+    'processed': {'text': 'text-white',       'bg': 'bg-emerald-500','border': 'border-emerald-500', 'dot': 'bg-white',       'label': 'Prête'},
+    'archived':  {'text': 'text-slate-500',   'bg': 'bg-slate-100',  'border': 'border-slate-200',   'dot': 'bg-slate-400',   'label': 'Archivée'}
+} %}
+{% set cfg = sc[commande.status] | default({'text': 'text-slate-700', 'bg': 'bg-slate-100', 'border': 'border-slate-200', 'dot': 'bg-slate-500', 'label': commande.status}) %}
+
+{# ── Breadcrumb ──────────────────────────────────────────────────── #}
+<nav class="mb-5 pb-4 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+    <a href="{{ path('admin_commandes_index') }}"
+       class="inline-flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-indigo-600 transition-colors">
+        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path d="M15 19l-7-7 7-7"/></svg>
+        Retour à la file logistique
+    </a>
+    <div class="flex items-center gap-2">
+        <span class="text-[9px] font-bold text-slate-300 uppercase tracking-widest">ID :</span>
+        <span class="px-2 py-0.5 rounded bg-slate-100 border border-slate-200 font-mono text-[9px] font-black text-slate-500">{{ commande.slug|slice(0,10)|upper }}</span>
+        <div class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md {{ cfg.bg }} {{ cfg.text }} border {{ cfg.border }}">
+            <span class="w-1.5 h-1.5 rounded-full {{ cfg.dot }} {{ commande.status == 'processing' ? 'animate-pulse' : '' }}"></span>
+            <span class="text-[9px] font-black uppercase tracking-widest">{{ cfg.label }}</span>
+        </div>
+    </div>
+</nav>
+
+{# ── Main Grid ───────────────────────────────────────────────────── #}
+<div class="grid grid-cols-1 lg:grid-cols-[1fr_300px] gap-6 items-start mb-12">
+
+    {# │ LEFT column #}
+    <div class="space-y-5 min-w-0">
+
+        {# Card: commande header #}
+        <div class="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
+
+            {# Title bar #}
+            <div class="px-5 sm:px-8 py-5 sm:py-7 border-b border-slate-100 bg-slate-50/50">
+                <div class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-indigo-50 border border-indigo-100 mb-3">
+                    <span class="w-1.5 h-1.5 rounded-full bg-indigo-600"></span>
+                    <span class="text-[9px] font-black uppercase tracking-widest text-indigo-600">Manifeste Validé</span>
+                </div>
+                <h1 class="text-2xl sm:text-3xl lg:text-4xl font-black text-slate-900 tracking-tighter leading-none uppercase mb-3">
+                    Commande <span class="text-indigo-600">#{{ commande.id }}</span>
+                </h1>
+                <div class="flex flex-wrap items-center gap-3 sm:gap-5 text-slate-400 text-[10px] font-bold uppercase tracking-widest">
+                    <div class="flex items-center gap-1.5">
+                        <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                        {{ commande.createdAt|date('d/m/Y') }}
+                    </div>
+                    <div class="w-1 h-1 bg-slate-200 rounded-full"></div>
+                    <div class="flex items-center gap-1.5">
+                        <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M12 8v4l3 2m6-2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                        {{ commande.createdAt|date('H:i') }}
+                    </div>
+                </div>
+            </div>
+
+            {# Identity matrix — stacks on mobile, side-by-side on sm+ #}
+            <div class="grid grid-cols-1 sm:grid-cols-2 divide-y sm:divide-y-0 sm:divide-x divide-slate-100">
+                <div class="px-5 sm:px-8 py-5 sm:py-7">
+                    <h4 class="text-[9px] uppercase tracking-[0.2em] text-slate-300 font-black mb-4">Émetteur</h4>
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 sm:w-12 sm:h-12 bg-slate-900 text-white rounded-xl flex items-center justify-center font-black text-base sm:text-lg border-2 border-slate-700 shrink-0 shadow-md">
+                            {{ commande.user.nom|slice(0,1)|upper }}
+                        </div>
+                        <div class="min-w-0">
+                            <div class="font-black text-sm text-slate-900 uppercase tracking-tight truncate">{{ commande.user.nom }} {{ commande.user.prenom }}</div>
+                            <div class="text-[10px] text-slate-400 font-bold truncate mb-1">{{ commande.user.email }}</div>
+                            <span class="inline-flex px-1.5 py-0.5 bg-indigo-50 text-indigo-600 text-[9px] font-black uppercase tracking-tighter border border-indigo-100/50 rounded">
+                                {{ commande.user.magasin|default('DIRECT')|upper }}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+                <div class="px-5 sm:px-8 py-5 sm:py-7">
+                    <h4 class="text-[9px] uppercase tracking-[0.2em] text-slate-300 font-black mb-4">Statut actuel</h4>
+                    <div class="flex items-center gap-3">
+                        <span class="text-2xl sm:text-3xl font-black uppercase tracking-tight {{ cfg.text }} leading-none">{{ cfg.label }}</span>
+                        <span class="w-2.5 h-2.5 rounded-full {{ cfg.dot }} {{ commande.status == 'processing' ? 'animate-pulse' : '' }} shrink-0"></span>
+                    </div>
+                    <div class="text-[10px] text-slate-300 font-bold uppercase tracking-widest mt-1.5 italic">État opérationnel</div>
+                </div>
+            </div>
+
+            {# Items table section #}
+            <div class="border-t border-slate-100">
+                <div class="px-5 sm:px-8 py-3 bg-slate-50/50 border-b border-slate-100 flex items-center justify-between">
+                    <span class="text-[10px] font-black uppercase tracking-widest text-slate-400">Détail des Articles</span>
+                    <span class="text-[9px] font-bold text-slate-300">{{ commande.items|length }} lignes</span>
+                </div>
+
+                {# Desktop: table; Mobile: stacked product cards #}
+                <div class="hidden sm:block overflow-x-auto">
+                    <table class="w-full">
+                        <thead>
+                            <tr class="border-b border-slate-100">
+                                <th class="px-6 py-3 text-[9px] font-black uppercase tracking-widest text-slate-300 text-left">Produit</th>
+                                <th class="px-4 py-3 text-[9px] font-black uppercase tracking-widest text-slate-300 text-center">Unité</th>
+                                <th class="px-6 py-3 text-[9px] font-black uppercase tracking-widest text-slate-300 text-right">Qté</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-50">
+                            {% for i in commande.items %}
+                                <tr class="hover:bg-slate-50/50 transition-colors">
+                                    <td class="px-6 py-4">
+                                        <div class="flex items-center gap-3">
+                                            <div class="w-10 h-10 bg-white border border-slate-100 rounded-xl flex items-center justify-center overflow-hidden shrink-0">
+                                                {% if i.product.imageUrl %}
+                                                    <img src="{{ path('app_media_product', {filename: i.product.imageUrl}) }}" alt="{{ i.product.designation }}" class="w-full h-full object-cover">
+                                                {% else %}
+                                                    <svg width="18" height="18" fill="none" stroke="#e2e8f0" stroke-width="2" viewBox="0 0 24 24"><path d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+                                                {% endif %}
+                                            </div>
+                                            <div class="min-w-0">
+                                                <div class="font-black text-sm text-slate-900 uppercase tracking-tight truncate">{{ i.product.designation }}</div>
+                                                <div class="font-mono text-[9px] font-black text-indigo-400/60 uppercase">REF-{{ i.product.reference|upper }}</div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="px-4 py-4 text-center">
+                                        <span class="px-2 py-0.5 rounded bg-slate-100 border border-slate-200 text-[9px] font-black text-slate-500 uppercase">{{ i.product.unite|upper }}</span>
+                                    </td>
+                                    <td class="px-6 py-4 text-right">
+                                        {% if not isLocked and isFullAccess %}
+                                            <form method="post" action="{{ path('admin_commandes_update_item', {id: commande.id, itemId: i.id}) }}" class="flex items-center justify-end gap-2">
+                                                <input type="number" name="quantity" value="{{ i.quantity }}" min="0"
+                                                       class="w-16 h-9 border border-slate-200 rounded-lg font-black text-center text-sm bg-white outline-none focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-400 transition-all">
+                                                <button type="submit"
+                                                        class="h-9 px-3 bg-slate-900 text-white text-[10px] font-black uppercase rounded-lg hover:bg-indigo-600 transition-all border-0 cursor-pointer">OK</button>
+                                            </form>
+                                        {% else %}
+                                            <span class="text-xl font-black text-slate-900">{{ i.quantity }}</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                            {% endfor %}
+
+                            {# Total row #}
+                            <tr class="bg-slate-50/50 border-t border-slate-100">
+                                <td colspan="2" class="px-6 py-5 text-right text-[10px] font-black uppercase tracking-widest text-slate-400">Volume Total</td>
+                                <td class="px-6 py-5 text-right">
+                                    {% set totalQty = 0 %}
+                                    {% for i in commande.items %}{% set totalQty = totalQty + i.quantity %}{% endfor %}
+                                    <div class="text-2xl font-black text-slate-900 tracking-tighter leading-none">{{ totalQty }}</div>
+                                    <div class="text-[9px] font-black text-indigo-600 uppercase tracking-widest mt-0.5">UNITÉS</div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                {# Mobile: compact product cards #}
+                <div class="sm:hidden divide-y divide-slate-100">
+                    {% set totalQty = 0 %}
+                    {% for i in commande.items %}
+                        {% set totalQty = totalQty + i.quantity %}
+                        <div class="p-5">
+                            <div class="flex items-start gap-3 mb-3">
+                                <div class="w-10 h-10 bg-white border border-slate-100 rounded-xl flex items-center justify-center overflow-hidden shrink-0">
+                                    {% if i.product.imageUrl %}
+                                        <img src="{{ path('app_media_product', {filename: i.product.imageUrl}) }}" alt="{{ i.product.designation }}" class="w-full h-full object-cover">
+                                    {% else %}
+                                        <svg width="16" height="16" fill="none" stroke="#e2e8f0" stroke-width="2" viewBox="0 0 24 24"><path d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+                                    {% endif %}
+                                </div>
+                                <div class="flex-1 min-w-0">
+                                    <div class="font-black text-sm text-slate-900 uppercase tracking-tight leading-tight">{{ i.product.designation }}</div>
+                                    <div class="font-mono text-[9px] text-indigo-400/60 uppercase mt-0.5">REF-{{ i.product.reference|upper }}</div>
+                                </div>
+                                <span class="px-2 py-0.5 rounded bg-slate-100 text-[9px] font-black text-slate-500 uppercase shrink-0">{{ i.product.unite|upper }}</span>
+                            </div>
+                            {% if not isLocked and isFullAccess %}
+                                <form method="post" action="{{ path('admin_commandes_update_item', {id: commande.id, itemId: i.id}) }}" class="flex items-center gap-2">
+                                    <label class="text-[9px] font-black text-slate-400 uppercase tracking-widest shrink-0">Qté :</label>
+                                    <input type="number" name="quantity" value="{{ i.quantity }}" min="0"
+                                           class="flex-1 h-10 border border-slate-200 rounded-lg font-black text-center text-sm bg-white outline-none focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-400 transition-all">
+                                    <button type="submit"
+                                            class="h-10 px-4 bg-slate-900 text-white text-[10px] font-black uppercase rounded-lg hover:bg-indigo-600 transition-all border-0 cursor-pointer shrink-0">Mettre à jour</button>
+                                </form>
+                            {% else %}
+                                <div class="flex items-center justify-between p-3 bg-slate-50 rounded-xl border border-slate-100">
+                                    <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Quantité commandée</span>
+                                    <span class="text-xl font-black text-slate-900">{{ i.quantity }}</span>
+                                </div>
+                            {% endif %}
+                        </div>
+                    {% endfor %}
+
+                    <div class="px-5 py-4 bg-slate-50 flex items-center justify-between border-t border-slate-100">
+                        <span class="text-[10px] font-black uppercase tracking-widest text-slate-400">Volume Total</span>
+                        <div class="text-right">
+                            <div class="text-2xl font-black text-slate-900 tracking-tighter leading-none">{{ totalQty }}</div>
+                            <div class="text-[9px] font-black text-indigo-600 uppercase tracking-widest">UNITÉS</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {# Card: audit history #}
+        <div class="bg-white border border-slate-200 rounded-xl overflow-hidden">
+            <div class="px-5 sm:px-6 py-4 border-b border-slate-100 bg-slate-50/50 flex items-center justify-between">
+                <span class="text-[9px] font-black uppercase tracking-[0.2em] text-slate-400">Journal d'activité</span>
+                <span class="text-[9px] font-bold text-slate-300">{{ commande.histories|length }} entrées</span>
+            </div>
+            <div class="p-4 sm:p-6 space-y-2.5">
+                {% for h in commande.histories|sort((a, b) => b.changedAt <=> a.changedAt) %}
+                    <div class="flex items-start gap-3 sm:gap-4 p-3 sm:p-4 bg-slate-50 border border-slate-100 rounded-xl hover:border-slate-200 transition-colors">
+                        <div class="font-mono text-[10px] font-black text-indigo-500/60 shrink-0 pt-0.5 min-w-[60px]">
+                            {{ h.changedAt|date('d/m H:i') }}
+                        </div>
+                        <div class="text-[11px] text-slate-700 font-bold leading-relaxed flex-1 min-w-0">
+                            <span class="text-slate-900 uppercase tracking-tight">{{ h.changedBy ? h.changedBy.nom : 'SYSTÈME' }}</span>
+                            <span class="mx-1 sm:mx-2 text-slate-300">|</span>
+                            {% if h.detail %}
+                                <span class="text-slate-500 font-medium break-words">{{ h.detail }}</span>
+                            {% else %}
+                                Transition : <span class="px-1.5 py-0.5 rounded bg-indigo-50 text-indigo-600 uppercase tracking-tighter text-[10px]">{{ h.status }}</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                {% else %}
+                    <div class="py-10 text-center text-[11px] font-bold text-slate-300 uppercase tracking-widest italic">Aucun historique.</div>
+                {% endfor %}
+            </div>
+        </div>
+
+    </div>{# end left #}
+
+    {# │ RIGHT sidebar #}
+    <div class="space-y-4 lg:sticky lg:top-8 min-w-0">
+
+        {# Control panel #}
+        <div class="bg-white border border-slate-900 rounded-xl shadow-lg p-5 sm:p-6 relative overflow-hidden">
+            <div class="absolute top-3 right-3">
+                <div class="w-7 h-7 rounded-full bg-slate-50 flex items-center justify-center text-slate-900 text-[9px] font-black">CP</div>
+            </div>
+            <h3 class="text-sm font-black text-slate-900 uppercase tracking-tight mb-1">Poste de Contrôle</h3>
+            <p class="text-[10px] font-bold text-slate-400 mb-5 uppercase tracking-wider leading-relaxed">Administration des flux logistiques.</p>
+
+            {% if isFullAccess %}
+                {% if not isLocked %}
+                    {{ form_start(form) }}
+                    <div class="mb-4">
+                        <label class="block text-[9px] uppercase tracking-[0.2em] font-black text-indigo-600 mb-2">Changement d'état</label>
+                        {{ form_widget(form.status, {'attr': {'class': 'w-full h-11 border border-slate-200 rounded-xl px-3 text-xs font-black bg-slate-50 cursor-pointer outline-none focus:ring-4 focus:ring-indigo-500/5 focus:border-indigo-400 transition-all uppercase tracking-widest'}}) }}
+                    </div>
+                    <button type="submit"
+                            class="w-full h-11 bg-slate-900 hover:bg-indigo-600 text-white text-[11px] font-black uppercase tracking-[0.1em] rounded-xl transition-all shadow-lg active:scale-95 border-0 cursor-pointer flex items-center justify-center gap-2">
+                        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg>
+                        Valider le statut
+                    </button>
+                    {{ form_end(form) }}
+                {% else %}
+                    <div class="p-5 bg-slate-50 border border-slate-100 rounded-xl text-center">
+                        <div class="text-2xl mb-2">🔒</div>
+                        <div class="font-black text-slate-900 text-xs uppercase tracking-tight mb-1">Dossier Verrouillé</div>
+                        <div class="text-[9px] font-bold text-slate-400 uppercase tracking-widest leading-relaxed">Archivage permanent — aucune modification possible.</div>
+                    </div>
+                {% endif %}
+            {% else %}
+                <div class="p-5 bg-indigo-50/50 border border-indigo-100 rounded-xl text-center">
+                    <div class="w-9 h-9 bg-indigo-50 rounded-full flex items-center justify-center mx-auto mb-3 text-lg">🛡️</div>
+                    <div class="font-black text-indigo-900 text-xs uppercase tracking-tight mb-1">Accès Restreint</div>
+                    <div class="text-[9px] font-bold text-indigo-500/70 uppercase tracking-widest leading-relaxed">Lecture seule — contactez un administrateur global.</div>
+                </div>
+            {% endif %}
+        </div>
+
+        {# PDF button #}
+        <a href="{{ path('admin_commandes_receipt', {id: commande.id}) }}" target="_blank"
+           class="flex items-center justify-center gap-3 w-full h-11 bg-slate-50 hover:bg-white text-slate-900 text-[10px] font-black uppercase tracking-[0.15em] rounded-xl transition-all border border-slate-200 shadow-sm active:shadow-inner">
+            <svg width="17" height="17" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9"/></svg>
+            Manifeste PDF
+        </a>
+
+        {# Info card #}
+        <div class="p-5 bg-slate-900 rounded-xl shadow-xl relative overflow-hidden group">
+            <div class="absolute -right-3 -bottom-3 opacity-10 group-hover:rotate-12 transition-transform duration-500">
+                <svg width="100" height="100" fill="currentColor" class="text-white" viewBox="0 0 24 24"><path d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg>
+            </div>
+            <div class="relative z-10">
+                <div class="font-black text-[9px] text-indigo-400 uppercase tracking-[0.3em] mb-2">Assistance Flux</div>
+                <p class="text-[11px] text-slate-400 leading-relaxed font-medium">Les transitions d'état notifient automatiquement le client via son espace portal.</p>
+            </div>
+        </div>
+
+    </div>{# end sidebar #}
+
+</div>{# end grid #}
+
+{% endblock %}

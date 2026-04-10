@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <style>
+        @page { 
+            margin: 0.3cm; 
+            size: A4 landscape; 
+        }
+        body { 
+            font-family: 'Helvetica', 'Arial', sans-serif; 
+            font-size: 8px; 
+            color: #334155; 
+            margin: 0;
+            padding: 0;
+            line-height: 1.2;
+            background-color: #ffffff;
+            height: 100%;
+        }
+        
+        /* Light Premium Header */
+        .header-container {
+            padding: 8px 15px;
+            border-bottom: 2px solid #e2e8f0;
+            margin-bottom: 8px;
+            position: relative;
+        }
+        .header-table { width: 100%; border-collapse: collapse; }
+        .logo-box { width: 15%; }
+        .title-box { width: 50%; text-align: center; }
+        .magasin-box { width: 35%; text-align: right; vertical-align: middle; }
+        
+        .main-title { 
+            font-size: 16px; 
+            font-weight: 800; 
+            color: #1e293b; 
+            text-transform: uppercase; 
+            margin: 0;
+            letter-spacing: 0.5px;
+        }
+        .date-range { 
+            font-size: 10px; 
+            color: #64748b; 
+            font-weight: 700;
+        }
+        
+        .magasin-hero {
+            display: inline-block;
+            background-color: #f8fafc;
+            color: #1e293b;
+            padding: 6px 15px;
+            border-radius: 6px;
+            text-align: right;
+            border: 1px solid #e2e8f0;
+            border-right: 4px solid #6366f1;
+        }
+        .magasin-label {
+            display: block;
+            font-size: 7px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #64748b;
+            font-weight: 800;
+            margin-bottom: 1px;
+        }
+        .magasin-name {
+            display: block;
+            font-size: 13px;
+            font-weight: 900;
+            text-transform: uppercase;
+            color: #4338ca;
+        }
+
+        .week-indicator {
+            font-size: 8px;
+            color: #94a3b8;
+            font-weight: 800;
+            margin-top: 3px;
+        }
+
+        /* Main Content Grid */
+        .grid-wrapper {
+            padding: 0 5px;
+        }
+        .days-grid {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 6px 0;
+            table-layout: fixed;
+        }
+        
+        .day-column {
+            vertical-align: top;
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+        }
+        
+        .day-header-top {
+            background: #f8fafc;
+            padding: 6px 2px;
+            text-align: center;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        
+        .day-name {
+            font-size: 10px;
+            font-weight: 800;
+            color: #1e293b;
+            text-transform: uppercase;
+        }
+        .day-sub {
+            font-size: 8px;
+            color: #64748b;
+            font-weight: 700;
+            display: block;
+        }
+        
+        .day-body {
+            padding: 6px 4px;
+            min-height: 310px;
+        }
+        
+        /* Highlighted Employee Cards */
+        .emp-card {
+            margin-bottom: 6px;
+            padding: 4px 6px;
+            border-radius: 4px;
+            background-color: #f1f5f9;
+            border-left: 3px solid #6366f1;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+        }
+        
+        .emp-name {
+            font-weight: 800;
+            font-size: 9px;
+            color: #1e1b4b; /* Darker for better contrast on light bg */
+            display: block;
+            margin-bottom: 1px;
+        }
+        
+        .time-badge {
+            display: inline-block;
+            color: #4338ca;
+            font-weight: 800;
+            font-size: 8.5px;
+            margin-right: 6px;
+        }
+
+        /* Sticky Bottom Absences Section */
+        .absences-wrapper {
+            position: absolute;
+            bottom: 30px;
+            left: 20px;
+            right: 20px;
+        }
+        
+        .info-footer-container {
+            border: 1px solid #e2e8f0;
+            border-top: 2px solid #6366f1;
+            border-radius: 6px;
+            overflow: hidden;
+            background-color: #ffffff;
+        }
+        
+        .info-title-bar {
+            background-color: #f8fafc;
+            color: #475569;
+            padding: 5px 12px;
+            font-size: 8px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        
+        .info-grid {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        .info-cell {
+            padding: 6px;
+            border-right: 1px solid #f1f5f9;
+            vertical-align: top;
+            width: 14.28%;
+        }
+        .info-cell:last-child {
+            border-right: none;
+        }
+        
+        .info-day-name {
+            font-size: 7px;
+            font-weight: 800;
+            color: #94a3b8;
+            text-transform: uppercase;
+            margin-bottom: 4px;
+            display: block;
+        }
+        
+        .event-item {
+            font-size: 8px;
+            color: #475569;
+            margin-bottom: 3px;
+            line-height: 1.2;
+        }
+        
+        .dot-marker {
+            display: inline-block;
+            height: 6px;
+            width: 6px;
+            border-radius: 50%;
+            margin-right: 4px;
+            vertical-align: middle;
+        }
+
+        .page-footer {
+            position: absolute;
+            bottom: 8px;
+            left: 0;
+            right: 0;
+            text-align: center;
+            font-size: 7px;
+            color: #94a3b8;
+        }
+    </style>
+</head>
+<body>
+    {# French day labels #}
+    {% set french_days = {
+        'Monday': 'Lundi',
+        'Tuesday': 'Mardi',
+        'Wednesday': 'Mercredi',
+        'Thursday': 'Jeudi',
+        'Friday': 'Vendredi',
+        'Saturday': 'Samedi',
+        'Sunday': 'Dimanche'
+    } %}
+
+    {# French month labels #}
+    {% set french_months = {
+        '01': 'Janvier', '02': 'Février', '03': 'Mars', '04': 'Avril',
+        '05': 'Mai', '06': 'Juin', '07': 'Juillet', '08': 'Août',
+        '09': 'Septembre', '10': 'Octobre', '11': 'Novembre', '12': 'Décembre'
+    } %}
+
+    <div class="header-container">
+        <table class="header-table">
+            <tr>
+                <td class="logo-box">
+                    {% if logoBase64 %}
+                        <img src="{{ logoBase64 }}" alt="Logo" style="height: 25px;">
+                    {% endif %}
+                </td>
+                <td class="title-box">
+                    <div class="main-title">Agenda des Horaires</div>
+                    <div class="date-range">
+                        Du {{ start|date('d') }} {{ french_months[start|date('m')] }} au {{ end|date_modify('-1 day')|date('d') }} {{ french_months[end|date_modify('-1 day')|date('m')] }} {{ end|date_modify('-1 day')|date('Y') }}
+                    </div>
+                </td>
+                <td class="magasin-box">
+                    <div class="magasin-hero">
+                        <span class="magasin-label">Établissement</span>
+                        <span class="magasin-name">
+                            {% if magasin == 'all' or magasin is empty %}
+                                TOUS LES MAGASINS
+                            {% else %}
+                                {{ magasin }}
+                            {% endif %}
+                        </span>
+                    </div>
+                    <div class="week-indicator">SEMAINE {{ start|date('W') }}</div>
+                </td>
+            </tr>
+        </table>
+    </div>
+
+    <div class="grid-wrapper">
+        <table class="days-grid">
+            <tr>
+                {% for date, data in days %}
+                    <td class="day-column">
+                        <div class="day-header-top">
+                            <span class="day-name">{{ french_days[data.date|date('l')] }}</span>
+                            <span class="day-sub">{{ data.date|date('d/m') }}</span>
+                        </div>
+                        <div class="day-body">
+                            {% if data.users|length > 0 %}
+                                {% for userId, userData in data.users %}
+                                    <div class="emp-card">
+                                        <span class="emp-name">{{ userData.user.prenom }} {{ userData.user.nom|upper }}</span>
+                                        <div class="shifts-list">
+                                            {% for shift in userData.shifts %}
+                                                <span class="time-badge">{{ shift.startTime|date('H\\hi') }}-{{ shift.endTime|date('H\\hi') }}</span>
+                                            {% endfor %}
+                                        </div>
+                                    </div>
+                                {% endfor %}
+                            {% endif %}
+                        </div>
+                    </td>
+                {% endfor %}
+            </tr>
+        </table>
+    </div>
+
+    <div class="absences-wrapper">
+        <div class="info-footer-container">
+            <div class="info-title-bar">INFOS / ABSENCES / CONGÉS</div>
+            <table class="info-grid">
+                <tr>
+                    {% for date, data in days %}
+                        <td class="info-cell">
+                            <div class="info-day-name">{{ french_days[data.date|date('l')] }}</div>
+                            {% for event in data.allDayEvents %}
+                                <div class="event-item">
+                                    <span class="dot-marker" style="background-color: {{ event.color ?: (event.user.calendarColor ?: '#6366f1') }}"></span>
+                                    <strong style="color: #1e293b;">{{ event.user.prenom }}</strong>: {{ event.status ?: 'Info' }}
+                                </div>
+                            {% endfor %}
+                        </td>
+                    {% endfor %}
+                </tr>
+            </table>
+        </div>
+    </div>
+
+    <div class="page-footer">
+        Document interne LSDJ Portal &bull; Généré le {{ "now"|date('d/m/Y H:i') }}
+    </div>
+</body>
+</html>

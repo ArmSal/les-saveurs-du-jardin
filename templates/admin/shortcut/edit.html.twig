@@ -1,0 +1,99 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Modifier le Raccourci | Plateforme LSDJ{% endblock %}
+
+{% block body %}
+<div class="min-h-screen bg-slate-50 py-4 sm:py-8 px-0 sm:px-4 lg:px-8">
+    <div class="max-w-2xl mx-auto">
+        
+        {# Back Navigation #}
+        <a href="{{ path('admin_shortcuts_index') }}" class="inline-flex items-center gap-2 text-[11px] font-bold uppercase tracking-wider text-slate-400 hover:text-indigo-600 transition-colors mb-4 group">
+            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" class="group-hover:-translate-x-1 transition-transform"><path d="M15 19l-7-7 7-7"></path></svg>
+            Retour à la gestion
+        </a>
+
+        <div class="bg-white border border-slate-200 rounded-lg shadow-sm overflow-hidden">
+            <div class="p-6 border-b border-slate-100 flex items-center gap-4">
+                <div class="w-14 h-14 bg-slate-50 rounded-lg flex items-center justify-center {{ shortcut.colorClass|default('text-slate-600') }} border border-slate-100">
+                    {% if shortcut.icon %}
+                        {% if '<svg' in shortcut.icon %}
+                            {{ shortcut.icon|raw }}
+                        {% else %}
+                            <img src="{{ path('app_media_shortcut', {filename: shortcut.icon}) }}" class="w-8 h-8 object-contain">
+                        {% endif %}
+                    {% else %}
+                        <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                    {% endif %}
+                </div>
+                <div>
+                    <div class="text-[10px] font-bold uppercase tracking-wider text-indigo-600 mb-0.5">Configuration</div>
+                    <h1 class="text-lg font-bold text-slate-900">{{ shortcut.label }}</h1>
+                </div>
+            </div>
+
+            <form action="{{ path('admin_shortcuts_edit', {id: shortcut.id}) }}" method="POST" enctype="multipart/form-data" class="p-6 space-y-4" onsubmit="return validateEditForm()">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">Libellé <span class="text-rose-500">*</span></label>
+                        <input type="text" name="label" value="{{ shortcut.label }}" required class="w-full h-10 px-3 text-sm font-semibold text-slate-800 bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-100 focus:border-indigo-400 outline-none transition-all">
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">Ordre d'affichage (1-10) <span class="text-rose-500">*</span></label>
+                        <select name="displayOrder" required class="w-full h-10 px-3 text-sm font-semibold text-slate-800 bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-100 focus:border-indigo-400 outline-none transition-all">
+                            {% for i in 1..10 %}
+                                <option value="{{ i }}" {{ shortcut.displayOrder == i ? 'selected' : '' }}>Position {{ i }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">URL Relative ou Absolue <span class="text-rose-500">*</span></label>
+                    <input type="text" name="url" value="{{ shortcut.url }}" required class="w-full h-10 px-3 text-sm font-semibold text-slate-700 bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-100 focus:border-indigo-400 outline-none transition-all">
+                </div>
+
+                <div>
+                    <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">Icône / Photo <span class="text-rose-500">*</span></label>
+                    <input type="file" name="iconFile" class="hidden" id="edit-icon-file" accept="image/*,.svg" onchange="updateEditHint(this)">
+                    <div class="flex gap-3">
+                        <button type="button" onclick="document.getElementById('edit-icon-file').click()" class="h-10 px-4 bg-slate-100 hover:bg-slate-200 rounded-lg text-[10px] font-bold uppercase text-slate-600 transition-all flex items-center gap-2 border border-slate-200">
+                            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
+                            Changer l'icône
+                        </button>
+                        <textarea name="icon" id="edit-icon-text" rows="1" class="flex-1 h-10 px-3 py-2 text-xs font-mono bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-100 focus:border-indigo-400 outline-none resize-none" placeholder="<svg...> ou https://...">{{ shortcut.icon }}</textarea>
+                    </div>
+                    <span id="edit-hint" class="text-[10px] font-semibold text-indigo-600 mt-1.5 block"></span>
+                    <p class="text-[9px] text-slate-400 mt-1">Laissez vide pour conserver l'icône actuelle, ou téléchargez une nouvelle image</p>
+                </div>
+
+                <script>
+                    function updateEditHint(input) {
+                        if (input.files && input.files[0]) {
+                            document.getElementById('edit-hint').innerText = 'Fichier sélectionné: ' + input.files[0].name;
+                            document.getElementById('edit-icon-text').value = '';
+                        }
+                    }
+                    function validateEditForm() {
+                        const fileInput = document.getElementById('edit-icon-file');
+                        const textInput = document.getElementById('edit-icon-text');
+                        // Pour l'édition, on vérifie seulement si un nouveau fichier est sélectionné (optionnel)
+                        if (!fileInput.value && !textInput.value.trim()) {
+                            alert('Veuillez sélectionner une icône ou saisir un code SVG/URL.');
+                            return false;
+                        }
+                        return true;
+                    }
+                </script>
+
+                <div class="pt-4 border-t border-slate-100 flex justify-end gap-3">
+                    <a href="{{ path('admin_shortcuts_index') }}" class="h-10 px-6 flex items-center justify-center text-[11px] font-bold uppercase tracking-wider text-slate-500 hover:text-slate-800 transition-all">Annuler</a>
+                    <button type="submit" class="h-10 px-8 bg-indigo-600 hover:bg-indigo-700 text-white text-[11px] font-bold uppercase tracking-wider rounded-lg transition-all shadow-sm">
+                        Sauvegarder
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

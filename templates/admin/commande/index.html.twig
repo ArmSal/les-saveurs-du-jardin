@@ -1,0 +1,182 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Gestion Commandes | Plateforme LSDJ{% endblock %}
+
+{% block body %}
+
+{# ── Header ─────────────────────────────────────────────────────── #}
+<div class="mb-6 flex flex-col sm:flex-row sm:items-end justify-between gap-4 pb-5 border-b border-slate-100">
+    <div class="space-y-1">
+        <div class="inline-flex items-center gap-2 px-2 py-0.5 rounded-md bg-slate-100 border-slate-200 border mb-1">
+            <span class="w-1.5 h-1.5 rounded-full bg-slate-400"></span>
+            <span class="text-[9px] font-black uppercase tracking-widest text-slate-500">Flux de Commandes</span>
+        </div>
+        <h1 class="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight leading-none uppercase">
+            Gestion <span class="text-indigo-600">Logistique</span>
+        </h1>
+        <p class="text-slate-400 text-xs font-medium">Suivi en temps réel des flux d'expéditions.</p>
+    </div>
+
+    {# Tab Navigation — clicking updates the view state + reloads list #}
+    <div class="flex flex-wrap items-center gap-1 p-1.5 bg-slate-50 border border-slate-100 rounded-xl self-start sm:self-auto">
+        <button type="button" data-view="my"
+                class="tab-btn px-3 py-2 text-[10px] font-black uppercase tracking-widest rounded-lg transition-all {{ currentView == 'my' ? 'bg-white text-indigo-600 shadow-sm border border-slate-100' : 'text-slate-400 hover:text-slate-700' }}">
+            Mes Commandes
+        </button>
+        {% if isAdminMagasin %}
+        <button type="button" data-view="magasin"
+                class="tab-btn px-3 py-2 text-[10px] font-black uppercase tracking-widest rounded-lg transition-all {{ currentView == 'magasin' ? 'bg-white text-indigo-600 shadow-sm border border-slate-100' : 'text-slate-400 hover:text-slate-700' }}">
+            Mon Magasin
+        </button>
+        {% endif %}
+        {% if isFullAccess %}
+        <button type="button" data-view="all"
+                class="tab-btn px-3 py-2 text-[10px] font-black uppercase tracking-widest rounded-lg transition-all {{ currentView == 'all' ? 'bg-white text-indigo-600 shadow-sm border border-slate-100' : 'text-slate-400 hover:text-slate-700' }}">
+            Toutes
+        </button>
+        {% endif %}
+    </div>
+</div>
+
+{# ── Filter Bar ──────────────────────────────────────────────────── #}
+<div class="bg-white border border-slate-200 rounded-xl mb-6 overflow-hidden shadow-sm">
+    <div class="px-4 sm:px-6 py-4 bg-slate-50 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div class="flex flex-wrap items-center gap-3">
+            <div class="relative">
+                <select id="statusFilter"
+                        class="appearance-none h-9 pl-4 pr-8 bg-white border border-slate-200 text-[10px] font-black text-slate-600 uppercase tracking-widest cursor-pointer focus:ring-4 focus:ring-indigo-500/5 focus:border-indigo-400 transition-all rounded-lg min-w-[180px]">
+                    <option value="all">Tous les Statuts</option>
+                    {% for val, label in statusLabels %}
+                        <option value="{{ val }}" {% if currentStatus == val %}selected{% endif %}>{{ label|upper }}</option>
+                    {% endfor %}
+                </select>
+                <div class="absolute inset-y-0 right-3 flex items-center pointer-events-none">
+                    <svg width="10" height="10" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path d="M19 9l-7 7-7-7"/></svg>
+                </div>
+            </div>
+            <button type="button" id="resetFilter"
+                    class="h-9 px-3 flex items-center text-slate-300 hover:text-indigo-600 transition-colors" title="Réinitialiser">
+                <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12"/></svg>
+            </button>
+        </div>
+        {# Spinner shown during AJAX load #}
+        <div id="loadingSpinner" class="hidden">
+            <svg class="animate-spin h-4 w-4 text-indigo-500" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/>
+            </svg>
+        </div>
+    </div>
+
+    {# Dynamic results container — swapped by AJAX #}
+    <div id="commandesResults">
+        {% include 'admin/commande/_list.html.twig' %}
+    </div>
+</div>
+
+<script>
+(function () {
+    const ajaxUrl   = '{{ path("admin_commandes_ajax") }}';
+    const container = document.getElementById('commandesResults');
+    const spinner   = document.getElementById('loadingSpinner');
+    const statusSel = document.getElementById('statusFilter');
+    const resetBtn  = document.getElementById('resetFilter');
+    const tabBtns   = document.querySelectorAll('.tab-btn');
+
+    // State
+    let currentView   = '{{ currentView }}';
+    let currentStatus = '{{ currentStatus }}';
+    let currentPage   = 1;
+
+    function setActiveTab(view) {
+        tabBtns.forEach(btn => {
+            const isActive = btn.dataset.view === view;
+            btn.classList.toggle('bg-white', isActive);
+            btn.classList.toggle('text-indigo-600', isActive);
+            btn.classList.toggle('shadow-sm', isActive);
+            btn.classList.toggle('border', isActive);
+            btn.classList.toggle('border-slate-100', isActive);
+            btn.classList.toggle('text-slate-400', !isActive);
+            btn.classList.toggle('hover:text-slate-700', !isActive);
+        });
+    }
+
+    function load(page) {
+        const params = new URLSearchParams({
+            view:   currentView,
+            status: currentStatus,
+            page:   page,
+        });
+
+        spinner.classList.remove('hidden');
+        container.style.opacity = '0.5';
+        container.style.pointerEvents = 'none';
+
+        fetch(`${ajaxUrl}?${params}`, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+            .then(r => r.text())
+            .then(html => {
+                container.innerHTML = html;
+                container.style.opacity = '';
+                container.style.pointerEvents = '';
+                spinner.classList.add('hidden');
+                currentPage = page;
+
+                // Re-attach pagination link listeners after swap
+                attachPaginationListeners();
+
+                // Update browser URL without reload
+                const url = new URL(window.location);
+                url.searchParams.set('view', currentView);
+                url.searchParams.set('status', currentStatus);
+                url.searchParams.set('page', page);
+                history.replaceState({}, '', url);
+            })
+            .catch(() => {
+                spinner.classList.add('hidden');
+                container.style.opacity = '';
+                container.style.pointerEvents = '';
+            });
+    }
+
+    function attachPaginationListeners() {
+        // Intercept all pagination <a> tags inside the container
+        container.querySelectorAll('a[href*="page="]').forEach(link => {
+            link.addEventListener('click', function (e) {
+                e.preventDefault();
+                const url = new URL(this.href, window.location.origin);
+                const page = url.searchParams.get('page') || 1;
+                load(parseInt(page));
+            });
+        });
+    }
+
+    // Tab clicks
+    tabBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+            currentView = btn.dataset.view;
+            currentPage = 1;
+            setActiveTab(currentView);
+            load(1);
+        });
+    });
+
+    // Status filter change — no form submit, instant AJAX
+    statusSel.addEventListener('change', () => {
+        currentStatus = statusSel.value;
+        currentPage   = 1;
+        load(1);
+    });
+
+    // Reset
+    resetBtn.addEventListener('click', () => {
+        currentStatus = 'all';
+        statusSel.value = 'all';
+        load(1);
+    });
+
+    // Initial pagination intercept
+    attachPaginationListeners();
+})();
+</script>
+
+{% endblock %}

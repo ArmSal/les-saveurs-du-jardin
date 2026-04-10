@@ -1,0 +1,550 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}
+	{{ canEdit ? 'GESTION DES CONGÉS' : 'DEMANDE DE CONGÉ' }} - LSDJ
+{% endblock %}
+
+{% block body %}
+<div class="min-h-screen bg-slate-50 py-4 sm:py-6 px-0 sm:px-4 lg:px-8" x-data="{ activeTab: 'pending' }">
+    <div class="max-w-7xl mx-auto">
+        
+        {# Header - Dashboard Style #}
+        <div class="mb-6 px-3 sm:px-0">
+            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                <div>
+                    <h1 class="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
+                        {{ canEdit ? 'Gestion des Congés' : 'Mes Congés' }}
+                    </h1>
+                    <p class="text-xs text-slate-500 mt-1 flex items-center gap-2">
+                        <span class="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></span>
+                        <span>En direct • {{ "now"|date("d/m/Y H:i") }}</span>
+                    </p>
+                </div>
+                <button onclick="openRequestModal()" class="inline-flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2.5 px-5 rounded-lg transition-all text-xs uppercase tracking-wider shadow-sm">
+                    <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 4v16m8-8H4"></path></svg>
+                    Nouvelle Demande
+                </button>
+            </div>
+        </div>
+
+        {# Stats Cards - Dashboard Style #}
+        {% if canEdit %}
+        {# Mobile: All cards stacked vertically. sm+: 2 columns with Congé/Total spanning full width #}
+        <div class="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3 mb-6 px-3 sm:px-0">
+            {# En attente - compact for mobile #}
+            <div class="bg-white rounded-lg p-2 sm:p-3 shadow-sm border border-slate-200">
+                <div class="text-[9px] sm:text-[10px] font-bold text-slate-400 uppercase tracking-wider">En attente</div>
+                <div class="text-base sm:text-lg lg:text-xl font-black text-amber-600" id="stat-pending">{{ pending|length }}</div>
+                <div class="text-[8px] sm:text-[9px] text-slate-400">Demandes</div>
+            </div>
+            {# Validés - shows all upcoming approved congés with scrollbar #}
+            <div class="col-span-2 sm:col-span-1 bg-white rounded-lg p-2 sm:p-3 shadow-sm border border-slate-200 flex flex-col">
+                <div class="text-[9px] sm:text-[10px] font-bold text-slate-400 uppercase tracking-wider">Validés</div>
+                <div class="text-base sm:text-lg lg:text-xl font-black text-emerald-600" id="stat-approved">{{ upcomingApproved|length }}</div>
+                <div class="text-[8px] sm:text-[9px] text-slate-400 mb-1">À venir</div>
+                {# Scrollable list of all upcoming approved congés #}
+                <div class="flex-1 overflow-y-auto max-h-32 mt-1 space-y-1 pr-1">
+                    {% for conge in upcomingApproved %}
+                        <div class="text-[10px] text-slate-700 border-l-2 border-emerald-400 pl-1.5 py-0.5 hover:bg-slate-50 rounded-r truncate" title="{{ conge.user.prenom }} {{ conge.user.nom }}: {{ conge.startDate|date('d/m') }} - {{ conge.endDate|date('d/m') }}">
+                            <span class="font-bold">{{ conge.user.prenom }} {{ conge.user.nom }}</span>: {{ conge.startDate|date('d/m') }} - {{ conge.endDate|date('d/m') }}
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {# Congé/Total employés - full width on mobile, spans 2 cols on sm+ #}
+            <div class="col-span-2 bg-white rounded-lg p-2 sm:p-3 shadow-sm border border-slate-200">
+                <div class="text-[9px] sm:text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5 sm:mb-2">Congé/Total employés</div>
+                {# Auto-fit grid - cards resize to fit container #}
+                <div class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-8 gap-1.5 sm:gap-2">
+                    {% for mag, stats in magasinStats %}
+                        <div class="bg-slate-50 rounded px-1.5 sm:px-2 py-1 sm:py-1.5 border border-slate-100 min-w-0">
+                            <span class="text-[9px] sm:text-[10px] font-bold text-slate-600 block truncate" title="{{ mag }}">{{ mag }}</span>
+                            <span class="text-xs sm:text-sm font-black {% if stats.onConge > 0 %}text-amber-600{% else %}text-emerald-600{% endif %}">{{ stats.onConge }}/{{ stats.total }}</span>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+	        {# Filters - Clean Transparent Style #}
+        {% if canEdit %}
+        <div class="px-3 sm:px-0 mb-4">
+            <div class="bg-slate-50/50 backdrop-blur-sm border border-slate-200/60 rounded-lg p-3 flex flex-col sm:flex-row gap-3">
+                <div class="flex-1">
+                    <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">Magasin</label>
+                    <select id="magasinFilter" onchange="filterMagasin(this.value)" class="w-full bg-white/80 border border-slate-200 rounded-lg px-3 py-2 text-xs font-bold text-slate-800 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none">
+                        {% if not isMagasinOnly %}
+                            <option value="all">Tous les magasins</option>
+                        {% endif %}
+                        {% for mag in magasins %}
+                            <option value="{{ mag|lower|replace({' ':''}) }}">{{ mag }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="flex-1">
+                    <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">Collaborateur</label>
+                    <select id="employeFilter" onchange="filterEmploye(this.value)" class="w-full bg-white/80 border border-slate-200 rounded-lg px-3 py-2 text-xs font-bold text-slate-800 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none">
+                        <option value="all">Tous les collaborateurs</option>
+                        {% for emp in employes %}
+                            <option value="{{ emp.id }}" data-magasin="{{ emp.magasin|lower|replace({' ':''}) }}">{{ emp.prenom }} {{ emp.nom }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+			{# --- 4. MAIN CONTENT --- #}
+			<div class="space-y-16">
+				{# DOSSIERS ACTIFS - Dashboard Style #}
+				<section>
+					<div class="flex items-center gap-4 mb-4 px-3 sm:px-0">
+						<h2 class="text-xs font-bold text-slate-400 uppercase tracking-wider">Dossiers en cours</h2>
+						<div class="flex-1 h-px bg-slate-200"></div>
+						<span class="text-xs font-bold text-slate-400">{{ pending|length }}</span>
+					</div>
+
+					<div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3 px-3 sm:px-0" id="active-requests-grid">
+					{% for conge in pending %}
+						<div class="conge-card bg-white rounded-lg shadow-sm border border-slate-200 overflow-hidden hover:shadow-md transition-all flex flex-col"
+							 data-magasin-filter="{{ conge.user.magasin|lower|replace({' ':''}) }}"
+							 data-user-id="{{ conge.user.id }}">
+							<div class="p-3 flex flex-col h-full">
+								<div class="flex items-start justify-between gap-2 mb-2">
+									<div class="flex items-center gap-2">
+										{% if conge.user.photo %}
+											<img src="{{ path('app_media_user', {filename: conge.user.photo}) }}" class="w-8 h-8 rounded-lg object-cover border border-slate-200">
+										{% else %}
+											<div class="w-8 h-8 bg-indigo-50 rounded-lg flex items-center justify-center text-indigo-600 font-bold text-xs border border-slate-200">
+												{{ conge.user.prenom|first }}{{ conge.user.nom|first }}
+											</div>
+										{% endif %}
+										<div>
+											<h4 class="text-xs font-bold text-slate-900">{{ conge.user.prenom }} {{ conge.user.nom }}</h4>
+											<span class="text-[10px] font-bold text-slate-400 uppercase">{{ conge.user.magasin|default('LSDJ') }}</span>
+										</div>
+									</div>
+									<div class="flex flex-col items-end gap-1">
+										<span class="inline-flex items-center gap-1 px-2 py-1 rounded text-xs font-bold uppercase tracking-wider border-2
+											{% if conge.status == 'PENDING' %}bg-amber-100 text-amber-700 border-amber-300{% elseif conge.status == 'MODIFIED' %}bg-indigo-100 text-indigo-700 border-indigo-300{% elseif conge.status == 'ACCEPTED_BY_EMPLOYEE' %}bg-emerald-100 text-emerald-700 border-emerald-300{% else %}bg-slate-100 text-slate-600 border-slate-300{% endif %}">
+											<span class="w-1.5 h-1.5 rounded-full bg-current {% if conge.status == 'MODIFIED' %}animate-pulse{% endif %}"></span>
+											{% if conge.status == 'PENDING' %}En attente{% elseif conge.status == 'MODIFIED' %}Modifié{% elseif conge.status == 'ACCEPTED_BY_EMPLOYEE' %}Accepté{% else %}Traitement{% endif %}
+										</span>
+										<span class="text-[10px] font-bold text-slate-400 uppercase bg-slate-100 px-1.5 py-0.5 rounded">{{ conge.type }}</span>
+									</div>
+								</div>
+
+								<div class="flex items-center gap-3 mb-2 text-xs">
+									<div>
+										<span class="text-[10px] font-bold text-slate-400 uppercase block">Départ</span>
+										<span class="font-bold text-slate-900">{{ conge.startDate|date('d/m/Y') }}</span>
+									</div>
+									<svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" class="text-slate-300"><path d="M9 5l7 7-7 7"></path></svg>
+									<div>
+										<span class="text-[10px] font-bold text-slate-400 uppercase block">Retour</span>
+										<span class="font-bold text-slate-900">{{ conge.endDate|date('d/m/Y') }}</span>
+									</div>
+								</div>
+
+								{% for step in conge.history|reverse|slice(0, 1) %}
+									<p class="text-[10px] text-slate-600 bg-slate-50 p-1.5 rounded border border-slate-100 mb-2 italic">
+										"{{ step.comment|default(step.action) }}"
+									</p>
+								{% endfor %}
+
+								{# Actions - push to bottom with mt-auto #}
+								<div class="flex gap-1.5 pt-2 border-t border-slate-100 mt-auto">
+									{% if conge.user == app.user %}
+										{% if conge.status in ['PENDING', 'MODIFIED', 'ACCEPTED_BY_EMPLOYEE'] %}
+											{% if conge.status == 'MODIFIED' %}
+												<button onclick="openEmployeeAcceptModal('{{ conge.id }}')" class="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-1.5 rounded text-xs uppercase tracking-wider transition-all">Accepter</button>
+											{% endif %}
+											<button onclick="openEmployeeModifyModal('{{ conge.id }}', '{{ conge.startDate|date('Y-m-d') }}', '{{ conge.endDate|date('Y-m-d') }}', '{{ conge.type }}')" class="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-1.5 rounded text-xs uppercase tracking-wider transition-all">Modifier</button>
+											<button onclick="openEmployeeCancelModal('{{ conge.id }}')" class="flex-1 bg-rose-50 hover:bg-rose-100 text-rose-600 font-bold py-1.5 rounded text-xs uppercase tracking-wider transition-all border border-rose-200">Annuler</button>
+										{% endif %}
+									{% elseif canEdit %}
+										{% if conge.status == 'PENDING' %}
+											<button onclick="openApproveModal('{{ conge.id }}')" class="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-1.5 rounded text-xs uppercase tracking-wider transition-all">Approuver</button>
+											<button onclick="openModifyModal('{{ conge.id }}', '{{ conge.startDate|date('Y-m-d') }}', '{{ conge.endDate|date('Y-m-d') }}', '{{ conge.type }}')" class="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-1.5 rounded text-xs uppercase tracking-wider transition-all">Modifier</button>
+											<button onclick="openRejectModal('{{ conge.id }}')" class="flex-1 bg-rose-50 hover:bg-rose-100 text-rose-600 font-bold py-1.5 rounded text-xs uppercase tracking-wider transition-all border border-rose-200">Rejeter</button>
+										{% elseif conge.status == 'ACCEPTED_BY_EMPLOYEE' %}
+											<button onclick="openApproveModal('{{ conge.id }}')" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-1.5 rounded text-xs uppercase tracking-wider transition-all">Signer Définitivement</button>
+										{% else %}
+											<span class="w-full text-center text-xs font-bold text-slate-400 uppercase py-1.5">En attente salarié...</span>
+										{% endif %}
+									{% endif %}
+								</div>
+							</div>
+						</div>
+					{% else %}
+						<div class="col-span-full text-center py-12 bg-white rounded-lg border border-dashed border-slate-200">
+							<svg width="48" height="48" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" class="text-slate-300 mx-auto mb-3"><path d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+							<p class="text-sm font-bold text-slate-400 uppercase">Aucune demande en cours</p>
+						</div>
+					{% endfor %}
+				</div>
+
+					<div id="no-active-results" class="hidden py-12 text-center border border-dashed border-slate-200 rounded-lg bg-slate-50">
+						<p class="text-sm font-bold text-slate-400 uppercase">Aucun dossier en cours</p>
+					</div>
+				</section>
+
+				{# ARCHIVES - Ultra Compact Grid #}
+				<section>
+					<div class="flex items-center gap-4 mb-4 px-3 sm:px-0">
+						<h2 class="text-xs font-bold text-slate-400 uppercase tracking-wider">Archives traitées</h2>
+						<div class="flex-1 h-px bg-slate-200"></div>
+						<span class="text-xs font-bold text-slate-400">{{ history.getTotalItemCount }}</span>
+					</div>
+
+					<div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-2 px-3 sm:px-0" id="history-grid">
+						{% for conge in history %}
+						<div class="conge-card bg-white rounded-lg shadow-sm border border-slate-200 p-2 opacity-80 hover:opacity-100 transition-all cursor-pointer hover:border-indigo-300"
+						 data-conge-id="{{ conge.id }}"
+						 data-user-name="{{ (conge.user.prenom ~ ' ' ~ conge.user.nom)|e('html_attr') }}"
+						 data-magasin="{{ conge.user.magasin|default('LSDJ')|e('html_attr') }}"
+						 data-start="{{ conge.startDate|date('d/m/Y') }}"
+						 data-end="{{ conge.endDate|date('d/m/Y') }}"
+						 data-type="{{ conge.type|e('html_attr') }}"
+						 data-status="{{ conge.status }}"
+						 data-magasin-filter="{{ conge.user.magasin|lower|replace({' ':''}) }}"
+						 data-user-id="{{ conge.user.id }}"
+						 data-history="{{ conge.history|map(h => {status: h.action, date: h.at, comment: h.comment|default('')})|json_encode|e('html_attr') }}"
+						onclick="const c=this.dataset; openViewHistoryModal(c.congeId, c.userName, c.magasin, c.start, c.end, c.type, c.status, c.history, {{ canEdit ? 'true' : 'false' }});">
+							<div class="flex items-center gap-1.5 mb-1.5">
+								{% if conge.user.photo %}
+									<img src="{{ path('app_media_user', {filename: conge.user.photo}) }}" class="w-6 h-6 rounded object-cover border border-slate-200">
+								{% else %}
+									<div class="w-6 h-6 bg-slate-50 rounded flex items-center justify-center text-slate-400 font-bold text-[10px] border border-slate-200">
+										{{ conge.user.prenom|first }}
+									</div>
+								{% endif %}
+								<div class="min-w-0 flex-1">
+									<h4 class="text-[11px] font-bold text-slate-900 truncate">{{ conge.user.prenom }} {{ conge.user.nom }}</h4>
+									<span class="text-[9px] font-bold text-slate-400 uppercase">{{ conge.user.magasin|default('LSDJ') }}</span>
+								</div>
+								<span class="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-bold uppercase border
+									{% if conge.status == 'APPROVED' %}bg-emerald-100 text-emerald-700 border-emerald-300{% elseif conge.status == 'CANCELLED' %}bg-slate-200 text-slate-600 border-slate-400{% else %}bg-rose-100 text-rose-700 border-rose-300{% endif %}">
+									{% if conge.status == 'APPROVED' %}✓{% elseif conge.status == 'CANCELLED' %}✕{% else %}✕{% endif %}
+								</span>
+							</div>
+							<div class="flex items-center justify-between">
+								<div class="flex items-center gap-1 text-[11px] text-slate-600">
+									<span class="font-bold">{{ conge.startDate|date('d/m') }}</span>
+									<span class="text-slate-300">→</span>
+									<span class="font-bold">{{ conge.endDate|date('d/m') }}</span>
+								</div>
+								<span class="text-[9px] font-bold text-slate-500 uppercase bg-slate-100 px-1.5 py-0.5 rounded">{{ conge.type }}</span>
+							</div>
+						</div>
+					{% endfor %}
+					</div>
+
+					{# PAGINATION - Premium Style #}
+				{% if history.getTotalItemCount > history.getItemNumberPerPage %}
+					<div class="mt-8 flex justify-center">
+						<div class="p-2 bg-white/40 backdrop-blur-md rounded-[2rem] border border-white/60 shadow-xl shadow-slate-100/50">
+							{{ knp_pagination_render(history, 'parts/_premium_pagination.html.twig') }}
+						</div>
+					</div>
+				{% endif %}
+				</section>
+			</div>
+		</div>
+	</div>
+
+	{# --- MODALS (Documents RH Style Sync) --- #}
+	{% include 'rh/_conge_modals.html.twig' %}
+	{% include 'rh/_view_history_modal.html.twig' %}
+
+	<script src="https://cdn.jsdelivr.net/npm/signature_pad@4.1.7/dist/signature_pad.umd.min.js"></script>
+	<script>
+		let adminSignaturePad = null;
+		const upcomingApproved = {{ upcomingApproved|map(c => {
+			id: c.id,
+			user: c.user.prenom ~ ' ' ~ c.user.nom,
+			magasin: c.user.magasin|lower|replace({' ':''}),
+			magasinDisplay: c.user.magasin,
+			start: c.startDate|date('d/m/y'),
+			end: c.endDate|date('d/m/y'),
+			type: c.type
+		})|json_encode|raw }};
+
+		function resizeCanvas() {
+			const ratio = Math.max(window.devicePixelRatio || 1, 1);
+			const canvas = document.getElementById('admin-signature-pad');
+			if (!canvas) return;
+			canvas.width = canvas.offsetWidth * ratio;
+			canvas.height = canvas.offsetHeight * ratio;
+			canvas.getContext("2d").scale(ratio, ratio);
+			if (adminSignaturePad) adminSignaturePad.clear();
+		}
+
+		document.addEventListener('DOMContentLoaded', function () {
+			const canvas = document.getElementById('admin-signature-pad');
+			if (canvas) {
+				adminSignaturePad = new SignaturePad(canvas, { backgroundColor: 'rgba(255, 255, 255, 0)', penColor: 'rgb(15, 23, 42)' });
+				window.addEventListener("resize", resizeCanvas);
+				setTimeout(resizeCanvas, 200);
+				document.getElementById('clear-admin-signature')?.addEventListener('click', () => adminSignaturePad.clear());
+			}
+
+			document.getElementById('admin-approve-form')?.addEventListener('submit', function (e) {
+				if (adminSignaturePad.isEmpty()) {
+					e.preventDefault(); alert('La signature est obligatoire pour valider.'); return;
+				}
+				document.getElementById('admin-signature-input').value = adminSignaturePad.toDataURL();
+			});
+
+			// Add click handlers for history cards
+			document.querySelectorAll('#history-grid .conge-card').forEach(card => {
+				card.addEventListener('click', function(e) {
+					console.log('Card clicked:', this.dataset);
+					openViewHistoryModal(
+						this.dataset.congeId,
+						this.dataset.userName,
+						this.dataset.magasin,
+						this.dataset.start,
+						this.dataset.end,
+						this.dataset.type,
+						this.dataset.status,
+						this.dataset.history,
+						{{ canEdit ? 'true' : 'false' }}
+					);
+				});
+			});
+
+			if ({{ isMagasinOnly ? 'true' : 'false' }}) {
+				const magFilter = document.getElementById('magasinFilter');
+				if (magFilter) filterMagasin(magFilter.value);
+			}
+		});
+
+		function filterMagasin(mag) {
+			const empSelect = document.getElementById('employeFilter');
+			if (empSelect) {
+				empSelect.value = 'all';
+				Array.from(empSelect.options).forEach(opt => {
+					if (opt.value === 'all' || mag === 'all' || opt.dataset.magasin === mag) {
+						opt.style.display = '';
+					} else {
+						opt.style.display = 'none';
+					}
+				});
+			}
+			applyFilters();
+		}
+
+		function filterEmploye(uid) { applyFilters(); }
+
+		function applyFilters() {
+			const mag = document.getElementById('magasinFilter')?.value || 'all';
+			const uid = document.getElementById('employeFilter')?.value || 'all';
+			let count = 0;
+
+			document.querySelectorAll('#active-requests-grid .conge-card').forEach(card => {
+				const cardMag = card.dataset.magasinFilter;
+				const cardUid = card.dataset.userId;
+
+				const magMatch = (mag === 'all' || cardMag === mag);
+				const uidMatch = (uid === 'all' || cardUid === uid);
+
+				if (magMatch && uidMatch) {
+					card.style.display = 'flex';
+					count++;
+				} else {
+					card.style.display = 'none';
+				}
+			});
+
+			document.querySelectorAll('#history-grid .conge-card').forEach(card => {
+				const cardMag = card.dataset.magasinFilter;
+				const cardUid = card.dataset.userId;
+				if ((mag === 'all' || cardMag === mag) && (uid === 'all' || cardUid === uid)) {
+					card.style.display = 'block';
+				} else {
+					card.style.display = 'none';
+				}
+			});
+
+			const noResults = document.getElementById('no-active-results');
+			if (count === 0) noResults?.classList.remove('hidden');
+			else noResults?.classList.add('hidden');
+		}
+
+		function toggleHistory(id) {
+			const tab = document.getElementById(id);
+			const icon = document.getElementById('icon-' + id);
+			if (tab) tab.classList.toggle('hidden');
+			if (icon) icon.classList.toggle('rotate-180');
+		}
+
+		function setAction(a) { document.getElementById('admin-action-input').value = a; }
+		function setEmpAction(a) { document.getElementById('employee-action-input').value = a; }
+
+		function openRequestModal() {
+			const m = document.getElementById('ask-conge-modal');
+			m.classList.remove('hidden'); m.classList.add('flex');
+		}
+
+		function openApproveModal(id) {
+			const m = document.getElementById('admin-approve-modal');
+			document.getElementById('admin-approve-form').action = `/rh/conge/admin-action/${id}`;
+			m.classList.remove('hidden'); m.classList.add('flex');
+			setTimeout(resizeCanvas, 50);
+		}
+
+		function openModifyModal(id, start, end, type) {
+			const m = document.getElementById('admin-modify-modal');
+			document.getElementById('admin-modify-form').action = `/rh/conge/admin-action/${id}`;
+			document.getElementById('modify-start-input').value = start;
+			document.getElementById('modify-end-input').value = end;
+			document.getElementById('modify-type-input').value = type;
+			m.classList.remove('hidden'); m.classList.add('flex');
+		}
+
+		function openRejectModal(id) {
+			const m = document.getElementById('admin-reject-modal');
+			document.getElementById('admin-reject-form').action = `/rh/conge/admin-action/${id}`;
+			m.classList.remove('hidden'); m.classList.add('flex');
+		}
+
+		function openEmployeeAcceptModal(id) {
+			const m = document.getElementById('employee-accept-modal');
+			document.getElementById('employee-accept-form').action = `/rh/conge/employee-action/${id}`;
+			m.classList.remove('hidden'); m.classList.add('flex');
+		}
+
+		function openEmployeeModifyModal(id, start, end, type) {
+			const m = document.getElementById('employee-modify-modal');
+			document.getElementById('employee-modify-form').action = `/rh/conge/employee-action/${id}`;
+			document.getElementById('emp-modify-start-input').value = start;
+			document.getElementById('emp-modify-end-input').value = end;
+			document.getElementById('emp-modify-type-input').value = type;
+			m.classList.remove('hidden'); m.classList.add('flex');
+		}
+
+		function openEmployeeCancelModal(id) {
+			const m = document.getElementById('employee-cancel-modal');
+			document.getElementById('employee-cancel-form').action = `/rh/conge/employee-action/${id}`;
+			m.classList.remove('hidden'); m.classList.add('flex');
+		}
+
+		function openViewHistoryModal(id, userName, magasin, start, end, type, status, historyJson, canEdit) {
+			const m = document.getElementById('view-history-modal');
+		
+			document.getElementById('history-user-name').textContent = userName;
+			document.getElementById('history-magasin').textContent = magasin;
+			document.getElementById('history-dates').textContent = start + ' - ' + end;
+			document.getElementById('history-type').textContent = type;
+			
+			// Handle delete form visibility for users with edit permissions
+			const deleteForm = document.getElementById('delete-conge-form');
+			if (deleteForm) {
+				if (canEdit && ['APPROVED', 'REJECTED', 'CANCELLED'].includes(status)) {
+					deleteForm.classList.remove('hidden');
+					deleteForm.action = `/rh/conge/admin-action/${id}`;
+				} else {
+					deleteForm.classList.add('hidden');
+				}
+			}
+		
+			// Avatar initial
+			const avatar = document.getElementById('history-user-avatar');
+			avatar.textContent = userName.charAt(0).toUpperCase();
+		
+			// Status badge
+			const statusEl = document.getElementById('history-status');
+			if (status === 'APPROVED') {
+				statusEl.className = 'mt-2 inline-flex items-center px-2 py-0.5 rounded text-xs font-bold uppercase bg-emerald-100 text-emerald-700 border border-emerald-300';
+				statusEl.textContent = '✓ Validé';
+			} else if (status === 'CANCELLED' || status === 'REJECTED') {
+				statusEl.className = 'mt-2 inline-flex items-center px-2 py-0.5 rounded text-xs font-bold uppercase bg-rose-100 text-rose-700 border border-rose-300';
+				statusEl.textContent = status === 'CANCELLED' ? '✕ Annulé' : '✕ Refusé';
+			} else {
+				statusEl.className = 'mt-2 inline-flex items-center px-2 py-0.5 rounded text-xs font-bold uppercase bg-amber-100 text-amber-700 border border-amber-300';
+				statusEl.textContent = 'En cours';
+			}
+		
+			// Build timeline
+			const timeline = document.getElementById('history-timeline');
+			timeline.innerHTML = '';
+		
+			// Parse history JSON
+			let history = [];
+			try {
+				history = JSON.parse(historyJson || '[]');
+			} catch (e) {
+				history = [];
+			}
+		
+			if (history && history.length > 0) {
+				history.forEach((item, index) => {
+					const isLast = index === history.length - 1;
+					const itemEl = document.createElement('div');
+					itemEl.className = 'flex gap-3';
+					itemEl.innerHTML = `
+						<div class="flex flex-col items-center">
+							<div class="w-2 h-2 rounded-full ${isLast ? 'bg-emerald-500' : 'bg-slate-300'}"></div>
+							${!isLast ? '<div class="w-0.5 flex-1 bg-slate-200 mt-1"></div>' : ''}
+						</div>
+						<div class="flex-1 pb-3">
+							<div class="text-xs font-bold text-slate-700">${item.status || 'Action'}</div>
+							<div class="text-xs text-slate-500">${item.date || 'Date inconnue'}</div>
+							${item.comment ? `<div class="text-xs text-slate-600 mt-1 italic">"${item.comment}"</div>` : ''}
+						</div>
+					`;
+					timeline.appendChild(itemEl);
+				});
+			} else {
+				timeline.innerHTML = '<div class="text-xs text-slate-400 italic">Aucun historique disponible</div>';
+			}
+		
+			m.classList.remove('hidden');
+			m.classList.add('flex');
+		}
+
+		function closeModal(id) { const m = document.getElementById(id); if (m) { m.classList.add('hidden'); m.classList.remove('flex'); } }
+		
+		function confirmDeleteConge() {
+			if (confirm('Êtes-vous sûr de vouloir supprimer définitivement cette demande de congé ?\n\nCette action supprimera également l\'entrée correspondante du planning et est irréversible.')) {
+				document.getElementById('delete-conge-form').submit();
+			}
+		}
+	</script>
+	<style>
+		.conge-card { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+		.portal-pagination nav { display: flex; gap: 6px; align-items: center; }
+		.portal-pagination .pagination { display: flex; gap: 6px; }
+		.portal-pagination .pagination .page-item .page-link { 
+			border-radius: 10px; 
+			border: 1px solid rgba(226, 232, 240, 0.6); 
+			font-weight: 700; 
+			font-size: 12px; 
+			padding: 8px 14px; 
+			color: #475569; 
+			background: rgba(255, 255, 255, 0.6);
+			backdrop-filter: blur(4px);
+			transition: all 0.2s ease;
+			box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+		}
+		.portal-pagination .pagination .page-item .page-link:hover {
+			background: rgba(255, 255, 255, 0.9);
+			border-color: #cbd5e1;
+			transform: translateY(-1px);
+		}
+		.portal-pagination .pagination .page-item.active .page-link { 
+			background: #4f46e5; 
+			border-color: #4f46e5; 
+			color: white; 
+			font-weight: 800;
+			box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
+		}
+		.portal-pagination .pagination .page-item.disabled .page-link {
+			background: rgba(241, 245, 249, 0.5);
+			color: #94a3b8;
+			cursor: not-allowed;
+		}
+	</style>
+{% endblock %}

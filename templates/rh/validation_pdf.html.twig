@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <style>
+        @page { margin: 8mm; }
+        body { font-family: 'Helvetica', 'Arial', sans-serif; color: #1e293b; line-height: 1.2; font-size: 9px; margin: 0; padding: 0; background-color: #ffffff; }
+        
+        /* Header Section */
+        .header { margin-bottom: 12px; border-bottom: 2px solid #a9df51; padding-bottom: 8px; }
+        .logo { height: 40px; }
+        .header-table { width: 100%; border-collapse: collapse; }
+        .header-title { font-size: 18px; font-weight: 900; color: #1e293b; text-transform: uppercase; letter-spacing: -0.5px; margin: 0; }
+        .header-subtitle { font-size: 10px; font-weight: 700; color: #64748b; margin-top: 2px; }
+        
+        /* Info Cards */
+        .info-table { width: 100%; border-collapse: collapse; background-color: #f8fafc; margin-bottom: 12px; }
+        .info-cell { padding: 8px 12px; border: 1px solid #e2e8f0; }
+        .label { font-size: 7px; font-weight: 800; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 1px; }
+        .value { font-size: 10px; font-weight: 700; color: #0f172a; }
+        
+        /* Table Styles */
+        .data-table { width: 100%; border-collapse: collapse; margin-bottom: 10px; border: 1px solid #e2e8f0; }
+        .data-table th { background-color: #f8fafc; padding: 5px 8px; text-align: left; font-size: 8px; font-weight: 800; color: #475569; text-transform: uppercase; border-bottom: 2.5px solid #a9df51; }
+        .data-table td { padding: 4px 8px; border-bottom: 1px solid #f1f5f9; vertical-align: middle; }
+        
+        .day-name { font-weight: 800; color: #0f172a; text-transform: uppercase; font-size: 9px; width: 80px; }
+        .day-date { color: #64748b; font-size: 8px; }
+        
+        .shift-line { font-size: 9px; font-weight: 600; color: #1e293b; }
+        .shift-tag { font-size: 7px; font-weight: 800; color: #92400e; background: #fffbeb; padding: 1px 4px; border-radius: 3px; border: 0.5px solid #fef3c7; margin-left: 4px; text-transform: uppercase; }
+        .inactive { color: #94a3b8; text-decoration: line-through; opacity: 0.6; }
+        
+        .duration { text-align: right; font-weight: 800; font-size: 10px; color: #0f172a; width: 60px; }
+
+        /* Total Section */
+        .total-row { background-color: #0f172a !important; color: #ffffff; }
+        .total-row td { border: none !important; padding: 10px 15px !important; }
+        .total-label { font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; }
+        .total-value { font-size: 18px; font-weight: 900; }
+
+        /* Signature Section */
+        .footer { margin-top: 15px; }
+        .signature-grid { width: 100%; border-collapse: collapse; }
+        .signature-box { border: 1px solid #e2e8f0; border-radius: 8px; padding: 10px; width: 220px; text-align: center; background-color: #fcfdfe; }
+        .signature-img { max-width: 180px; max-height: 50px; margin-bottom: 4px; }
+        .stamp { font-size: 7px; font-weight: 700; color: #94a3b8; border-top: 1px solid #e2e8f0; padding-top: 5px; margin-top: 5px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <table class="header-table">
+                <tr>
+                    <td>
+                        {% if logoBase64 %}
+                            <img src="{{ logoBase64 }}" class="logo">
+                        {% endif %}
+                    </td>
+                    <td style="text-align: right;">
+                        <h1 class="header-title">Confirmation d'Heures</h1>
+                        <div class="header-subtitle">MOIS {{ validation.month|format('%02d') }} • {{ year }}</div>
+                    </td>
+                </tr>
+            </table>
+        </div>
+
+        <table class="info-table">
+            <tr>
+                <td class="info-cell" style="width: 33%;">
+                    <div class="label">Employé</div>
+                    <div class="value">{{ validation.user.prenom }} {{ validation.user.nom }}</div>
+                </td>
+                <td class="info-cell" style="width: 33%;">
+                    <div class="label">Magasin</div>
+                    <div class="value">{{ validation.user.magasin }}</div>
+                </td>
+                <td class="info-cell" style="text-align: right;">
+                    <div class="label">Période</div>
+                    <div class="value">{{ startOfMonth|date('d/m/Y') }} au {{ endOfMonth|date('d/m/Y') }}</div>
+                </td>
+            </tr>
+        </table>
+
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Détail des présences</th>
+                    <th style="text-align: right;">Durée Active</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% set total_seconds = 0 %}
+                {% for dateStr, dayData in daysMap %}
+                    {% set day_total_seconds = 0 %}
+                    {% for h in dayData.horaires %}
+                        {% if h.status == 'Actif' or not h.status %}
+                            {% set day_total_seconds = day_total_seconds + (h.endTime.timestamp - h.startTime.timestamp) %}
+                            {% set total_seconds = total_seconds + (h.endTime.timestamp - h.startTime.timestamp) %}
+                        {% endif %}
+                    {% endfor %}
+
+                    <tr>
+                        <td>
+                            <span class="day-name">
+                                {{ dayData.date|date('D')|replace({
+                                    'Mon':'LUN','Tue':'MAR','Wed':'MER','Thu':'JEU','Fri':'VEN','Sat':'SAM','Sun':'DIM'
+                                }) }}
+                            </span>
+                            <span class="day-date">{{ dayData.date|date('d/m') }}</span>
+                        </td>
+                        <td>
+                            {% if dayData.horaires|length > 0 %}
+                                {% for h in dayData.horaires %}
+                                    {% set is_actif = (h.status == 'Actif' or not h.status) %}
+                                    <span class="shift-line {{ not is_actif ? 'inactive' : '' }}">
+                                        {{ h.startTime|date('H:i') }} - {{ h.endTime|date('H:i') }}
+                                        {% if not is_actif %}<span class="shift-tag">{{ h.status }}</span>{% endif %}
+                                    </span>
+                                    {% if not loop.last %} <span style="color: #cbd5e1; margin: 0 4px;">•</span> {% endif %}
+                                {% endfor %}
+                            {% else %}
+                                <span style="color: #cbd5e1; font-style: italic; font-size: 8px;">-- Repos --</span>
+                            {% endif %}
+                        </td>
+                        <td class="duration">
+                            {% if day_total_seconds > 0 %}
+                                {% set dh = (day_total_seconds / 3600)|round(0, 'floor') %}
+                                {% set dm = ((day_total_seconds % 3600) / 60)|round(0, 'floor') %}
+                                {{ dh|format('%02d') }}h{{ dm|format('%02d') }}
+                            {% else %}
+                                <span style="color: #e2e8f0;">00h00</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                {% endfor %}
+                <tr class="total-row">
+                    <td colspan="2" class="total-label">Total Heures Mensuelles</td>
+                    <td class="duration total-value">
+                        {% set total_h = (total_seconds / 3600)|round(0, 'floor') %}
+                        {% set total_m = ((total_seconds % 3600) / 60)|round(0, 'floor') %}
+                        {{ total_h|format('%02d') }}h{{ total_m|format('%02d') }}
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="footer">
+            <table class="signature-grid">
+                <tr>
+                    <td style="width: 240px;">
+                        <div class="label" style="margin-bottom: 6px;">Certification de l'employé</div>
+                        <div class="signature-box">
+                            <div style="font-size: 8px; font-weight: 700; color: #0f172a; margin-bottom: 4px;">
+                                {{ validation.user.prenom }} {{ validation.user.nom }}
+                            </div>
+                            <img src="{{ validation.signature }}" class="signature-img">
+                            <div class="stamp">
+                                Signé le {{ validation.signedAt|date('d/m/Y à H:i') }} • ID: #{{ validation.id|format('%06d') }}
+                            </div>
+                        </div>
+                    </td>
+                    <td style="vertical-align: bottom; padding-left: 20px;">
+                        <div style="font-size: 7px; color: #94a3b8; font-style: italic; line-height: 1.4;">
+                            Ce document certifie l'exactitude des heures déclarées par l'agent.<br>
+                            Généré automatiquement par le portail RH • Copie archivée.
+                        </div>
+                    </td>
+                </tr>
+            </table>
+        </div>
+    </div>
+</body>
+</html>
+

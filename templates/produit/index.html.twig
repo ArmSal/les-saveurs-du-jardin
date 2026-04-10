@@ -1,0 +1,253 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Produits | Plateforme LSDJ{% endblock %}
+
+{% block body %}
+<div class="min-h-screen bg-slate-50 py-2 sm:py-4 px-0 sm:px-4 lg:px-8">
+    <div class="max-w-7xl mx-auto">
+        
+        {# Header - Compact style matching Gestion des Accès #}
+        <div class="mb-4 sm:mb-6 px-3 sm:px-0">
+            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                <div>
+                    <h1 class="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">Gestion des Produits</h1>
+                    <p class="text-xs text-slate-500 mt-0.5">Configuration du catalogue et gestion des stocks</p>
+                </div>
+                {% if canEdit %}
+                <div class="flex items-center gap-2">
+                    <a href="{{ path('app_produit_category_index') }}" class="inline-flex items-center gap-2 bg-slate-800 hover:bg-slate-700 text-white text-[10px] font-black uppercase tracking-wider py-2 px-4 rounded-lg transition-all">
+                        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"></path></svg>
+                        Catégories
+                    </a>
+                    <a href="{{ path('app_produit_new') }}" class="inline-flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white text-[10px] font-black uppercase tracking-wider py-2 px-4 rounded-lg transition-all">
+                        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 4v16m8-8H4"></path></svg>
+                        Nouveau
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+	<!-- Unified Advanced Filter Hub -->
+	<div class="bg-white/50 backdrop-blur-sm border border-slate-200/60 rounded-2xl mb-8 overflow-hidden animate-in fade-in slide-in-from-top-6 duration-700">
+		<div class="p-4">
+			<form method="get" action="{{ path('app_produit_index') }}" class="grid grid-cols-1 md:grid-cols-2 lg:flex items-center gap-4">
+				<!-- Search -->
+				<div class="relative flex-1 lg:max-w-[400px]">
+					<div class="absolute inset-y-0 left-3.5 flex items-center pointer-events-none">
+						<svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+					</div>
+					<input type="text" name="q" value="{{ searchTerm }}" placeholder="Référence, Désignation, Code-barre..." class="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 text-[11px] font-bold text-slate-700 outline-none focus:ring-4 focus:ring-indigo-500/5 focus:border-indigo-400 transition-all rounded-xl placeholder:text-slate-400">
+				</div>
+
+				<!-- Categories Dropdown -->
+				<div class="relative flex-1 lg:max-w-[240px]">
+					<div class="absolute inset-y-0 left-3.5 flex items-center pointer-events-none">
+						<svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"></path></svg>
+					</div>
+					<select name="category" onchange="this.form.submit()" class="appearance-none w-full pl-10 pr-10 py-2.5 bg-white border border-slate-200 text-[10px] font-black text-slate-700 uppercase tracking-widest cursor-pointer focus:ring-4 focus:ring-indigo-500/5 focus:border-indigo-400 transition-all rounded-xl hover:border-slate-300">
+						<option value="all">Catégories (Toutes)</option>
+						{% for cat in categories %}
+							<option value="{{ cat.id }}" {% if currentCategory == cat.id %}selected{% endif %}>{{ cat.nom|upper }}</option>
+						{% endfor %}
+					</select>
+					<div class="absolute inset-y-0 right-3.5 flex items-center pointer-events-none">
+						<svg class="w-4 h-4 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="3"><path d="M19 9l-7 7-7-7"></path></svg>
+					</div>
+				</div>
+
+				<!-- Sorting & Reset -->
+				<div class="flex items-center gap-2 lg:ml-auto">
+					<div class="relative min-w-[140px]">
+						<select name="sortBy" onchange="this.form.submit()" class="appearance-none w-full pl-3 pr-8 py-2.5 bg-slate-50 border border-slate-200 text-[10px] font-black text-slate-500 uppercase tracking-widest cursor-pointer focus:ring-4 focus:ring-indigo-500/5 focus:border-slate-400 transition-all rounded-xl">
+							<option value="designation" {% if currentSort == 'designation' %}selected{% endif %}>Nom A-Z</option>
+							<option value="reference" {% if currentSort == 'reference' %}selected{% endif %}>Référence</option>
+							<option value="prix" {% if currentSort == 'prix' %}selected{% endif %}>Prix</option>
+							<option value="qte_stock" {% if currentSort == 'qte_stock' %}selected{% endif %}>Stock</option>
+						</select>
+						<div class="absolute inset-y-0 right-3 flex items-center pointer-events-none">
+							<svg class="w-3.5 h-3.5 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="3"><path d="M19 9l-7 7-7-7"></path></svg>
+						</div>
+					</div>
+					<a href="{{ path('app_produit_index') }}" class="p-2.5 bg-slate-100 hover:bg-rose-50 hover:text-rose-600 text-slate-400 rounded-xl transition-all active:scale-95" title="Réinitialiser">
+						<svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12"></path></svg>
+					</a>
+				</div>
+			</form>
+		</div>
+	</div>
+
+	<!-- Portrait Product Grid -->
+	<div id="product-container" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 mb-10">
+		{% for item in produits %}
+			<div class="group relative bg-white border border-slate-200 rounded-xl p-3 transition-all duration-300 hover:shadow-xl hover:border-indigo-300 flex flex-col animate-in fade-in slide-in-from-bottom-2">
+				
+				<!-- Product Image (Portrait Top) - Clickable -->
+				<a href="{{ path('app_produit_show', {id: item.id}) }}" class="relative w-full aspect-[4/3] rounded-lg overflow-hidden bg-slate-50 border border-slate-100 mb-3 block group/img">
+					{% if item.imageUrl %}
+						<img src="{{ path('app_media_product', {filename: item.imageUrl}) }}" alt="{{ item.designation }}" class="w-full h-full object-cover group-hover/img:scale-105 transition-transform duration-300">
+					{% else %}
+						{% set initials = item.designation|slice(0, 2)|upper %}
+						<div class="w-full h-full flex items-center justify-center bg-gradient-to-br from-indigo-100 to-slate-100 text-indigo-400 font-black text-4xl shadow-inner group-hover/img:scale-105 transition-transform duration-300">
+							{{ initials }}
+						</div>
+					{% endif %}
+					
+					<!-- Price Badge Overlay (Top Right) - Light Color -->
+					<div class="absolute top-2 right-2 px-2 py-1 bg-white/90 backdrop-blur text-slate-700 rounded text-[11px] font-black shadow-md border border-slate-100">
+						{{ item.prix }}€
+					</div>
+				</a>
+
+				<!-- Reference Badge -->
+				<div class="inline-flex items-center gap-1 px-2 py-1 bg-indigo-50 border border-indigo-100 rounded w-fit mb-2">
+					<svg width="10" height="10" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" class="text-indigo-500"><path d="M7 20l4-16m2 16l4-16M6 9h14M4 15h14"></path></svg>
+					<span class="text-[10px] font-black text-indigo-700 uppercase tracking-wide">{{ item.reference }}</span>
+				</div>
+				
+				<!-- Product Name -->
+				<h3 class="text-[11px] font-bold text-slate-700 uppercase leading-tight line-clamp-2 mb-2 flex-1" title="{{ item.designation }}">
+					{{ item.designation }}
+				</h3>
+				
+				<!-- Bottom Row: Stock (admin) - BIGGER + Unit + Actions -->
+				<div class="flex items-center justify-between pt-2 border-t border-slate-100">
+					<div class="flex items-center gap-2">
+						{% if canEdit %}
+							<div class="flex items-center gap-1.5 px-2 py-1 {% if item.qte_stock < 10 %}bg-rose-100 text-rose-700 border-rose-200{% else %}bg-emerald-100 text-emerald-700 border-emerald-200{% endif %} rounded-md border">
+								<span class="w-2 h-2 rounded-full {% if item.qte_stock < 10 %}bg-rose-500{% else %}bg-emerald-500{% endif %}"></span>
+								<span class="text-[11px] font-black uppercase tracking-wide">{{ item.qte_stock }}</span>
+							</div>
+						{% endif %}
+						<span class="text-[8px] font-bold text-slate-400 uppercase">/{{ item.unite }}</span>
+					</div>
+
+					<!-- Quick Actions -->
+					<div class="flex items-center gap-1">
+						<a href="{{ path('app_produit_show', {id: item.id}) }}" class="w-6 h-6 bg-slate-50 hover:bg-indigo-50 text-slate-400 hover:text-indigo-600 rounded flex items-center justify-center transition-all" title="Détails">
+							<svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+						</a>
+						{% if canEdit %}
+							<a href="{{ path('app_produit_edit', {id: item.id}) }}" class="w-6 h-6 bg-slate-50 hover:bg-indigo-50 text-slate-400 hover:text-indigo-600 rounded flex items-center justify-center transition-all" title="Modifier">
+								<svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
+							</a>
+						{% endif %}
+						<form method="post" action="{{ path('app_cart_add', {id: item.id}) }}" class="inline">
+							<input type="hidden" name="_token" value="{{ csrf_token('cart_add_' ~ item.id) }}">
+							<input type="hidden" name="qty" id="qty-{{ item.id }}" value="1">
+							<button type="button" onclick="addToCart({{ item.id }}, '{{ item.designation|e('js') }}')" class="w-6 h-6 bg-indigo-600 hover:bg-indigo-700 text-white rounded flex items-center justify-center transition-all" title="Ajouter">
+								<svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M12 4v16m8-8H4"></path></svg>
+							</button>
+						</form>
+					</div>
+				</div>
+			</div>
+		{% else %}
+			<div class="col-span-full py-24 px-8 border-2 border-dashed border-slate-100 bg-white rounded-3xl text-center">
+				<div class="w-16 h-16 bg-slate-50 rounded-2xl flex items-center justify-center mx-auto mb-6">
+					<svg width="32" height="32" fill="none" stroke="currentColor" stroke-width="1.5" class="text-slate-300" viewBox="0 0 24 24">
+						<path d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path>
+					</svg>
+				</div>
+				<h2 class="text-xl font-black text-slate-900 mb-1">Aucun produit trouvé</h2>
+				<p class="text-slate-400 text-sm">Le catalogue ne contient aucun article correspondant à vos critères.</p>
+			</div>
+		{% endfor %}
+	</div>
+
+	<!-- Premium Pagination -->
+	{% if produits is not empty %}
+		<div class="flex justify-center pb-12 transition-all duration-500 animate-in fade-in slide-in-from-bottom-4">
+			<div class="p-2 bg-white/40 backdrop-blur-md rounded-[2rem] border border-white/60 shadow-xl shadow-slate-100/50">
+				{{ knp_pagination_render(produits, 'parts/_premium_pagination.html.twig') }}
+			</div>
+		</div>
+	{% endif %}
+
+	<style>
+		@keyframes animate-in {
+			from { opacity: 0; transform: translateY(20px); }
+			to { opacity: 1; transform: translateY(0); }
+		}
+		.animate-in {
+			animation: animate-in 0.6s ease-out backwards;
+		}
+		{% for i in 1..20 %}
+			.animate-in:nth-child({{ i }}) { animation-delay: {{ i * 0.05 }}s; }
+		{% endfor %}
+	</style>
+
+	<!-- Nano-Compact Quantity Modal -->
+	<div id="qtyModal" style="display:none;" class="fixed inset-0 z-[9999] bg-slate-900/40 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4">
+		<div class="bg-white w-full sm:max-w-[300px] sm:rounded-[1.5rem] rounded-t-[2rem] shadow-2xl p-5 transform transition-all text-center animate-in slide-in-from-bottom-5 duration-300">
+			<div class="w-10 h-1 bg-slate-100 rounded-full mx-auto mb-4 sm:hidden"></div>
+
+			<div class="mb-4">
+				<h2 class="text-sm font-black text-slate-400 uppercase tracking-[0.2em] mb-1">Ajouter au Panier</h2>
+				<p id="modalProductName" class="text-xs font-black text-slate-900 line-clamp-2 px-2"></p>
+			</div>
+
+			<div class="flex items-center gap-3 mb-6 w-full px-2">
+				<button type="button" onclick="adjustModalQty(-1)" class="w-11 h-11 bg-slate-50 rounded-xl flex items-center justify-center text-slate-400 hover:text-rose-500 hover:bg-rose-50 active:scale-90 transition-all border-0 cursor-pointer shrink-0">
+					<svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path d="M20 12H4"></path></svg>
+				</button>
+				<div class="flex-1 relative">
+					<input type="number" id="modalQtyInput" value="1" min="1" class="w-full h-11 border-0 bg-slate-50 rounded-xl px-2 text-xl font-black text-slate-900 text-center outline-none focus:ring-2 focus:ring-indigo-500/10 transition-all [appearance:textfield]">
+					<div class="absolute inset-x-0 -bottom-4 text-[8px] font-black text-slate-300 uppercase tracking-widest">Quantité</div>
+				</div>
+				<button type="button" onclick="adjustModalQty(1)" class="w-11 h-11 bg-indigo-50 rounded-xl flex items-center justify-center text-indigo-600 hover:bg-indigo-600 hover:text-white active:scale-90 transition-all border-0 cursor-pointer shrink-0">
+					<svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path d="M12 4v16m8-8H4"></path></svg>
+				</button>
+			</div>
+
+			<div class="flex gap-2">
+				<button type="button" onclick="closeQtyModal()" class="flex-1 h-11 bg-slate-50 hover:bg-slate-100 text-slate-500 font-bold text-[10px] uppercase tracking-widest rounded-xl transition-all border-0 cursor-pointer">Annuler</button>
+				<button type="button" onclick="confirmAddToCart()" class="flex-[2] h-11 bg-indigo-600 hover:bg-indigo-700 text-white font-black text-[10px] uppercase tracking-widest rounded-xl shadow-lg shadow-indigo-100 transition-all border-0 cursor-pointer flex items-center justify-center gap-2">
+					<svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"></path></svg>
+					Confirmer
+				</button>
+			</div>
+		</div>
+	</div>
+
+	<script>
+		let currentAddId = null;
+
+		function addToCart(id, designation) {
+			currentAddId = id;
+			document.getElementById('modalProductName').innerText = designation;
+			document.getElementById('modalQtyInput').value = 1;
+			document.getElementById('qtyModal').style.display = 'flex';
+			setTimeout(() => document.getElementById('modalQtyInput').focus(), 50);
+		}
+
+		function adjustModalQty(delta) {
+			const input = document.getElementById('modalQtyInput');
+			let val = parseInt(input.value) || 1;
+			val = Math.max(1, val + delta);
+			input.value = val;
+		}
+
+		function closeQtyModal() {
+			document.getElementById('qtyModal').style.display = 'none';
+			currentAddId = null;
+		}
+
+		function confirmAddToCart() {
+			const qty = document.getElementById('modalQtyInput').value;
+			if (qty > 0 && currentAddId) {
+				const form = document.querySelector(`form[action*="/cart/add/${currentAddId}"]`);
+				if (form) {
+					form.querySelector('input[name="qty"]').value = qty;
+					form.submit();
+				}
+			}
+		}
+
+		window.addEventListener('keydown', e => {
+			if (e.key === 'Escape') closeQtyModal();
+		});
+	</script>
+	</div>
+</div>
+{% endblock %}

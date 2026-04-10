@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <style>
+        @page { margin: 8mm; size: A4; }
+        body { font-family: 'Helvetica', 'Arial', sans-serif; color: #1e293b; line-height: 1; font-size: 10px; margin: 0; padding: 0; background-color: #ffffff; }
+        
+        .header { position: relative; margin-bottom: 6px; border-bottom: 2px solid #a9df51; padding-bottom: 4px; }
+        .logo { height: 35px; }
+        .header-table { width: 100%; border-collapse: collapse; }
+        .header-title { font-size: 16px; font-weight: 900; color: #1e293b; text-transform: uppercase; letter-spacing: -0.5px; margin: 0; }
+        
+        .info-table { width: 100%; border-collapse: collapse; background-color: #f8fafc; margin-bottom: 6px; }
+        .info-cell { padding: 5px; vertical-align: top; border: 1px solid #e2e8f0; }
+        .label { font-size: 8px; font-weight: 800; color: #94a3b8; text-transform: uppercase; margin-bottom: 1px; }
+        .value { font-size: 10px; font-weight: 700; color: #0f172a; }
+        
+        .data-table { width: 100%; border-collapse: collapse; margin-bottom: 4px; border: 1px solid #e2e8f0; }
+        .data-table th { background-color: #f8fafc; padding: 3px 8px; text-align: left; font-size: 8px; font-weight: 800; text-transform: uppercase; border-bottom: 1px solid #e2e8f0; }
+        .data-table td { padding: 1px 8px; border-bottom: 1px solid #f1f5f9; vertical-align: middle; }
+        
+        .total-container { border: 2px solid #0f172a; border-radius: 4px; padding: 6px 10px; text-align: right; margin-bottom: 6px; }
+        .total-label { font-size: 9px; font-weight: 700; color: #475569; text-transform: uppercase; }
+        .total-value { font-size: 18px; font-weight: 900; color: #0f172a; }
+        
+        .signature-box { border: 1px solid #e2e8f0; border-radius: 6px; padding: 6px; width: 220px; text-align: center; }
+        .signature-img { max-width: 180px; max-height: 50px; }
+        .stamp { font-size: 8px; color: #64748b; margin-top: 2px; border-top: 1px solid #e2e8f0; padding-top: 2px; }
+        .status-badge { display: inline-block; padding: 1px 4px; border-radius: 2px; font-size: 7px; font-weight: 800; text-transform: uppercase; border: 1px solid #e2e8f0; }
+    </style>
+</head>
+<body>
+    {% for entry in reportData %}
+        {% set validation = entry.validation %}
+        {% set daysMap = entry.daysMap %}
+        <div class="page-break">
+            <div class="header">
+                <table class="header-table">
+                    <tr>
+                        <td style="width: 100px;">
+                            {% if logoBase64 %}
+                                <img src="{{ logoBase64 }}" class="logo">
+                            {% endif %}
+                        </td>
+                        <td style="text-align: right;">
+                            <h1 class="header-title">Confirmation d'Heures</h1>
+                            <div style="font-size: 10px; font-weight: 700; color: #64748b;">MOIS {{ month }} • {{ year }}</div>
+                        </td>
+                    </tr>
+                </table>
+            </div>
+
+            <table class="info-table">
+                <tr>
+                    <td class="info-cell" style="width: 33%;">
+                        <div class="label">Employé</div>
+                        <div class="value">{{ validation.user.prenom }} {{ validation.user.nom }}</div>
+                    </td>
+                    <td class="info-cell" style="width: 33%;">
+                        <div class="label">Magasin</div>
+                        <div class="value">{{ validation.user.magasin }}</div>
+                    </td>
+                    <td class="info-cell" style="width: 33%;">
+                        <div class="label">Période</div>
+                        <div class="value">{{ startDate|date('d/m/Y') }} au {{ endDate|date('d/m/Y') }}</div>
+                    </td>
+                </tr>
+            </table>
+
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th style="width: 70px;">Jour</th>
+                        <th>Plages Horaires</th>
+                        <th style="text-align: right; width: 50px;">Durée</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% set total_seconds = 0 %}
+                    {% for dateStr, dayData in daysMap %}
+                        <tr>
+                            <td style="vertical-align: top;">
+                                <div style="font-weight: 800; color: #0f172a; text-transform: uppercase; font-size: 8px;">
+                                    {{ dayData.date|date('l')|replace({
+                                        'Monday': 'Lun', 'Tuesday': 'Mar', 'Wednesday': 'Mer',
+                                        'Thursday': 'Jeu', 'Friday': 'Ven', 'Saturday': 'Sam', 'Sunday': 'Dim'
+                                    }) }}
+                                </div>
+                                <div style="color: #64748b; font-size: 8px;">{{ dayData.date|date('d/m') }}</div>
+                            </td>
+                            <td>
+                                {% if dayData.horaires|length > 0 %}
+                                    {% for horaire in dayData.horaires %}
+                                        {% set is_actif = (horaire.status == 'Actif' or not horaire.status) %}
+                                        <span style="font-weight: 700; font-size: 9px;{% if not is_actif %} text-decoration: line-through; color: #94a3b8;{% endif %}">
+                                            {{ horaire.startTime|date('H:i') }}-{{ horaire.endTime|date('H:i') }}
+                                        </span>
+                                        {% if not is_actif %}
+                                            <span class="status-badge">{{ horaire.status[:3] }}</span>
+                                        {% endif %}
+                                        {% if is_actif %}{% set total_seconds = total_seconds + (horaire.endTime.timestamp - horaire.startTime.timestamp) %}{% endif %}
+                                        {% if not loop.last %}<span style="color: #cbd5e1;"> | </span>{% endif %}
+                                    {% endfor %}
+                                {% else %}
+                                    <span style="color: #cbd5e1; font-style: italic; font-size: 9px;">--</span>
+                                {% endif %}
+                            </td>
+                            <td style="text-align: right; vertical-align: top;">
+                                {% set day_total_seconds = 0 %}
+                                {% for horaire in dayData.horaires %}
+                                    {% if horaire.status == 'Actif' or not horaire.status %}
+                                        {% set day_total_seconds = day_total_seconds + (horaire.endTime.timestamp - horaire.startTime.timestamp) %}
+                                    {% endif %}
+                                {% endfor %}
+                                <div style="font-weight: 700; font-size: 10px;">
+                                    {{ (day_total_seconds / 3600)|round(0, 'floor')|format('%02d') }}h{{ ((day_total_seconds % 3600) / 60)|round(0, 'floor')|format('%02d') }}
+                                </div>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+
+            <div class="total-container">
+                <div class="total-label">Total Mensuel</div>
+                <div class="total-value">{{ (total_seconds / 3600)|round(0, 'floor')|format('%02d') }}h{{ ((total_seconds % 3600) / 60)|round(0, 'floor')|format('%02d') }}</div>
+            </div>
+
+            <div class="signature-box">
+                <div class="label">Certification Employé</div>
+                <div style="font-weight: 700; font-size: 10px; color: #0f172a; margin-bottom: 4px;">{{ validation.user.prenom }} {{ validation.user.nom }}</div>
+                <img src="{{ validation.signature }}" class="signature-img">
+                <div class="stamp">
+                    Signé le {{ validation.signedAt|date('d/m/Y à H:i') }}
+                </div>
+            </div>
+        </div>
+    {% endfor %}
+</body>
+</html>
+

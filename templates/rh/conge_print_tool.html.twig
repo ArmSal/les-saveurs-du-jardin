@@ -1,0 +1,219 @@
+{% extends 'base.html.twig' %}
+{% block title %}Rapports Congés - LSDJ{% endblock %}
+
+{% block body %}
+<div class="min-h-screen bg-gradient-to-br from-slate-50 via-white to-indigo-50/20 py-8 px-4 sm:px-6 lg:px-8">
+    <div class="max-w-6xl mx-auto">
+
+        {# Header #}
+        <div class="mb-12">
+            <div class="flex items-center gap-2 mb-4">
+                <a href="{{ path('app_rh_conge') }}" class="flex items-center gap-1.5 text-[10px] font-black text-slate-400 uppercase tracking-widest hover:text-indigo-600 transition-colors">
+                    <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path d="M15 19l-7-7 7-7"></path></svg>
+                    Congés
+                </a>
+                <span class="text-slate-300">/</span>
+                <span class="text-[10px] font-black text-indigo-600 uppercase tracking-widest">Rapports</span>
+            </div>
+            <h1 class="text-5xl md:text-6xl font-black text-slate-900 tracking-tighter leading-none">
+                Rapports <span class="text-indigo-600">Congés</span>
+            </h1>
+            <p class="text-slate-400 font-bold mt-3 text-sm">Filtrez et générez des attestations avec signature pour chaque dossier.</p>
+        </div>
+
+        {# Filter Panel #}
+        <div class="bg-white border border-slate-200/80 rounded-[3rem] p-8 md:p-10 shadow-2xl shadow-slate-100/50 mb-10">
+            <div class="flex items-center gap-3 mb-8">
+                <div class="p-2.5 bg-indigo-50 rounded-2xl"><svg class="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"></path></svg></div>
+                <h2 class="text-xl font-black text-slate-900 tracking-tight">Sélectionner un dossier</h2>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                {# Step 1: Magasin #}
+                <div>
+                    <label class="text-[9px] font-black text-slate-400 uppercase tracking-[0.25em] block mb-3">① Magasin</label>
+                    <form method="GET">
+                        <select name="magasin" onchange="this.form.submit()" class="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl text-sm font-black py-4 px-5 focus:bg-white focus:border-indigo-400 outline-none transition-all cursor-pointer hover:border-slate-200 appearance-none">
+                            <option value="">— Choisir un magasin —</option>
+                            {% for mag in magasins %}
+                                <option value="{{ mag }}" {{ selectedMagasin == mag ? 'selected' : '' }}>{{ mag }}</option>
+                            {% endfor %}
+                        </select>
+                    </form>
+                </div>
+
+                {# Step 2: Employee #}
+                <div>
+                    <label class="text-[9px] font-black text-slate-400 uppercase tracking-[0.25em] block mb-3">② Employé</label>
+                    {% if employes|length > 0 %}
+                        <form method="GET">
+                            <input type="hidden" name="magasin" value="{{ selectedMagasin }}">
+                            <select name="user_id" onchange="this.form.submit()" class="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl text-sm font-black py-4 px-5 focus:bg-white focus:border-indigo-400 outline-none transition-all cursor-pointer hover:border-slate-200 appearance-none">
+                                <option value="">— Choisir un employé —</option>
+                                {% for emp in employes %}
+                                    <option value="{{ emp.id }}" {{ selectedUserId == emp.id ? 'selected' : '' }}>
+                                        {{ emp.prenom }} {{ emp.nom }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </form>
+                    {% else %}
+                        <div class="w-full bg-slate-50 border-2 border-dashed border-slate-100 rounded-2xl py-4 px-5 text-sm font-black text-slate-300">
+                            Sélectionnez d'abord un magasin
+                        </div>
+                    {% endif %}
+                </div>
+
+                {# Step 3: Congé #}
+                <div>
+                    <label class="text-[9px] font-black text-slate-400 uppercase tracking-[0.25em] block mb-3">③ Dossier de congé</label>
+                    {% if conges|length > 0 %}
+                        <form method="GET">
+                            <input type="hidden" name="magasin" value="{{ selectedMagasin }}">
+                            <input type="hidden" name="user_id" value="{{ selectedUserId }}">
+                            <select name="conge_id" onchange="this.form.submit()" class="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl text-sm font-black py-4 px-5 focus:bg-white focus:border-indigo-400 outline-none transition-all cursor-pointer hover:border-slate-200 appearance-none">
+                                <option value="">— Choisir un congé —</option>
+                                {% for c in conges %}
+                                    <option value="{{ c.id }}" {{ selectedCongeId == c.id ? 'selected' : '' }}>
+                                        {{ c.startDate|date('d/m/Y') }} → {{ c.endDate|date('d/m/Y') }} · {{ c.type }} ·
+                                        {% if c.status == 'APPROVED' %}✓ Validé
+                                        {% elseif c.status == 'REJECTED' %}✕ Refusé
+                                        {% else %}⏳ En attente{% endif %}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </form>
+                    {% else %}
+                        <div class="w-full bg-slate-50 border-2 border-dashed border-slate-100 rounded-2xl py-4 px-5 text-sm font-black text-slate-300">
+                            Sélectionnez d'abord un employé
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        {# Preview Panel if a congé is selected #}
+        {% if selectedConge %}
+        {% set c = selectedConge %}
+        <div class="bg-white border border-slate-200/80 rounded-[3rem] p-8 md:p-10 shadow-2xl shadow-slate-100/50">
+            <div class="flex flex-col sm:flex-row sm:items-start justify-between gap-6 mb-10">
+                <div class="flex items-center gap-5">
+                    <div class="w-20 h-20 rounded-[1.8rem] bg-gradient-to-br
+                        {% if c.status == 'APPROVED' %}from-emerald-500 to-emerald-600
+                        {% elseif c.status == 'REJECTED' %}from-rose-500 to-rose-600
+                        {% else %}from-amber-400 to-orange-500{% endif %}
+                        flex flex-col items-center justify-center shadow-xl">
+                        <span class="text-[9px] font-black text-white/70 uppercase leading-none mb-1">{{ c.startDate|date('M') }}</span>
+                        <span class="text-3xl font-black text-white leading-none">{{ c.startDate|date('d') }}</span>
+                    </div>
+                    <div>
+                        <div class="flex flex-wrap items-center gap-2 mb-2">
+                            <h2 class="text-2xl font-black text-slate-900 tracking-tight">{{ c.user.prenom }} {{ c.user.nom }}</h2>
+                            <span class="px-3 py-1 text-[10px] font-black rounded-full uppercase
+                                {% if c.status == 'APPROVED' %}bg-emerald-50 text-emerald-700 border border-emerald-100
+                                {% elseif c.status == 'REJECTED' %}bg-rose-50 text-rose-700 border border-rose-100
+                                {% else %}bg-amber-50 text-amber-700 border border-amber-100{% endif %}">
+                                {% if c.status == 'APPROVED' %}✓ Validé
+                                {% elseif c.status == 'REJECTED' %}✕ Refusé
+                                {% else %}⏳ En attente{% endif %}
+                            </span>
+                        </div>
+                        <p class="text-sm font-black text-slate-400 uppercase tracking-widest">
+                            {{ c.type }} · {{ c.startDate|date('d/m/Y') }} → {{ c.endDate|date('d/m/Y') }}
+                        </p>
+                    </div>
+                </div>
+                <a href="{{ path('app_rh_conge_pdf', {id: c.id}) }}" target="_blank" 
+                   class="group flex items-center gap-3 bg-indigo-600 text-white font-black py-4 px-8 rounded-2xl hover:bg-indigo-700 hover:-translate-y-1 transition-all duration-300 shadow-xl shadow-indigo-100 text-[11px] uppercase tracking-widest shrink-0">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg>
+                    Générer le PDF
+                </a>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                {# Info & Comments #}
+                <div class="space-y-6">
+                    <div class="grid grid-cols-3 gap-4">
+                        <div class="bg-slate-50 rounded-2xl p-4 text-center border border-slate-100">
+                            <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Employé</p>
+                            <p class="text-xs font-black text-slate-900">{{ c.user.prenom }}</p>
+                        </div>
+                        <div class="bg-slate-50 rounded-2xl p-4 text-center border border-slate-100">
+                            <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Magasin</p>
+                            <p class="text-xs font-black text-slate-900">{{ c.user.magasin|default('N/A') }}</p>
+                        </div>
+                        <div class="bg-slate-50 rounded-2xl p-4 text-center border border-slate-100">
+                            <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Type</p>
+                            <p class="text-xs font-black text-slate-900">{{ c.type }}</p>
+                        </div>
+                    </div>
+
+                    {% if c.employeeComment %}
+                    <div>
+                        <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-3">Commentaire employé</p>
+                        <div class="bg-slate-50 rounded-2xl p-5 border-l-4 border-indigo-400 text-sm font-bold text-slate-600 italic leading-relaxed">"{{ c.employeeComment }}"</div>
+                    </div>
+                    {% endif %}
+
+                    {% if c.adminComment %}
+                    <div>
+                        <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-3">Note administration</p>
+                        <div class="bg-amber-50 rounded-2xl p-5 border-l-4 border-amber-400 text-sm font-bold text-amber-800 italic leading-relaxed">"{{ c.adminComment }}"</div>
+                    </div>
+                    {% endif %}
+
+                    {# Signature Preview #}
+                    <div class="bg-slate-50 rounded-2xl p-6 border border-slate-100">
+                        <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-4">Signature de validation</p>
+                        {% if c.approvedSignature %}
+                            <div class="bg-white rounded-xl p-3 border border-emerald-100 mb-3">
+                                <img src="{{ c.approvedSignature }}" class="max-h-20 w-full object-contain" alt="Signature">
+                            </div>
+                            <p class="text-xs font-black text-emerald-700">✓ Signée par {{ c.approvedBy }} le {{ c.approvedAt|date('d/m/Y à H:i') }}</p>
+                        {% else %}
+                            <div class="h-14 border-2 border-dashed border-slate-200 rounded-xl flex items-center justify-center mb-2">
+                                <p class="text-[10px] font-black text-slate-300 italic">Aucune signature numérique enregistrée</p>
+                            </div>
+                            <p class="text-[10px] text-slate-400 font-bold italic">La signature sera capturée lors de la validation du congé depuis le module RH.</p>
+                        {% endif %}
+                    </div>
+                </div>
+
+                {# History Timeline #}
+                <div>
+                    <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-5">Journal complet du dossier — {{ c.history|length }} entrée(s)</p>
+                    <div class="space-y-5 relative before:absolute before:left-3 before:top-2 before:bottom-2 before:w-0.5 before:bg-slate-100">
+                        {% for step in c.history %}
+                            <div class="pl-10 relative">
+                                <div class="absolute left-0 top-1.5 w-6 h-6 rounded-xl border-2 border-white {{ step.who == 'Admin' ? 'bg-indigo-600 shadow-md shadow-indigo-200' : 'bg-slate-400' }}"></div>
+                                <div class="flex justify-between items-center mb-1">
+                                    <span class="text-sm font-black text-slate-900 uppercase tracking-tight">{{ step.action }}</span>
+                                    <span class="text-[9px] text-slate-400 font-black">{{ step.at|date('d/m H:i') }}</span>
+                                </div>
+                                <p class="text-[10px] font-black text-slate-500 uppercase tracking-wider mb-1">{{ step.who }}</p>
+                                {% if step.comment %}
+                                    <div class="bg-slate-50 rounded-xl p-3 border border-slate-100 text-[11px] font-bold text-slate-600 italic">"{{ step.comment }}"</div>
+                                {% endif %}
+                                {% if step.startDate %}
+                                    <span class="inline-flex items-center gap-1.5 mt-2 text-[9px] font-black bg-indigo-50 text-indigo-600 px-3 py-1 rounded-full border border-indigo-100">
+                                        <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path d="M8 7V3m8 4V3M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                                        {{ step.startDate|date('d/m') }} → {{ step.endDate|date('d/m') }}
+                                    </span>
+                                {% endif %}
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% elseif selectedMagasin %}
+            <div class="bg-white border-4 border-dashed border-slate-100 rounded-[3rem] py-20 flex flex-col items-center gap-4 text-center">
+                <div class="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center text-slate-200">
+                    <svg width="32" height="32" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
+                </div>
+                <p class="text-sm font-black text-slate-300 uppercase tracking-[0.2em]">Sélectionnez un employé et un dossier</p>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

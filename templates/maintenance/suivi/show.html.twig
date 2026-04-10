@@ -1,0 +1,129 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Fiche de tâches | Suivi intervention{% endblock %}
+
+{% block body %}
+<div class="min-h-screen bg-slate-50 py-2 sm:py-4 px-0 sm:px-4 lg:px-8">
+    <div class="max-w-3xl mx-auto">
+        
+        {# Header #}
+        <div class="mb-6 px-3 sm:px-0">
+            <a href="{{ path('app_maintenance_suivi') }}" class="inline-flex items-center gap-2 text-[11px] font-bold text-slate-500 hover:text-slate-700 transition-colors mb-3">
+                <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M19 12H5m7 7l-7-7 7-7"></path></svg>
+                Retour à la liste
+            </a>
+            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                <div>
+                    <h1 class="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">Fiche de tâches</h1>
+                    <p class="text-xs text-slate-500 mt-0.5">{{ task.magasin.nom }} - {{ task.date|date('d/m/Y') }}</p>
+                </div>
+                {% if task.isApproved %}
+                    <span class="inline-flex items-center gap-2 px-3 py-2 bg-emerald-100 text-emerald-700 rounded-xl text-[11px] font-black uppercase tracking-wide border border-emerald-200 w-fit">
+                        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"></path></svg>
+                        <span class="hidden sm:inline">Approuvé le {{ task.approvedAt|date('d/m/Y H:i') }}</span>
+                        <span class="sm:hidden">Approuvé</span>
+                    </span>
+                {% else %}
+                    <span class="inline-flex items-center gap-2 px-3 py-2 bg-amber-50 text-amber-600 rounded-xl text-[11px] font-black uppercase tracking-wide border border-amber-200 w-fit">
+                        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        En cours
+                    </span>
+                {% endif %}
+            </div>
+        </div>
+
+        {# Details Card #}
+        <div class="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden mb-4">
+            {# Info Section #}
+            <div class="p-6 border-b border-slate-100">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                    <div class="bg-slate-50 border border-slate-200 rounded-xl p-3">
+                        <span class="block text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1">Date</span>
+                        <span class="text-[14px] font-bold text-slate-800">{{ task.date|date('d/m/Y') }}</span>
+                    </div>
+                    <div class="bg-slate-50 border border-slate-200 rounded-xl p-3">
+                        <span class="block text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1">Magasin</span>
+                        <span class="text-[14px] font-bold text-slate-800">{{ task.magasin.nom }}</span>
+                    </div>
+                </div>
+                <div class="bg-slate-50 border border-slate-200 rounded-xl p-3">
+                    <span class="block text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1">Créé par</span>
+                    <span class="text-[14px] font-bold text-slate-800">{{ task.user.nom }} {{ task.user.prenom }}</span>
+                    <span class="text-[11px] text-slate-500 ml-2">le {{ task.createdAt|date('d/m/Y à H:i') }}</span>
+                </div>
+            </div>
+
+            {# Tasks Section #}
+            <div class="p-6">
+                <h3 class="text-[12px] font-black text-slate-700 uppercase tracking-widest mb-4">Tâches effectuées</h3>
+                
+                {% if task.items|length > 0 %}
+                <div class="space-y-2">
+                    {% for item in task.items %}
+                    <div class="flex items-start gap-3 p-3 bg-slate-50 border border-slate-200 rounded-xl">
+                        <div class="shrink-0 pt-0.5">
+                            {% if item.completed %}
+                            <div class="w-5 h-5 sm:w-6 sm:h-6 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center">
+                                <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"></path></svg>
+                            </div>
+                            {% else %}
+                            <div class="w-5 h-5 sm:w-6 sm:h-6 bg-slate-200 text-slate-400 rounded-full flex items-center justify-center">
+                                <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12"></path></svg>
+                            </div>
+                            {% endif %}
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <p class="text-[12px] sm:text-[13px] font-semibold text-slate-700 break-words leading-relaxed">{{ item.description }}</p>
+                            <span class="text-[9px] sm:text-[10px] text-slate-500">({{ item.completed ? 'Terminé' : 'Non terminé' }})</span>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                
+                {# Summary #}
+                <div class="mt-4 flex items-center justify-between p-3 bg-indigo-50 border border-indigo-100 rounded-xl">
+                    <span class="text-[11px] font-bold text-indigo-700 uppercase">Total des tâches</span>
+                    {% set completedCount = task.items|filter(i => i.completed)|length %}
+                    <span class="text-[14px] font-black text-indigo-800">{{ completedCount }}/{{ task.items|length }} terminées</span>
+                </div>
+                {% else %}
+                <div class="text-center py-8 text-slate-500">
+                    <p class="text-[13px] font-semibold">Aucune tâche enregistrée</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        {# Actions #}
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between bg-white border border-slate-200 rounded-2xl p-4 gap-3">
+            <div class="flex items-center gap-2 order-2 sm:order-1">
+                {# Delete button: Full access can delete anything, Personal access can only delete non-approved #}
+                {% if isFullAccess or (isPersonalAccess and not task.isApproved) %}
+                <a href="{{ path('app_maintenance_suivi_delete', {id: task.id}) }}?_token={{ csrf_token('delete' ~ task.id) }}" onclick="showConfirmModal('Supprimer', 'Êtes-vous sûr de vouloir supprimer cette fiche ?', function() { window.location.href = this.href; }.bind(this)); return false;" class="inline-flex items-center justify-center gap-2 px-4 py-2 bg-rose-50 hover:bg-rose-100 text-rose-600 text-[11px] font-bold uppercase tracking-wider rounded-lg transition-all flex-1 sm:flex-none">
+                    <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                    <span class="sm:hidden">Suppr.</span>
+                    <span class="hidden sm:inline">Supprimer</span>
+                </a>
+                {% endif %}
+            </div>
+            <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3 order-1 sm:order-2">
+                <a href="{{ path('app_maintenance_suivi') }}" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-[11px] font-bold uppercase tracking-wider rounded-lg transition-all text-center">
+                    Retour
+                </a>
+                {% if not task.isApproved or isFullAccess %}
+                    {% if not task.isApproved and isFullAccess %}
+                        <a href="{{ path('app_maintenance_suivi_approve', {id: task.id}) }}?_token={{ csrf_token('approve' ~ task.id) }}" onclick="showConfirmModal('Approuver', 'Êtes-vous sûr de vouloir approuver cette fiche ? Elle ne pourra plus être modifiée.', function() { window.location.href = this.href; }.bind(this)); return false;" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-[11px] font-black uppercase tracking-wider rounded-lg transition-all text-center">
+                            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" class="inline mr-1"><path d="M5 13l4 4L19 7"></path></svg>
+                            Approuver
+                        </a>
+                    {% endif %}
+                    <a href="{{ path('app_maintenance_suivi_edit', {id: task.id}) }}" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-[11px] font-black uppercase tracking-wider rounded-lg transition-all text-center">
+                        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" class="inline mr-1"><path d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
+                        Modifier
+                    </a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

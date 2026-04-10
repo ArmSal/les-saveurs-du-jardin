@@ -2,36 +2,44 @@
 
 namespace App\Controller;
 
-use Firebase\JWT\JWT;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
-use Symfony\Component\HttpFoundation\JsonResponse;
-use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
+use Symfony\Component\Security\Http\Authentication\AuthenticationUtils;
 
 class SecurityController extends AbstractController
 {
-    private string $jwtSecret = 'votre_cle_secrete_super_securise_12345';
+    private \App\Service\AccessHelper $access;
 
-    #[Route('/api/login', name: 'api_login', methods: ['POST'])]
-    public function login(Request $request): JsonResponse
+    public function __construct(\App\Service\AccessHelper $access)
     {
-        $data = json_decode($request->getContent(), true);
-        $email = $data['email'] ?? null;
-        $password = $data['password'] ?? null;
+        $this->access = $access;
+    }
 
-        // Simulation simple d'un utilisateur (à remplacer par la DB en Rendu 2)
-        if ($email === 'admin@lsdj.fr' && $password === 'password123') {
-            $payload = [
-                'iat' => time(),
-                'exp' => time() + 3600, // Expire dans 1 heure
-                'user' => $email,
-            ];
-
-            $token = JWT::encode($payload, $this->jwtSecret, 'HS256');
-
-            return new JsonResponse(['token' => $token]);
+    #[Route(path: '/', name: 'app_login')]
+    public function login(AuthenticationUtils $authenticationUtils): Response
+    {
+        if ($this->getUser()) {
+            if ($this->access->canView('dashboard')) {
+                return $this->redirectToRoute('app_dashboard');
+            }
+            return $this->redirectToRoute('app_home');
         }
 
-        return new JsonResponse(['error' => 'Identifiants invalides'], 401);
+        $error = $authenticationUtils->getLastAuthenticationError();
+        $lastUsername = $authenticationUtils->getLastUsername();
+
+        return $this->render('security/login.html.twig', [
+            'last_username' => $lastUsername,
+            'error' => $error,
+        ]);
+    }
+
+    #[Route(path: '/logout', name: 'app_logout')]
+    public function logout(): void
+    {
+        throw new \LogicException('This method can be blank - it will be intercepted by the logout key on your firewall.');
     }
 }
+
+
