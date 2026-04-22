@@ -25,6 +25,11 @@ sans: ['Plus Jakarta Sans', 'Inter', 'sans-serif']
 }
 		</script>
 
+		{% block javascripts %}
+            {% block importmap %}{{ importmap('app') }}{% endblock %}
+			{{ importmap('app') }}
+		{% endblock %}
+
 		{% block stylesheets %}
 			<link rel="stylesheet" href="{{ asset('css/base.css') }}?v={{ 'now'|date('U') }}">
 			<style>
@@ -387,7 +392,8 @@ sans: ['Plus Jakarta Sans', 'Inter', 'sans-serif']
 			</style>
 		{% endblock %}
 
-		{% block javascripts %}{% endblock %}
+
+
 	</head>
 	<body class="{% block body_class %}{% endblock %}">
 		{% if app.request.get('_route') != 'app_login' %}
