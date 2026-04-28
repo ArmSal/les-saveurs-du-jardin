@@ -1,112 +1,98 @@
-# 🌿 Portail LSDJ - Les Saveurs Du Jardin
+# 🌿 Les Saveurs Du Jardin (LSDJ) - Enterprise Management Portal
 
-[![CI Pipeline](https://github.com/ArmSal/les-saveurs-du-jardin/actions/workflows/ci.yml/badge.svg)](https://github.com/ArmSal/les-saveurs-du-jardin/actions)
-[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](https://opensource.org/licenses/MIT)
-[![Symfony](https://img.shields.io/badge/Symfony-6.4%20%2F%207.0-black?logo=symfony)](https://symfony.com)
-[![DevOps](https://img.shields.io/badge/Stack-DevOps-blue?logo=docker)](https://docker.com)
+[![CI/CD Pipeline](https://github.com/ArmSal/les-saveurs-du-jardin/actions/workflows/devops-ci.yml/badge.svg)](https://github.com/ArmSal/les-saveurs-du-jardin/actions)
+[![Symfony](https://img.shields.io/badge/Framework-Symfony%207.4%20LTS-black?logo=symfony)](https://symfony.com)
+[![Docker](https://img.shields.io/badge/Infrastructure-Docker%20Ready-blue?logo=docker)](https://www.docker.com/)
+[![Monitoring](https://img.shields.io/badge/Supervision-Prometheus%20%26%20Grafana-orange?logo=grafana)](https://grafana.com/)
 
-**Portail LSDJ** est une plateforme web interne de gestion multi-magasin centralisant les ressources humaines, la logistique et l'administration pour l'entreprise **Les Saveurs Du Jardin**.
+## 📖 Executive Summary
+**Les Saveurs Du Jardin (LSDJ)** is a high-performance Enterprise Resource Planning (ERP) portal designed for multisite retail management. It centralizes Human Resources, Logistics, and General Administration into a unified, secure, and scalable platform. 
 
----
-
-## 🚀 Vision du Projet
-
-Conçu pour répondre aux défis d'une entreprise multisite en pleine croissance, le Portail LSDJ offre une solution exhaustive pour :
-- 👥 **Gestion RH** : Congés avec workflow de validation, plannings dynamiques et signatures électroniques.
-- 📦 **Logistique & Vente** : Catalogue produits multi-critères et gestion complète des commandes.
-- 📂 **Gestion Documentaire** : Coffre-fort numérique avec permissions granulaires.
-- ⚡ **Notifications** : Système d'alerting en temps réel pour tous les événements métier.
+This project serves as a comprehensive demonstration of **DevOps Excellence**, implementing advanced CI/CD pipelines, containerized micro-services, and real-time infrastructure monitoring.
 
 ---
 
-## 🛠️ Stack Technique & Architecture
+## 🚀 Key Business Modules
 
-- **Backend** : Symfony 6.4 / 7.0 (PHP 8.2) | Doctrine ORM
-- **Database** : MySQL 8.0
-- **Frontend** : Twig | Tailwind CSS | JavaScript (Turbo/Stimulus)
-- **Security** : RBAC (Role-Based Access Control) avec **6 niveaux de permissions** par module.
-- **Reporting** : Dompdf (Génération de PDF) | KnpPaginator (Pagination)
+### 👥 Human Resources & Workforce Management
+*   **Dynamic Rostering**: Real-time employee schedule management with conflict detection.
+*   **Leave Management**: Automated workflow for leave requests, approvals, and electronic signatures.
+*   **HR Vault**: Secure digital storage for employee contracts and sensitive documentation.
+
+### 📦 Logistics & Supply Chain
+*   **Inventory Control**: Centralized product catalog with multi-criteria filtering.
+*   **Order Management**: Full lifecycle tracking of internal and external orders.
+*   **Fleet Tracking**: Logistics module for managing truck deliveries and maintenance schedules.
+
+### 🛡️ Security & Governance
+*   **RBAC (Role-Based Access Control)**: Granular permission system with 6 distinct access levels per module.
+*   **Electronic Signature**: Legal-grade digital signature integration for internal validations.
+*   **Audit Logging**: Comprehensive tracking of critical business events.
 
 ---
 
-## 🏗️ Écosystème DevOps (Parcours ASD)
+## 🎨 User Interface Experience
+The portal features a modern, responsive interface optimized for Desktop, Tablet, and Mobile devices.
 
-Ce projet implémente les piliers du titre **Administrateur Systèmes DevOps** :
-- **BC01 - Infrastructure** : Déploiement automatisé ciblant le Cloud Public (IaC).
-- **BC02 - CI/CD** : Pipeline robuste via GitHub Actions incluant tests unitaires, analyse statique et build Docker.
-- **BC03 - Supervision** : Monitoring de l'application et de l'infrastructure via Prometheus & Grafana.
-
----
-
-## 🎨 Maquettes de l'Interface
-
-Voici les visuels de l'interface **Les Saveurs Du Jardin** pour les différents terminaux :
-
-| Desktop | Tablette | Mobile |
+| Desktop View | Tablet View | Mobile View |
 | :--- | :--- | :--- |
 | ![Desktop](docs/Desktop.png) | ![Tablette](docs/Tablet.png) | ![Mobile](docs/Mobile.png) |
 
 ---
 
-## 📂 Documentation de Référence
+## 🏗️ Technical Architecture
 
-- 📄 **[Cahier des Charges Détaillé](docs/CAHIER_DES_CHARGES.md)**
-- 📕 **[Spécifications PDF](docs/Cahier%20de%20charge.pdf)**
+### Core Stack
+*   **Engine**: Symfony 7.4 LTS (PHP 8.2.30)
+*   **Storage**: MySQL 8.0 (Relational Data)
+*   **Interface**: Twig Template Engine + Tailwind CSS (JIT)
+*   **Reporting**: Dompdf Engine for professional PDF generation.
+
+### DevOps & Infrastructure (ASD Path)
+This platform implements the three pillars of the **Administrateur Systèmes DevOps** certification:
+
+1.  **Infrastructure as Code (BC01)**: Automated provisioning and deployment targeting Cloud environments.
+2.  **CI/CD Pipeline (BC02)**: Robust GitHub Actions workflow including:
+    *   Security vulnerabilities scanning (Symfony Check).
+    *   Automated Unit & Functional Testing (PHPUnit).
+    *   Production-ready Docker Image builds.
+3.  **Observability & Monitoring (BC03)**:
+    *   **Prometheus**: Time-series metrics collection.
+    *   **Grafana**: Professional dashboards for system and application health.
+    *   **Alerting**: Configured thresholds for critical performance indicators.
 
 ---
 
-## ⚙️ Installation Rapide (Docker)
+## ⚙️ Deployment & Installation
 
+### Prerequisites
+*   Docker & Docker Compose
+*   Git
+
+### Quick Start (Development)
 ```bash
-# Cloner le projet
+# Clone the repository
 git clone https://github.com/ArmSal/les-saveurs-du-jardin.git
 
-## 🏗️ Infrastructure & DevOps (BC01 & BC03)
+# Launch the environment
+docker compose up -d --build
 
-Le projet intègre une plateforme DevOps complète pour la certification :
-
-### ☁️ Infrastructure Cloud (BC01)
-Provisionnement automatisé sur **AWS** :
-- **Terraform** : VPC, Subnets, EC2, RDS (PostgreSQL). Dossier : `infra/terraform/`.
-- **Ansible** : Provisionnement Docker et sécurité système. Dossier : `infra/ansible/`.
-- **S3 Backend** : Gestion de l'état (State) centralisée.
-
-### 📊 Supervision & Alerting (BC03)
-Stack d'observabilité complète :
-- **Prometheus & Grafana** : Visualisation des métriques.
-- **Alert Rules** : Seuils configurés pour CPU (>80%), Disque (>90%) et Latence PHP (>2s).
-- **Exporters** : Node Exporter et PHP-FPM Exporter.
-
-### 🛡️ Sécurité & CI/CD
-- **Trivy** : Scan de vulnérabilités Docker intégré au pipeline.
-- **Secrets** : Gestion sécurisée via `.env.local` et secrets GitHub.
-- **Automated Tests** : Pipeline bloquant en cas d'échec de PHPUnit.
-
-Consultez le [Schéma d'Architecture](docs/architecture_schema.md) pour plus de détails.
-
-# Lancer l'environnement de développement
-docker-compose up -d --build
-
-# Initialiser la base de données (une fois le conteneur prêt)
-docker-compose exec app php bin/console doctrine:migrations:migrate
+# Run Database Migrations
+docker compose exec app php bin/console doctrine:migrations:migrate
 ```
-*Accès : `http://localhost:8080` | Base de données : `8081` (Adminer)*
+*   **Web Portal**: [http://localhost:8080](http://localhost:8080)
+*   **Database Management (Adminer)**: [http://localhost:8081](http://localhost:8081)
+*   **Monitoring (Grafana)**: [http://localhost:3000](http://localhost:3000)
 
 ---
 
-## ⚖️ Système de Permissions Granulaire
-
-Le portail utilise un système d'accès unique :
-1. `AUCUN_ACCES`
-2. `ACCES_PERSONNEL` (Données propres)
-3. `LECTURE_MAGASIN` (Scope site uniquement)
-4. `LECTURE_TOTALE` (Scope entreprise)
-5. `ADMIN_MAGASIN` (Gestion locale)
-6. `ACCES_TOTAL` (Super-Administration)
+## 📂 Project Documentation
+Detailed technical specifications and architectural diagrams are available in the `/docs` directory:
+*   📄 [Technical Specifications (CDC)](docs/CAHIER_DES_CHARGES.md)
+*   📊 [Architecture Schema](docs/architecture_schema.md)
 
 ---
 
-## 🤝 Contribution & Évaluation
-
-Ce projet est réalisé par **[ArmSal](https://github.com/ArmSal)** dans le cadre du titre professionnel **ASD**.
-Contact : https://github.com/ArmSal
+## 🤝 Authors & License
+Developed by **[ArmSal](https://github.com/ArmSal)**. 
+Distributed under the MIT License.
