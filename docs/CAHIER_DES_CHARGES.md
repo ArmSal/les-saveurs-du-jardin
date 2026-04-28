@@ -1,396 +1,152 @@
-# CAHIER DES CHARGES - PORTAIL LSDJ
+# CAHIER DES CHARGES - PORTAIL LSDJ (Enterprise Edition)
 
-**Version:** 1.0  
+**Version:** 2.1  
 **Date:** Avril 2026  
-**Projet:** Portail de Gestion Multi-Magasin  
-**Technologie:** Symfony 6/7, PHP 8, MySQL, TailwindCSS
+**Projet:** Portail de Gestion ERP Multi-Magasin  
+**Technologie:** Symfony 7.4 LTS (PHP 8.2), MySQL 8.0, TailwindCSS, Docker, Prometheus, Grafana
 
 ---
 
 ## TABLE DES MATIÈRES
 
-1. [Présentation du Projet](#1-présentation-du-projet)
-2. [Architecture Technique](#2-architecture-technique)
-3. [Modules Fonctionnels](#3-modules-fonctionnels)
-4. [Système de Permissions](#4-système-de-permissions)
-5. [Modèle de Données](#5-modèle-de-données)
-6. [Interfaces Utilisateur](#6-interfaces-utilisateur)
-7. [Fonctionnalités Détaillées](#7-fonctionnalités-détaillées)
-8. [Contraintes et Prérequis](#8-contraintes-et-prérequis)
+1. [PRÉSENTATION DU PROJET](#1-présentation-du-projet)
+2. [ARCHITECTURE TECHNIQUE & DEVOPS](#2-architecture-technique--devops)
+3. [MODULES FONCTIONNELS MÉTIERS](#3-modules-fonctionnels-métiers)
+4. [SYSTÈME DE PERMISSIONS (RBAC)](#4-système-de-permissions-rbac)
+5. [MODÈLE DE DONNÉES & ENTITÉS](#5-modèle-de-données--entités)
+6. [INTERFACES UTILISATEUR & UI/UX](#6-interfaces-utilisateur--uiux)
+7. [ÉCOSYSTÈME DE DÉPLOIEMENT (CI/CD)](#7-écosystème-de-déploiement-cicd)
+8. [CONTRAINTES DE SÉCURITÉ & PERFORMANCE](#8-contraintes-de-sécurité--performance)
 
 ---
 
 ## 1. PRÉSENTATION DU PROJET
 
 ### 1.1 Contexte
-Le Portail LSDJ est une plateforme web interne de gestion multi-magasin permettant la gestion centralisée des ressources humaines, des commandes, du catalogue produits et des documents pour l'entreprise LSDJ.
+Le Portail **Les Saveurs Du Jardin (LSDJ)** est une solution ERP centralisée conçue pour optimiser la gestion opérationnelle d'une entreprise multisite. Il répond aux besoins critiques de coordination entre les magasins physiques et la direction centrale.
 
-### 1.2 Objectifs
-- Centraliser la gestion des employés et des magasins
-- Gérer les commandes clients et internes
-- Administrer le catalogue produits avec photos
-- Gérer les congés et les horaires de travail
-- Gérer les documents RH avec signature électronique
-- Fournir un système de notifications en temps réel
-- Implémenter un contrôle d'accès granulaire par rôle et par magasin
+### 1.2 Objectifs Stratégiques
+- **Centralisation** : Unifier la gestion RH et logistique sur une plateforme unique.
+- **Transparence** : Permettre un suivi en temps réel des commandes et des plannings.
+- **Conformité** : Garantir la validité légale des documents via la signature électronique.
+- **Observabilité** : Monitorer l'état de santé de l'infrastructure pour garantir une haute disponibilité.
 
-### 1.3 Périmètre
-**Utilisateurs concernés:**
-- Directeur (accès total)
-- Responsables de magasin (accès magasin uniquement)
-- Employés (accès personnel)
-- Clients externes (commandes)
+### 1.3 Périmètre Utilisateurs
+Le système gère quatre types de profils avec des vues différenciées :
+- **Directeur (Admin)** : Accès global stratégique.
+- **Responsables de Magasin** : Gestion opérationnelle du site rattaché.
+- **Employés** : Consultation des ressources personnelles (horaires, documents).
+- **Clients/Utilisateurs Externes** : Interaction limitée via le catalogue et les commandes.
 
 ---
 
-## 2. ARCHITECTURE TECHNIQUE
+## 2. ARCHITECTURE TECHNIQUE & DEVOPS
 
-### 2.1 Stack Technique
-| Composant | Technologie |
-|-----------|-------------|
-| Framework Backend | Symfony 6/7 (PHP 8.2+) |
-| Base de données | MySQL 8.0 |
-| ORM | Doctrine |
-| Frontend | Twig + TailwindCSS |
-| Authentification | Symfony Security |
-| Pagination | KnpPaginatorBundle |
-| Génération PDF | Dompdf |
-| Gestion de fichiers | Symfony Filesystem |
+### 2.1 Stack Technologique Professionnelle
+| Composant | Technologie | Rôle |
+|-----------|-------------|------|
+| **Backend** | Symfony 7.4 LTS (PHP 8.2.30) | Logique métier et API |
+| **Base de données** | MySQL 8.0 | Stockage relationnel persistant |
+| **Infrastructure** | Docker & Docker Compose | Conteneurisation des services |
+| **Serveur Web** | Nginx | Reverse proxy et gestion des assets |
+| **Supervision** | Prometheus & Grafana | Monitoring et Alerting (BC03) |
+| **Frontend** | Twig + Tailwind CSS | Interface réactive et moderne |
 
-### 2.2 Structure des Répertoires
-```
+### 2.2 Structure des Répertoires (Standard Symfony)
+```text
 portal/
-├── bin/                    # Scripts et commandes
-├── config/                 # Configuration Symfony
-├── migrations/            # Migrations Doctrine
-├── public/                # Point d'entrée web
+├── bin/                    # Scripts console et utilitaires
+├── config/                 # Configuration du framework et des bundles
+├── docker/                 # Configurations Nginx, Prometheus et PHP
+├── migrations/             # Historique des évolutions de base de données
+├── public/                 # Point d'entrée web (index.php, CSS, JS)
 ├── src/
-│   ├── Controller/       # Contrôleurs 
-│   ├── Entity/          # Entités
-│   ├── Form/            # Formulaires
-│   ├── Repository/      # Repositories
-│   ├── Service/         # Services métier
-│   └── Security/        # Voters et sécurité
-├── templates/           # Templates Twig
-├── storage/            # Fichiers uploadés
-│   ├── documents/
-│   ├── documents_rh/
-│   ├── products/
-│   ├── shortcuts/
-│   └── users/
-└── var/                # Cache et logs
+│   ├── Controller/         # Contrôleurs métiers (20 contrôleurs)
+│   ├── Entity/             # Modèles de données (23 entités)
+│   ├── Service/            # Logique transverse (AccessHelper, etc.)
+│   └── Security/           # Gestion de l'authentification et des Voters
+├── templates/              # Vues Twig organisées par module
+└── compose.yaml            # Définition de l'infrastructure Docker
 ```
 
 ---
 
-## 3. MODULES FONCTIONNELS
+## 3. MODULES FONCTIONNELS MÉTIERS
 
-### 3.1 Module Authentification & Sécurité
-**Entités:** `User`, `Role`, `Magasin`, `ModulePermission`, `Article`, `Commande`,`Conge`, `Horaire`, 
+### 3.1 Module RH - Plannings & Horaires
+- **Planning Dynamique** : Vue calendrier interactive avec codes couleurs par employé.
+- **Validation Mensuelle** : Processus de verrouillage des heures en fin de mois avec signature.
+- **Export Reporting** : Génération automatique de rapports PDF professionnels pour la comptabilité.
 
-**Fonctionnalités:**
-- Authentification email/mot de passe
-- Gestion des rôles hiérarchiques (Directeur, Responsable, Employé)
-- Gestion multi-magasin
-- Permissions granulaires par module (6 niveaux d'accès)
-- Numéro client unique généré automatiquement
-- Photo de profil et signature électronique
+### 3.2 Module RH - Gestion des Congés
+- **Workflow de Demande** : Système de soumission avec statut (En attente, Modifié, Validé).
+- **Circuit de Signature** : Validation par le manager déclenchant une signature numérique.
+- **Calculateur** : Décompte automatique des jours payés et non payés.
 
-### 3.2 Module Dashboard
-**Contrôleur:** `DashboardController`
+### 3.3 Module Logistique - Ventes & Commandes
+- **Catalogue Centralisé** : Gestion des stocks et des tarifs par catégorie.
+- **Panier & Commandes** : Tunnel d'achat optimisé pour les commandes internes/externes.
+- **Suivi en temps réel** : Workflow de statut (Préparation, Livraison, Archivage).
 
-**Fonctionnalités:**
-- Vue d'ensemble des commandes actives
-- Calcul du chiffre d'affaires total
-- Statistiques des employés (travaillent/absents)
-- Liste des commandes récentes
-- Liste des employés en congé
-- Raccourcis personnalisables
-- Sélecteur de semaines pour rapports
+### 3.4 Module Logistique - Transport & Maintenance
+- **Flotte Camion** : Suivi de l'immatriculation et de l'état des véhicules.
+- **Maintenance Magasin** : Gestion des tâches de nettoyage et de maintenance technique.
 
-### 3.3 Module Agenda (Planning)
-
-
-**Fonctionnalités:**
-- Vue calendrier des horaires de travail
-- Création/modification/suppression des plages horaires
-- Codes couleur par employé
-- Verrouillage des horaires validés
-- Filtre par magasin
-- Vue quotidienne, hebdomadaire, mensuelle
-
-### 3.4 Module RH - Congés
-
-**Fonctionnalités:**
-- **Employé:**
-  - Demande de congé (date début/fin, type, commentaire)
-  - Suivi des demandes (En attente, Modifiée, Acceptée)
-  - Historique personnel des congés
-  
-- **Manager:**
-  - Validation/Rejet des demandes avec signature
-  - Modification des dates avec notification
-  - Calcul des jours payés/non payés
-  - Statistiques par magasin
-  - Gestion des différents types de congés
-  - Export PDF des validations
-
-**Workflow de validation:**
-```
-PENDING → MODIFIED → ACCEPTED_BY_EMPLOYEE → APPROVED
-       → REJECTED
-       → CANCELLED
-```
-
-### 3.5 Module RH - Validation Mensuelle
-
-**Fonctionnalités:**
-- Validation mensuelle des horaires par employé
-- Signature électronique avec timestamp
-- Génération de PDF de validation
-- Historique des validations mensuelles
-- Vue récapitulative par semaine et par mois
-
-### 3.6 Module Produits
-
-**Fonctionnalités:**
-- CRUD complet des produits
-- Gestion des catégories
-- Upload de photos produits
-- Recherche par référence, code-barre, désignation
-- Filtrage par catégorie
-- Tri multi-colonnes
-- Gestion du stock (quantité)
-- Prix et TVA
-- Pagination (20 éléments/page)
-
-**Champs produit:**
-- Référence, Code-barre, Désignation
-- Unité, Catégorie, Prix, TVA
-- Quantité stock, Description, Image
-
-### 3.7 Module Commandes
-
-**Fonctionnalités:**
-- **Panier d'achat:**
-  - Ajout/Suppression/Modification des quantités
-  - Session-based (non persistant)
-  
-- **Commandes:**
-  - Création de commande depuis le panier
-  - Statuts: En attente, Modifiée, Confirmée, En préparation, Préparée, Livrée, Archivée, Annulée
-  - Historique des changements de statut
-  - Suivi des commandes avec lien unique
-  - Filtrage par statut et par magasin
-  - Notifications automatiques
-
-### 3.8 Module Documents
-
-**Fonctionnalités:**
-- Gestion hiérarchique avec dossiers
-- Upload de documents (PDF, images, etc.)
-- Permissions par rôle sur les documents
-- Documents globaux vs documents personnels
-- **Documents RH spécifiques:**
-  - Contrats avec demande de signature
-  - Signature électronique intégrée
-  - Statut de signature (En attente, Signé)
-  - Envoi ciblé par employé
-
-### 3.9 Module Notifications
-
-**Fonctionnalités:**
-- Système de notification en temps réel
-- Types: NEW_PRODUCT, ORDER_STATUS, CONGE, etc.
-- Badge de notification non lue
-- Liste des notifications avec lien vers l'élément concerné
-- Marquage comme lu
-
-### 3.10 Module Paramètres
-
-**Fonctionnalités:**
-- Gestion des raccourcis (création, ordre d'affichage)
-- Configuration des couleurs du calendrier
-- Gestion de la signature électronique
-- Upload de photo de profil
+### 3.5 Module Gestion Documentaire (Coffre-fort)
+- **Structure Hiérarchique** : Organisation par dossiers avec permissions granulaires.
+- **Signature Électronique** : Intégration légale pour les contrats et avenants.
 
 ---
 
-## 4. SYSTÈME DE PERMISSIONS
+## 4. SYSTÈME DE PERMISSIONS (RBAC)
 
-### 4.1 Niveaux d'Accès
-Le système implémente 6 niveaux d'accès par module:
+Le portail implémente un modèle de sécurité granulaire unique basé sur 6 niveaux d'accès :
 
-| Niveau | Code | Description |
-|--------|------|-------------|
-| Aucun accès | `AUCUN_ACCES` | Module invisible |
-| Accès Personnel | `ACCES_PERSONNEL` | Accès aux données personnelles uniquement |
-| Lecture Magasin | `LECTURE_MAGASIN` | Lecture données du magasin |
-| Lecture Totale | `LECTURE_TOTALE` | Lecture tous les magasins |
-| Admin Magasin | `ADMIN_MAGASIN` | CRUD sur son magasin |
-| Accès Total | `ACCES_TOTAL` | CRUD sur tous les magasins |
-
-### 4.2 Modules Protégés
-- `dashboard` - Tableau de bord
-- `agenda` - Planning horaires
-- `rh_validation` - Validation mensuelle RH
-- `rh_conge` - Gestion des congés
-- `rh_documents` - Documents RH
-- `documents` - Documents généraux
-- `produits` - Catalogue produits
-- `commandes` - Gestion des commandes
-- `users` - Gestion des utilisateurs
-- `shortcuts` - Raccourcis personnalisés
-- `access_management` - Gestion des accès
-
-### 4.3 Logique d'Accès
-- **Directeur:** ACCES_TOTAL sur tous les modules
-- **Responsable Magasin:** ADMIN_MAGASIN ou LECTURE_MAGASIN sur son magasin
-- **Employé:** ACCES_PERSONNEL sur les modules RH, LECTURE sur produits/commandes
+| Niveau | Code | Portée |
+|--------|------|--------|
+| **Aucun** | `AUCUN_ACCES` | Module invisible pour l'utilisateur. |
+| **Personnel** | `ACCES_PERSONNEL` | Accès limité à ses propres données. |
+| **Lecture Site** | `LECTURE_MAGASIN` | Consultation des données d'un seul magasin. |
+| **Lecture Globale** | `LECTURE_TOTALE` | Consultation de l'ensemble du groupe. |
+| **Gestion Site** | `ADMIN_MAGASIN` | CRUD sur les données de son propre magasin. |
+| **Super Admin** | `ACCES_TOTAL` | Contrôle total sur l'ensemble du portail. |
 
 ---
 
-## 5. MODÈLE DE DONNÉES
+## 5. MODÈLE DE DONNÉES & ENTITÉS
 
-### 5.1 Entités Principales
-
-## 6. INTERFACES UTILISATEUR
-
-### 6.1 Structure des Templates
-
-```
-templates/
-├── base.html.twig           # Layout principal avec navigation
-├── admin/                   # Administration
-│   ├── users/
-│   ├── roles/
-│   └── permissions/
-├── agenda/                  # Planning
-│   ├── index.html.twig
-│   ├── _calendar_views/
-│   └── _modals/
-├── dashboard/               # Tableau de bord
-│   └── index.html.twig
-├── produit/               # Catalogue
-│   ├── index.html.twig
-│   ├── new.html.twig
-│   ├── edit.html.twig
-│   ├── show.html.twig
-│   └── categories/
-├── cart/                    # Panier
-│   └── index.html.twig
-├── commande/               # Commandes
-│   ├── index.html.twig
-│   ├── show.html.twig
-│   └── mes_commandes.html.twig
-├── rh/                     # Ressources Humaines
-│   ├── conge.html.twig
-│   ├── validation.html.twig
-│   ├── documents.html.twig
-│   └── suivi.html.twig
-├── document/               # Documents
-│   ├── index.html.twig
-│   ├── upload.html.twig
-│   └── signer.html.twig
-├── notification/          # Notifications
-│   └── index.html.twig
-├── settings/              # Paramètres
-│   └── index.html.twig
-├── security/              # Authentification
-│   └── login.html.twig
-└── static/                # Pages statiques
-    ├── home.html.twig
-    ├── about.html.twig
-    └── contact.html.twig
-```
-
-### 6.2 Composants UI Communs
-- **Navigation:** Sidebar responsive avec menu collapsible
-- **Header:** Notifications, profil utilisateur, recherche
-- **Tableaux:** Tri, filtrage, pagination intégrés
-- **Formulaires:** Validation côté client et serveur
-- **Modales:** Création/édition sans changement de page
-- **Flash Messages:** Notifications de succès/erreur
+### 5.1 Entités Cœurs
+- **Utilisateurs** : `User`, `Role`, `ModulePermission`.
+- **RH** : `PortalHoraire`, `PortalConge`, `PortalMonthlyValidation`, `UserObservation`.
+- **Logistique** : `PortalProduct`, `PortalCommandes`, `TransEtLog`, `CleaningTask`.
+- **Infrastructure** : `ObservationMonthLock`, `PortalWeekLock`.
 
 ---
 
-## 7. FONCTIONNALITÉS DÉTAILLÉES
+## 6. INTERFACES UTILISATEUR & UI/UX
 
-### 7.1 Gestion des Accès (AccessHelper)
-Le service `AccessHelper` fournit les méthodes suivantes:
-- `canView`
-- `canEdit`
-- `isFullAccess`
-- `isMagasinOnly`
-- `isFullView`
-
-### 7.2 Workflow des Congés
-1. Employé soumet une demande (PENDING)
-2. Manager consulte et peut:
-   - Approuver directement (APPROVED)
-   - Rejeter (REJECTED)
-   - Modifier les dates (MODIFIED)
-3. Si modifié, employé accepte (ACCEPTED_BY_EMPLOYEE)
-4. Manager approuve finalement (APPROVED)
-5. Signature électronique et génération PDF
-
-### 7.3 Workflow des Commandes
-```
-En attente → Modifiée → Confirmée → En préparation → Préparée → Livrée → Archivée
-        ↓
-     Annulée
-```
-
-### 7.4 Gestion des Fichiers
-**Stockage:**
-- `storage/products/` - Images produits
-- `storage/documents/` - Documents généraux
-- `storage/documents_rh/` - Documents RH (contrats...)
-- `storage/users/` - Photos de profil
-- `storage/shortcuts/` - Icônes de raccourcis
-
-**Sécurité:**
-- Vérification des extensions autorisées
-- Renommage des fichiers (slug + uniqid)
-- Permissions lecture/écriture contrôlées
-
-### 7.5 Notifications Automatiques
-Déclenchées par:
-- Création d'un nouveau produit
-- Changement de statut de commande
-- Réponse à une demande de congé
-- Envoi d'un document à signer
+L'interface a été conçue pour offrir une expérience "Premium" :
+- **Modernisme** : Utilisation de la police *Plus Jakarta Sans* et design épuré Tailwind.
+- **Interactivité** : Micro-animations CSS, loaders personnalisés et feedbacks par "Toasts".
+- **Responsive** : Adaptation totale aux terminaux mobiles pour les employés sur le terrain.
 
 ---
 
-## 8. CONTRAINTES ET PRÉREQUIS
+## 7. ÉCOSYSTÈME DE DÉPLOIEMENT (CI/CD)
 
-### 8.1 Contraintes Techniques
-- PHP 8.2 ou supérieur
-- MySQL 8.0 ou MariaDB 10.6+
-- Extensions PHP: PDO, GD/Imagick, mbstring, xml
-- Serveur web: Apache 2.4+ ou Nginx
-- Mémoire: Minimum 256MB (512MB recommandé)
+Conformément aux exigences du titre **DevOps**, le projet inclut :
+- **Automatisation CI** : Pipeline GitHub Actions pour le linting, les tests unitaires et le build Docker.
+- **Security Scans** : Audit automatique des vulnérabilités PHP (Symfony Security Check).
+- **Continuous Deployment** : Préparation au déploiement via Terraform (Infrastructure) et Ansible (Configuration).
 
-### 8.2 Contraintes de Sécurité
-- Authentification obligatoire pour tous les modules (sauf public)
-- CSRF protection sur tous les formulaires
-- Mots de passe hashés (bcrypt)
-- Upload de fichiers contrôlé et limité
-- Permissions d'accès vérifiées à chaque requête
+---
 
-### 8.3 Prérequis Déploiement
-- Document root pointant sur `public/`
-- Répertoire `var/` writable par le serveur web
-- Répertoire `storage/` writable par le serveur web
-- Base de données créée avec charset utf8mb4
+## 8. CONTRAINTES DE SÉCURITÉ & PERFORMANCE
 
-### 8.4 Configuration Requise (.env)
-```env
-APP_ENV=prod
-APP_SECRET=<clé_secrète_32_caractères>
-DATABASE_URL="mysql://user:pass@host:3306/dbname?serverVersion=8.0&charset=utf8mb4"
-MAILER_DSN=null://null
-```
+- **Protection CSRF** : Active sur l'ensemble des formulaires métiers.
+- **Hachage Sécurisé** : Utilisation de l'algorithme Argon2id pour les mots de passe.
+- **Optimisation Performance** : Mise en cache Symfony et compression des assets via Nginx.
+- **Supervision (BC03)** : Collecte de métriques (CPU, RAM, temps de réponse) pour l'alerting proactif.
 
-**Fin du Cahier des Charges**
+---
+**Document révisé - Avril 2026**
