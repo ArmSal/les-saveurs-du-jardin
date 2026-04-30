@@ -127,7 +127,7 @@
       "targets": [
         {
           "datasource": { "type": "prometheus", "uid": "prometheus" },
-          "expr": "100 - ((node_filesystem_avail_bytes{mountpoint=\"/\",fstype!=\"rootfs\"} * 100) / node_filesystem_size_bytes{mountpoint=\"/\",fstype!=\"rootfs\"})",
+          "expr": "100 - ((sum(node_filesystem_avail_bytes) * 100) / sum(node_filesystem_size_bytes))",
           "legendFormat": "Disk %",
           "refId": "A"
         }
@@ -147,8 +147,8 @@
             ]
           },
           "mappings": [
-            { "options": { "0": { "color": "green", "index": 0, "text": "UP" } }, "type": "value" },
-            { "options": { "from": 1, "result": { "color": "red", "index": 1, "text": "DOWN" }, "to": 1000 }, "type": "range" }
+            { "options": { "from": 0.5, "result": { "color": "green", "index": 0, "text": "UP" }, "to": 1.5 }, "type": "range" },
+            { "options": { "from": -0.5, "result": { "color": "red", "index": 1, "text": "DOWN" }, "to": 0.5 }, "type": "range" }
           ],
           "unit": "short"
         }
@@ -168,7 +168,7 @@
       "targets": [
         {
           "datasource": { "type": "prometheus", "uid": "prometheus" },
-          "expr": "up{job=\"prometheus\"}",
+          "expr": "max(up{job=\"prometheus\"})",
           "legendFormat": "Prometheus",
           "refId": "A"
         }
@@ -188,8 +188,8 @@
             ]
           },
           "mappings": [
-            { "options": { "0": { "color": "green", "index": 0, "text": "UP" } }, "type": "value" },
-            { "options": { "from": 1, "result": { "color": "red", "index": 1, "text": "DOWN" }, "to": 1000 }, "type": "range" }
+            { "options": { "from": 0.5, "result": { "color": "green", "index": 0, "text": "UP" }, "to": 1.5 }, "type": "range" },
+            { "options": { "from": -0.5, "result": { "color": "red", "index": 1, "text": "DOWN" }, "to": 0.5 }, "type": "range" }
           ],
           "unit": "short"
         }
@@ -208,7 +208,7 @@
       "targets": [
         {
           "datasource": { "type": "prometheus", "uid": "prometheus" },
-          "expr": "up{job=\"node-exporter\"}",
+          "expr": "max(up{job=\"node-exporter\"})",
           "legendFormat": "Node Exporter",
           "refId": "A"
         }
@@ -228,8 +228,8 @@
             ]
           },
           "mappings": [
-            { "options": { "0": { "color": "green", "index": 0, "text": "UP" } }, "type": "value" },
-            { "options": { "from": 1, "result": { "color": "red", "index": 1, "text": "DOWN" }, "to": 1000 }, "type": "range" }
+            { "options": { "from": 0.5, "result": { "color": "green", "index": 0, "text": "UP" }, "to": 1.5 }, "type": "range" },
+            { "options": { "from": -0.5, "result": { "color": "red", "index": 1, "text": "DOWN" }, "to": 0.5 }, "type": "range" }
           ]
         }
       },
@@ -247,7 +247,7 @@
       "targets": [
         {
           "datasource": { "type": "prometheus", "uid": "prometheus" },
-          "expr": "up{job=\"cadvisor\"}",
+          "expr": "max(up{job=\"cadvisor\"})",
           "legendFormat": "cAdvisor",
           "refId": "A"
         }
@@ -504,7 +504,7 @@
       "targets": [
         {
           "datasource": { "type": "prometheus", "uid": "prometheus" },
-          "expr": "rate(container_cpu_usage_seconds_total{name=~\"lsj-.*\",name!=\"\"}[5m]) * 100",
+          "expr": "rate(container_cpu_usage_seconds_total{id!=\"/\"}[5m]) * 100",
           "legendFormat": "{{name}}",
           "refId": "A"
         }
@@ -535,7 +535,7 @@
       "targets": [
         {
           "datasource": { "type": "prometheus", "uid": "prometheus" },
-          "expr": "container_memory_usage_bytes{name=~\"lsj-.*\",name!=\"\"}",
+          "expr": "container_memory_usage_bytes{id!=\"/\"}",
           "legendFormat": "{{name}}",
           "refId": "A"
         }
@@ -625,7 +625,7 @@
       "targets": [
         {
           "datasource": { "type": "prometheus", "uid": "prometheus" },
-          "expr": "100 - ((node_filesystem_avail_bytes{mountpoint=\"/\",fstype!=\"rootfs\"} * 100) / node_filesystem_size_bytes{mountpoint=\"/\",fstype!=\"rootfs\"})",
+          "expr": "100 - ((sum(node_filesystem_avail_bytes) * 100) / sum(node_filesystem_size_bytes))",
           "legendFormat": "Disk %",
           "refId": "A"
         }

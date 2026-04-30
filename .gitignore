@@ -66,4 +66,12 @@ compose.override.yaml
 /assets/vendor/
 ###< symfony/asset-mapper ###
 
+# Docker Infrastructure
+/docker/mysql/exporter.cnf
+/docker/db/db-data/
+/docker/prometheus/prometheus-data/
+/docker/grafana/grafana-data/
+.env.local
+docker-compose.override.yml
+
 /docker/alertmanager/discord_webhook_url

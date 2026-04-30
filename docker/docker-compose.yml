@@ -88,6 +88,8 @@ services:
       - /var/run:/var/run:rw
       - /sys:/sys:ro
       - /var/lib/docker/:/var/lib/docker:ro
+      - /dev/disk/:/dev/disk:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
     ports:
       - "8082:8080"
 
@@ -96,6 +98,15 @@ services:
     image: prom/node-exporter:latest
     container_name: lsj-node-exporter
     restart: unless-stopped
+    volumes:
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /:/rootfs:ro
+    command:
+      - '--path.procfs=/host/proc'
+      - '--path.sysfs=/host/sys'
+      - '--path.rootfs=/rootfs'
+      - '--collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($$|/)'
     ports:
       - "9100:9100"
 
@@ -105,6 +116,23 @@ services:
     container_name: lsj-adminer
     ports:
       - "8081:8080"
+
+  # PHP-FPM Exporter
+  php-fpm-exporter:
+    image: hipages/php-fpm_exporter
+    container_name: lsj-php-fpm-exporter
+    environment:
+      - PHP_FPM_SCRAPE_URI=tcp://app:9000/status
+    depends_on:
+      - app
+
+  mysqld-exporter:
+    image: prom/mysqld-exporter:latest
+    container_name: lsj-mysqld-exporter
+    volumes:
+      - ./mysql/exporter.cnf:/.my.cnf:ro
+    depends_on:
+      - db
 
 
 

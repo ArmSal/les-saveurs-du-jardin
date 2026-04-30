@@ -34,6 +34,10 @@ WORKDIR /var/www/html
 COPY docker/app/docker-entrypoint.sh /usr/local/bin/docker-entrypoint
 RUN chmod +x /usr/local/bin/docker-entrypoint
 
+# Optimized PHP config
+COPY docker/php/prod.ini $PHP_INI_DIR/conf.d/prod.ini
+COPY docker/php/fpm-status.conf /usr/local/etc/php-fpm.d/zz-fpm-status.conf
+
 # --- Stage 2: Development ---
 FROM base AS dev
 
@@ -54,7 +58,6 @@ FROM base AS prod
 
 # Optimized PHP config
 RUN mv "$PHP_INI_DIR/php.ini-production" "$PHP_INI_DIR/php.ini"
-COPY docker/php/prod.ini $PHP_INI_DIR/conf.d/prod.ini
 
 # Set Env
 ENV APP_ENV=prod
