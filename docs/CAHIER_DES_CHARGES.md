@@ -1,121 +1,121 @@
-# CAHIER DES CHARGES - PORTAIL LSDJ (Enterprise Edition)
+﻿# CAHIER DES CHARGES - PORTAIL LSDJ (Enterprise Edition)
 
-**Version:** 2.1  
-**Date:** Avril 2026  
-**Projet:** Portail de Gestion ERP Multi-Magasin  
+**Version:** 2.1 
+**Date:** Avril 2026 
+**Projet:** Portail de Gestion ERP Multi-Magasin 
 **Technologie:** Symfony 7.4 LTS (PHP 8.2), MySQL 8.0, TailwindCSS, Docker, Prometheus, Grafana
 
 ---
 
-## TABLE DES MATIÈRES
+## TABLE DES MATIÃˆRES
 
-1. [PRÉSENTATION DU PROJET](#1-présentation-du-projet)
+1. [PRÃ‰SENTATION DU PROJET](#1-prÃ©sentation-du-projet)
 2. [ARCHITECTURE TECHNIQUE & INFRASTRUCTURE](#2-architecture-technique--infrastructure)
-3. [MODULES FONCTIONNELS MÉTIERS](#3-modules-fonctionnels-métiers)
-4. [SYSTÈME DE PERMISSIONS (RBAC)](#4-système-de-permissions-rbac)
-5. [MODÈLE DE DONNÉES & ENTITÉS](#5-modèle-de-données--entités)
+3. [MODULES FONCTIONNELS MÃ‰TIERS](#3-modules-fonctionnels-mÃ©tiers)
+4. [SYSTÃˆME DE PERMISSIONS (RBAC)](#4-systÃ¨me-de-permissions-rbac)
+5. [MODÃˆLE DE DONNÃ‰ES & ENTITÃ‰S](#5-modÃ¨le-de-donnÃ©es--entitÃ©s)
 6. [INTERFACES UTILISATEUR & UI/UX](#6-interfaces-utilisateur--uiux)
-7. [ÉCOSYSTÈME DE DÉPLOIEMENT (CI/CD)](#7-écosystème-de-déploiement-cicd)
-8. [CONTRAINTES DE SÉCURITÉ & PERFORMANCE](#8-contraintes-de-sécurité--performance)
+7. [Ã‰COSYSTÃˆME DE DÃ‰PLOIEMENT (CI/CD)](#7-Ã©cosystÃ¨me-de-dÃ©ploiement-cicd)
+8. [CONTRAINTES DE SÃ‰CURITÃ‰ & PERFORMANCE](#8-contraintes-de-sÃ©curitÃ©--performance)
 
 ---
 
-## 1. PRÉSENTATION DU PROJET
+## 1. PRÃ‰SENTATION DU PROJET
 
 ### 1.1 Contexte
-Le Portail **Les Saveurs Du Jardin (LSDJ)** est une solution ERP centralisée conçue pour optimiser la gestion opérationnelle d'une entreprise multisite. Il répond aux besoins critiques de coordination entre les magasins physiques et la direction centrale.
+Le Portail **Les Saveurs Du Jardin (LSDJ)** est une solution ERP centralisÃ©e conÃ§ue pour optimiser la gestion opÃ©rationnelle d'une entreprise multisite. Il rÃ©pond aux besoins critiques de coordination entre les magasins physiques et la direction centrale.
 
-### 1.2 Objectifs Stratégiques
+### 1.2 Objectifs StratÃ©giques
 - **Centralisation** : Unifier la gestion RH et logistique sur une plateforme unique.
-- **Transparence** : Permettre un suivi en temps réel des commandes et des plannings.
-- **Conformité** : Garantir la validité légale des documents via la signature électronique.
-- **Observabilité** : Monitorer l'état de santé de l'infrastructure pour garantir une haute disponibilité.
+- **Transparence** : Permettre un suivi en temps rÃ©el des commandes et des plannings.
+- **ConformitÃ©** : Garantir la validitÃ© lÃ©gale des documents via la signature Ã©lectronique.
+- **ObservabilitÃ©** : Monitorer l'Ã©tat de santÃ© de l'infrastructure pour garantir une haute disponibilitÃ©.
 
-### 1.3 Périmètre Utilisateurs
-Le système gère quatre types de profils avec des vues différenciées :
-- **Directeur (Admin)** : Accès global stratégique.
-- **Responsables de Magasin** : Gestion opérationnelle du site rattaché.
-- **Employés** : Consultation des ressources personnelles (horaires, documents).
-- **Clients/Utilisateurs Externes** : Interaction limitée via le catalogue et les commandes.
+### 1.3 PÃ©rimÃ¨tre Utilisateurs
+Le systÃ¨me gÃ¨re quatre types de profils avec des vues diffÃ©renciÃ©es :
+- **Directeur (Admin)** : AccÃ¨s global stratÃ©gique.
+- **Responsables de Magasin** : Gestion opÃ©rationnelle du site rattachÃ©.
+- **EmployÃ©s** : Consultation des ressources personnelles (horaires, documents).
+- **Clients/Utilisateurs Externes** : Interaction limitÃ©e via le catalogue et les commandes.
 
 ---
 
 ## 2. ARCHITECTURE TECHNIQUE & INFRASTRUCTURE
 
 ### 2.1 Stack Technologique Professionnelle
-| Composant | Technologie | Rôle |
+| Composant | Technologie | RÃ´le |
 |-----------|-------------|------|
-| **Backend** | Symfony 7.4 LTS (PHP 8.2.30) | Logique métier et API |
-| **Base de données** | MySQL 8.0 | Stockage relationnel persistant |
+| **Backend** | Symfony 7.4 LTS (PHP 8.2.30) | Logique mÃ©tier et API |
+| **Base de donnÃ©es** | MySQL 8.0 | Stockage relationnel persistant |
 | **Infrastructure** | Docker & Docker Compose | Conteneurisation des services |
 | **Serveur Web** | Nginx | Reverse proxy et gestion des assets |
 | **Supervision** | Prometheus & Grafana | Monitoring et Alerting |
-| **Frontend** | Twig + Tailwind CSS | Interface réactive et moderne |
+| **Frontend** | Twig + Tailwind CSS | Interface rÃ©active et moderne |
 
-### 2.2 Structure des Répertoires (Standard Symfony)
+### 2.2 Structure des RÃ©pertoires (Standard Symfony)
 ```text
 portal/
-├── bin/                    # Scripts console et utilitaires
-├── config/                 # Configuration du framework et des bundles
-├── docker/                 # Configurations Nginx, Prometheus et PHP
-├── migrations/             # Historique des évolutions de base de données
-├── public/                 # Point d'entrée web (index.php, CSS, JS)
-├── src/
-│   ├── Controller/         # Contrôleurs métiers (20 contrôleurs)
-│   ├── Entity/             # Modèles de données (23 entités)
-│   ├── Service/            # Logique transverse (AccessHelper, etc.)
-│   └── Security/           # Gestion de l'authentification et des Voters
-├── templates/              # Vues Twig organisées par module
-└── compose.yaml            # Définition de l'infrastructure Docker
+â”œâ”€â”€ bin/          # Scripts console et utilitaires
+â”œâ”€â”€ config/         # Configuration du framework et des bundles
+â”œâ”€â”€ docker/         # Configurations Nginx, Prometheus et PHP
+â”œâ”€â”€ migrations/       # Historique des Ã©volutions de base de donnÃ©es
+â”œâ”€â”€ public/         # Point d'entrÃ©e web (index.php, CSS, JS)
+â”œâ”€â”€ src/
+â”‚  â”œâ”€â”€ Controller/     # ContrÃ´leurs mÃ©tiers (20 contrÃ´leurs)
+â”‚  â”œâ”€â”€ Entity/       # ModÃ¨les de donnÃ©es (23 entitÃ©s)
+â”‚  â”œâ”€â”€ Service/      # Logique transverse (AccessHelper, etc.)
+â”‚  â””â”€â”€ Security/      # Gestion de l'authentification et des Voters
+â”œâ”€â”€ templates/       # Vues Twig organisÃ©es par module
+â””â”€â”€ compose.yaml      # DÃ©finition de l'infrastructure Docker
 ```
 
 ---
 
-## 3. MODULES FONCTIONNELS MÉTIERS
+## 3. MODULES FONCTIONNELS MÃ‰TIERS
 
 ### 3.1 Module RH - Plannings & Horaires
-- **Planning Dynamique** : Vue calendrier interactive avec codes couleurs par employé.
+- **Planning Dynamique** : Vue calendrier interactive avec codes couleurs par employÃ©.
 - **Validation Mensuelle** : Processus de verrouillage des heures en fin de mois avec signature.
-- **Export Reporting** : Génération automatique de rapports PDF professionnels pour la comptabilité.
+- **Export Reporting** : GÃ©nÃ©ration automatique de rapports PDF professionnels pour la comptabilitÃ©.
 
-### 3.2 Module RH - Gestion des Congés
-- **Workflow de Demande** : Système de soumission avec statut (En attente, Modifié, Validé).
-- **Circuit de Signature** : Validation par le manager déclenchant une signature numérique.
-- **Calculateur** : Décompte automatique des jours payés et non payés.
+### 3.2 Module RH - Gestion des CongÃ©s
+- **Workflow de Demande** : SystÃ¨me de soumission avec statut (En attente, ModifiÃ©, ValidÃ©).
+- **Circuit de Signature** : Validation par le manager dÃ©clenchant une signature numÃ©rique.
+- **Calculateur** : DÃ©compte automatique des jours payÃ©s et non payÃ©s.
 
 ### 3.3 Module Logistique - Ventes & Commandes
-- **Catalogue Centralisé** : Gestion des stocks et des tarifs par catégorie.
-- **Panier & Commandes** : Tunnel d'achat optimisé pour les commandes internes/externes.
-- **Suivi en temps réel** : Workflow de statut (Préparation, Livraison, Archivage).
+- **Catalogue CentralisÃ©** : Gestion des stocks et des tarifs par catÃ©gorie.
+- **Panier & Commandes** : Tunnel d'achat optimisÃ© pour les commandes internes/externes.
+- **Suivi en temps rÃ©el** : Workflow de statut (PrÃ©paration, Livraison, Archivage).
 
 ### 3.4 Module Logistique - Transport & Maintenance
-- **Flotte Camion** : Suivi de l'immatriculation et de l'état des véhicules.
-- **Maintenance Magasin** : Gestion des tâches de nettoyage et de maintenance technique.
+- **Flotte Camion** : Suivi de l'immatriculation et de l'Ã©tat des vÃ©hicules.
+- **Maintenance Magasin** : Gestion des tÃ¢ches de nettoyage et de maintenance technique.
 
 ### 3.5 Module Gestion Documentaire (Coffre-fort)
-- **Structure Hiérarchique** : Organisation par dossiers avec permissions granulaires.
-- **Signature Électronique** : Intégration légale pour les contrats et avenants.
+- **Structure HiÃ©rarchique** : Organisation par dossiers avec permissions granulaires.
+- **Signature Ã‰lectronique** : IntÃ©gration lÃ©gale pour les contrats et avenants.
 
 ---
 
-## 4. SYSTÈME DE PERMISSIONS (RBAC)
+## 4. SYSTÃˆME DE PERMISSIONS (RBAC)
 
-Le portail implémente un modèle de sécurité granulaire unique basé sur 6 niveaux d'accès :
+Le portail implÃ©mente un modÃ¨le de sÃ©curitÃ© granulaire unique basÃ© sur 6 niveaux d'accÃ¨s :
 
-| Niveau | Code | Portée |
+| Niveau | Code | PortÃ©e |
 |--------|------|--------|
 | **Aucun** | `AUCUN_ACCES` | Module invisible pour l'utilisateur. |
-| **Personnel** | `ACCES_PERSONNEL` | Accès limité à ses propres données. |
-| **Lecture Site** | `LECTURE_MAGASIN` | Consultation des données d'un seul magasin. |
+| **Personnel** | `ACCES_PERSONNEL` | AccÃ¨s limitÃ© Ã  ses propres donnÃ©es. |
+| **Lecture Site** | `LECTURE_MAGASIN` | Consultation des donnÃ©es d'un seul magasin. |
 | **Lecture Globale** | `LECTURE_TOTALE` | Consultation de l'ensemble du groupe. |
-| **Gestion Site** | `ADMIN_MAGASIN` | CRUD sur les données de son propre magasin. |
-| **Super Admin** | `ACCES_TOTAL` | Contrôle total sur l'ensemble du portail. |
+| **Gestion Site** | `ADMIN_MAGASIN` | CRUD sur les donnÃ©es de son propre magasin. |
+| **Super Admin** | `ACCES_TOTAL` | ContrÃ´le total sur l'ensemble du portail. |
 
 ---
 
-## 5. MODÈLE DE DONNÉES & ENTITÉS
+## 5. MODÃˆLE DE DONNÃ‰ES & ENTITÃ‰S
 
-### 5.1 Entités Cœurs
+### 5.1 EntitÃ©s CÅ“urs
 - **Utilisateurs** : `User`, `Role`, `ModulePermission`.
 - **RH** : `PortalHoraire`, `PortalConge`, `PortalMonthlyValidation`, `UserObservation`.
 - **Logistique** : `PortalProduct`, `PortalCommandes`, `TransEtLog`, `CleaningTask`.
@@ -125,28 +125,29 @@ Le portail implémente un modèle de sécurité granulaire unique basé sur 6 ni
 
 ## 6. INTERFACES UTILISATEUR & UI/UX
 
-L'interface a été conçue pour offrir une expérience "Premium" :
-- **Modernisme** : Utilisation de la police *Plus Jakarta Sans* et design épuré Tailwind.
-- **Interactivité** : Micro-animations CSS, loaders personnalisés et feedbacks par "Toasts".
-- **Responsive** : Adaptation totale aux terminaux mobiles pour les employés sur le terrain.
+L'interface a Ã©tÃ© conÃ§ue pour offrir une expÃ©rience "Premium" :
+- **Modernisme** : Utilisation de la police *Plus Jakarta Sans* et design Ã©purÃ© Tailwind.
+- **InteractivitÃ©** : Micro-animations CSS, loaders personnalisÃ©s et feedbacks par "Toasts".
+- **Responsive** : Adaptation totale aux terminaux mobiles pour les employÃ©s sur le terrain.
 
 ---
 
-## 7. ÉCOSYSTÈME DE DÉPLOIEMENT (CI/CD)
+## 7. Ã‰COSYSTÃˆME DE DÃ‰PLOIEMENT (CI/CD)
 
-Conformément aux standards de production, le projet inclut :
+ConformÃ©ment aux standards de production, le projet inclut :
 - **Automatisation CI** : Pipeline GitHub Actions pour le linting, les tests unitaires et le build Docker.
-- **Security Scans** : Audit automatique des vulnérabilités PHP (Symfony Security Check).
-- **Continuous Deployment** : Préparation au déploiement via Terraform (Infrastructure) et Ansible (Configuration).
+- **Security Scans** : Audit automatique des vulnÃ©rabilitÃ©s PHP (Symfony Security Check).
+- **Continuous Deployment** : PrÃ©paration au dÃ©ploiement via Terraform (Infrastructure) et Ansible (Configuration).
 
 ---
 
-## 8. CONTRAINTES DE SÉCURITÉ & PERFORMANCE
+## 8. CONTRAINTES DE SÃ‰CURITÃ‰ & PERFORMANCE
 
-- **Protection CSRF** : Active sur l'ensemble des formulaires métiers.
-- **Hachage Sécurisé** : Utilisation de l'algorithme Argon2id pour les mots de passe.
+- **Protection CSRF** : Active sur l'ensemble des formulaires mÃ©tiers.
+- **Hachage SÃ©curisÃ©** : Utilisation de l'algorithme Argon2id pour les mots de passe.
 - **Optimisation Performance** : Mise en cache Symfony et compression des assets via Nginx.
-- **Supervision** : Collecte de métriques (CPU, RAM, temps de réponse) pour l'alerting proactif.
+- **Supervision** : Collecte de mÃ©triques (CPU, RAM, temps de rÃ©ponse) pour l'alerting proactif.
 
 ---
-**Document révisé - Avril 2026**
+**Document rÃ©visÃ© - Avril 2026**
+

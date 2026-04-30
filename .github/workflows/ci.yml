@@ -1,4 +1,4 @@
-# CI/CD Pipeline - Les Saveurs Du Jardin
+﻿# CI/CD Pipeline - Les Saveurs Du Jardin
 
 name: CI Pipeline
 
@@ -46,7 +46,7 @@ jobs:
         coverage: xdebug
 
     - name: Validate composer.json and composer.lock
-      run: composer validate --strict
+      run: cd symfony_project && composer validate --strict
 
     - name: Cache Composer packages
       id: composer-cache
@@ -58,22 +58,25 @@ jobs:
           ${{ runner.os }}-php-
 
     - name: Install dependencies
-      run: composer install --prefer-dist --no-progress
+      run: cd symfony_project && composer install --prefer-dist --no-progress
 
     - name: Prepare test database (MySQL)
       env:
         DATABASE_URL: "mysql://app:admin123@127.0.0.1:3306/lsj_db?serverVersion=8.0&charset=utf8mb4"
       run: |
+        cd symfony_project
         php bin/console doctrine:database:create --env=test --if-not-exists
         php bin/console doctrine:schema:update --force --env=test
 
     - name: Run PHPUnit Tests
       env:
         DATABASE_URL: "mysql://app:admin123@127.0.0.1:3306/lsj_db?serverVersion=8.0&charset=utf8mb4"
-      run: vendor/bin/phpunit --configuration phpunit.dist.xml --testdox --stop-on-failure
+      run: cd symfony_project && vendor/bin/phpunit --configuration phpunit.dist.xml --testdox --stop-on-failure
 
     - name: Security Check - Symfony CVE Audit
       uses: symfonycorp/security-checker-action@v5
+      with:
+        dir: ./symfony_project
 
   # ---------------------------------------------------------------
   # JOB 2 - Docker Build + Trivy Vulnerability Scan
@@ -165,3 +168,4 @@ jobs:
         echo "  docker compose exec app php bin/console cache:clear"
         echo ""
         echo "Deployment completed successfully."
+

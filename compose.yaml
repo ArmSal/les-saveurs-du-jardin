@@ -1,14 +1,14 @@
-# 🐳 Docker Compose - Les Saveurs Du Jardin (Full Stack)
+﻿# Docker Compose - Les Saveurs Du Jardin (Full Stack)
 
 services:
   # PHP-FPM Service (Application logic)
   app:
     build:
-      context: .
+      context: ./symfony_project
       target: dev
     container_name: lsj-app
     volumes:
-      - .:/var/www/html
+      - ./symfony_project:/var/www/html
     env_file:
       - .env
     depends_on:
@@ -22,8 +22,8 @@ services:
     ports:
       - "8080:80"
     volumes:
-      - .:/var/www/html
-      - ./docker/nginx/conf.d:/etc/nginx/conf.d
+      - ./symfony_project:/var/www/html
+      - ./symfony_project/docker/nginx/conf.d:/etc/nginx/conf.d
     depends_on:
       - app
 
@@ -53,7 +53,7 @@ services:
     container_name: lsj-prometheus
     restart: unless-stopped
     volumes:
-      - ./docker/prometheus:/etc/prometheus
+      - ./prometheus:/etc/prometheus
       - prometheus-data:/prometheus
     command:
       - '--config.file=/etc/prometheus/prometheus.yml'
@@ -73,7 +73,7 @@ services:
       - "3000:3000"
     volumes:
       - grafana-data:/var/lib/grafana
-      - ./docker/grafana/provisioning:/etc/grafana/provisioning
+      - ./grafana/provisioning:/etc/grafana/provisioning
     depends_on:
       - prometheus
 
@@ -111,3 +111,4 @@ volumes:
   db-data:
   prometheus-data:
   grafana-data:
+
