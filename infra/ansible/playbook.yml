@@ -59,3 +59,42 @@
       apt:
         name: fail2ban
         state: present
+
+    # ==========================================
+    # DEPLOYMENT TASKS (BC01 / BC02)
+    # ==========================================
+    
+    - name: Assurer que le répertoire de l'application existe
+      file:
+        path: /var/www/lsdj
+        state: directory
+        owner: ubuntu
+        group: ubuntu
+
+    - name: Clone du repository depuis GitHub
+      git:
+        repo: 'https://github.com/ArmSal/les-saveurs-du-jardin.git'
+        dest: /var/www/lsdj
+        version: main
+        force: yes
+      become_user: ubuntu
+
+    - name: Login to GitHub Container Registry (GHCR)
+      docker_login:
+        registry_url: ghcr.io
+        username: "{{ ghcr_username }}"
+        password: "{{ ghcr_token }}"
+      become_user: ubuntu
+      when: ghcr_token is defined
+
+    - name: Déploiement de la stack via Docker Compose
+      command: docker compose up -d --build
+      args:
+        chdir: /var/www/lsdj
+      become_user: ubuntu
+
+    - name: Exécution des migrations Doctrine
+      command: docker compose exec -T app php bin/console doctrine:migrations:migrate --no-interaction
+      args:
+        chdir: /var/www/lsdj
+      become_user: ubuntu
