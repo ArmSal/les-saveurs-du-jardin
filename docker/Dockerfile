@@ -1,4 +1,4 @@
-# ⚙️ Dockerfile - Les Saveurs Du Jardin (Symfony 7)
+# Dockerfile - Les Saveurs Du Jardin (Symfony 7)
 
 # --- Stage 1: Build & Dependencies ---
 FROM php:8.2-fpm-alpine AS base
@@ -41,7 +41,7 @@ FROM base AS dev
 ENV APP_ENV=dev
 
 # Copy composer files
-COPY composer.* ./
+COPY symfony_project/composer.* ./
 
 # Install dev dependencies
 RUN composer install --no-scripts --no-autoloader
@@ -60,7 +60,7 @@ COPY docker/php/prod.ini $PHP_INI_DIR/conf.d/prod.ini
 ENV APP_ENV=prod
 
 # Copy application source
-COPY . .
+COPY symfony_project/ .
 
 # Production Install
 RUN composer install --no-dev --optimize-autoloader --no-scripts
@@ -70,3 +70,4 @@ RUN mkdir -p /var/www/html/var && chown -R www-data:www-data /var/www/html/var
 
 ENTRYPOINT ["docker-entrypoint"]
 CMD ["php-fpm"]
+
