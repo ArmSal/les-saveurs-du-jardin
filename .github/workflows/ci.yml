@@ -23,7 +23,7 @@ jobs:
       database:
         image: mysql:8.0
         env:
-          MYSQL_DATABASE: app_test
+          MYSQL_DATABASE: lsj_db_test
           MYSQL_ROOT_PASSWORD: root
           MYSQL_USER: app
           MYSQL_PASSWORD: admin123
@@ -62,14 +62,14 @@ jobs:
 
     - name: Prepare test database (MySQL)
       env:
-        DATABASE_URL: "mysql://app:admin123@127.0.0.1:3306/app_test?serverVersion=8.0&charset=utf8mb4"
+        DATABASE_URL: "mysql://app:admin123@127.0.0.1:3306/lsj_db?serverVersion=8.0&charset=utf8mb4"
       run: |
         php bin/console doctrine:database:create --env=test --if-not-exists
         php bin/console doctrine:schema:update --force --env=test
 
     - name: Run PHPUnit Tests
       env:
-        DATABASE_URL: "mysql://app:admin123@127.0.0.1:3306/app_test?serverVersion=8.0&charset=utf8mb4"
+        DATABASE_URL: "mysql://app:admin123@127.0.0.1:3306/lsj_db?serverVersion=8.0&charset=utf8mb4"
       run: vendor/bin/phpunit --configuration phpunit.dist.xml --testdox --stop-on-failure
 
     - name: Security Check - Symfony CVE Audit (BC02)
