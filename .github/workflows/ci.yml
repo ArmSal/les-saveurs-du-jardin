@@ -76,7 +76,7 @@ jobs:
     - name: Security Check - Symfony CVE Audit
       uses: symfonycorp/security-checker-action@v5
       with:
-        dir: ./symfony_project
+        lock: ./symfony_project/composer.lock
 
   # ---------------------------------------------------------------
   # JOB 2 - Docker Build + Trivy Vulnerability Scan
