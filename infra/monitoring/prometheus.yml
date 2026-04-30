@@ -4,7 +4,7 @@ global:
   scrape_interval: 15s
   evaluation_interval: 15s
 
-# 🚨 Configuration des alertes (BC03)
+# 🚨 Configuration des alertes
 rule_files:
   - "alert_rules.yml"
 

@@ -51,7 +51,7 @@ sequenceDiagram
     AWS-->>Dev: Green Deployment ✅
 ```
 
-## 📊 3. Système de Supervision (BC03)
+## 📊 3. Système de Supervision
 La pile de monitoring est hébergée sur l'EC2 via Docker.
 
 *   **Prometheus** : Collecte les métriques (Scraping).

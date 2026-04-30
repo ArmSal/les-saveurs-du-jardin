@@ -8,7 +8,7 @@ use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 /**
  * Functional tests for the authentication and security system.
  * Validates that public routes are accessible and protected routes
- * enforce authentication - a core DevOps quality gate (BC02).
+ * enforce authentication.
  */
 class SecurityControllerTest extends WebTestCase
 {

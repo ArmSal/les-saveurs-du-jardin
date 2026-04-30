@@ -2,7 +2,7 @@
   "__inputs": [],
   "__requires": [],
   "annotations": { "list": [] },
-  "description": "Infrastructure and application monitoring dashboard for Les Saveurs Du Jardin - ASD DevOps Certification (BC03)",
+  "description": "Infrastructure and application monitoring dashboard for Les Saveurs Du Jardin",
   "editable": true,
   "fiscalYearStartMonth": 0,
   "graphTooltip": 1,
@@ -546,7 +546,7 @@
       "collapsed": false,
       "gridPos": { "h": 1, "w": 24, "x": 0, "y": 34 },
       "id": 104,
-      "title": "Alerting Thresholds (BC03)",
+      "title": "Alerting Thresholds",
       "type": "row"
     },
 
@@ -669,11 +669,11 @@
   "refresh": "30s",
   "schemaVersion": 36,
   "style": "dark",
-  "tags": ["lsdj", "devops", "bc03", "asd"],
+  "tags": ["lsdj", "monitoring", "infrastructure"],
   "time": { "from": "now-1h", "to": "now" },
   "timepicker": {},
   "timezone": "Europe/Paris",
-  "title": "LSDJ - Infrastructure & Monitoring (BC03)",
-  "uid": "lsdj-bc03-main",
+  "title": "LSDJ - Infrastructure & Monitoring",
+  "uid": "lsdj-monitoring-main",
   "version": 1
 }
