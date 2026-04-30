@@ -1,4 +1,4 @@
-﻿# CI/CD Pipeline - Les Saveurs Du Jardin
+# CI/CD Pipeline - Les Saveurs Du Jardin
 
 name: CI Pipeline
 
@@ -71,7 +71,7 @@ jobs:
     - name: Run PHPUnit Tests
       env:
         DATABASE_URL: "mysql://app:admin123@127.0.0.1:3306/lsj_db?serverVersion=8.0&charset=utf8mb4"
-      run: cd symfony_project && vendor/bin/phpunit --configuration phpunit.dist.xml --testdox --stop-on-failure
+      run: cd symfony_project && php vendor/bin/phpunit --configuration phpunit.dist.xml --testdox --stop-on-failure
 
     - name: Security Check - Symfony CVE Audit
       uses: symfonycorp/security-checker-action@v5
@@ -92,7 +92,7 @@ jobs:
     - uses: actions/checkout@v4
 
     - name: Build Docker Image (production stage)
-      run: docker build -f docker/Dockerfile --target prod -t lsj-app:${{ github.sha }} symfony_project
+      run: docker build -f docker/Dockerfile --target prod -t lsj-app:${{ github.sha }} .
 
     - name: Run Trivy vulnerability scanner (CRITICAL + HIGH only)
       uses: aquasecurity/trivy-action@master
