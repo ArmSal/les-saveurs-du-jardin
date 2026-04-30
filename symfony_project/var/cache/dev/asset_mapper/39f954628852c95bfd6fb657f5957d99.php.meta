@@ -1,0 +1,1 @@
+a:2:{i:0;O:46:"Symfony\Component\Config\Resource\FileResource":1:{s:8:"resource";s:27:"/var/www/html/assets/app.js";}i:1;O:55:"Symfony\Component\Config\Resource\FileExistenceResource":2:{s:8:"resource";s:35:"/var/www/html/assets/styles/app.css";s:6:"exists";b:1;}}
