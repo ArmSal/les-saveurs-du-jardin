@@ -79,9 +79,12 @@ jobs:
   # JOB 2 - Docker Build + Trivy Vulnerability Scan (BC02)
   # ---------------------------------------------------------------
   docker-security:
-    name: Docker Build and Security Scan
+    name: Docker Build, Scan and Push to GHCR
     needs: tests
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
     steps:
     - uses: actions/checkout@v4
 
@@ -97,6 +100,29 @@ jobs:
         ignore-unfixed: true
         vuln-type: 'os,library'
         severity: 'CRITICAL,HIGH'
+
+    - name: Log in to GitHub Container Registry (GHCR)
+      if: github.ref == 'refs/heads/main'
+      uses: docker/login-action@v3
+      with:
+        registry: ghcr.io
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Push Docker image to GHCR
+      if: github.ref == 'refs/heads/main'
+      run: |
+        # Convert repository name to lowercase for Docker tag
+        REPO_LC=$(echo "${{ github.repository }}" | tr '[:upper:]' '[:lower:]')
+        IMAGE_ID=ghcr.io/$REPO_LC/lsj-app
+        
+        # Tag the image
+        docker tag lsj-app:${{ github.sha }} $IMAGE_ID:${{ github.sha }}
+        docker tag lsj-app:${{ github.sha }} $IMAGE_ID:latest
+        
+        # Push both tags
+        docker push $IMAGE_ID:${{ github.sha }}
+        docker push $IMAGE_ID:latest
 
   # ---------------------------------------------------------------
   # JOB 3 - Simulated Deployment to AWS EC2 (BC01 / BC02)
@@ -120,10 +146,15 @@ jobs:
         echo "Step 1: Connect to EC2 via SSH..."
         echo "  ssh -i lsj-key.pem ubuntu@EC2_PUBLIC_IP"
         echo ""
-        echo "Step 2: Pull latest application code..."
-        echo "  git pull origin main"
+        echo "Step 2: CI/CD Registry Login..."
+        echo "  echo \${{ secrets.GITHUB_TOKEN }} | docker login ghcr.io -u \${{ github.actor }} --password-stdin"
         echo ""
-        echo "Step 3: Restart Docker stack with new image..."
+        echo "Step 3: Pull latest application code and image..."
+        echo "  git pull origin main"
+        REPO_LC=$(echo "${{ github.repository }}" | tr '[:upper:]' '[:lower:]')
+        echo "  docker pull ghcr.io/$REPO_LC/lsj-app:latest"
+        echo ""
+        echo "Step 4: Restart Docker stack with new image..."
         echo "  docker compose pull"
         echo "  docker compose up -d --build"
         echo ""
