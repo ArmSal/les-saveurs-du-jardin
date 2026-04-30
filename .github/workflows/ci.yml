@@ -1,4 +1,4 @@
-# 🛠️ GitHub Actions CI Pipeline - Les Saveurs Du Jardin
+# CI/CD Pipeline - Les Saveurs Du Jardin (ASD DevOps Certification)
 
 name: CI Pipeline
 
@@ -9,35 +9,40 @@ on:
     branches: [ "main", "develop" ]
 
 jobs:
-  # Logic Layer (PHP)
+  # ---------------------------------------------------------------
+  # JOB 1 - PHP Tests + Security Check (BC02)
+  # ---------------------------------------------------------------
   tests:
+    name: PHP Tests (MySQL 8.0)
     runs-on: ubuntu-latest
     strategy:
       matrix:
         php-versions: [ '8.2' ]
+
     services:
       database:
-        image: postgres:16-alpine
+        image: mysql:8.0
         env:
-          POSTGRES_DB: app_test
-          POSTGRES_PASSWORD: "admin123"
-          POSTGRES_USER: app
+          MYSQL_DATABASE: app_test
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_USER: app
+          MYSQL_PASSWORD: admin123
         ports:
-          - 5432:5432
+          - 3306:3306
         options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
+          --health-cmd="mysqladmin ping -h localhost"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
 
     steps:
     - uses: actions/checkout@v4
 
-    - name: Setup PHP
+    - name: Setup PHP 8.2 with MySQL extension
       uses: shivammathur/setup-php@v2
       with:
         php-version: ${{ matrix.php-versions }}
-        extensions: mbstring, intl, pdo_pgsql, zip
+        extensions: mbstring, intl, pdo_mysql, zip
         coverage: xdebug
 
     - name: Validate composer.json and composer.lock
@@ -55,52 +60,77 @@ jobs:
     - name: Install dependencies
       run: composer install --prefer-dist --no-progress
 
-    - name: Prepare Database for tests
+    - name: Prepare test database (MySQL)
       env:
-        DATABASE_URL: "postgresql://app:admin123@127.0.0.1:5432/app_test?serverVersion=16&charset=utf8"
+        DATABASE_URL: "mysql://app:admin123@127.0.0.1:3306/app_test?serverVersion=8.0&charset=utf8mb4"
       run: |
         php bin/console doctrine:database:create --env=test --if-not-exists
-        php bin/console doctrine:migrations:migrate --env=test --no-interaction
+        php bin/console doctrine:schema:update --force --env=test
 
     - name: Run PHPUnit Tests
       env:
-        DATABASE_URL: "postgresql://app:admin123@127.0.0.1:5432/app_test?serverVersion=16&charset=utf8"
+        DATABASE_URL: "mysql://app:admin123@127.0.0.1:3306/app_test?serverVersion=8.0&charset=utf8mb4"
       run: vendor/bin/phpunit --configuration phpunit.dist.xml --testdox --stop-on-failure
 
-    - name: Security Check (Symfony CLI)
+    - name: Security Check - Symfony CVE Audit (BC02)
       uses: symfonycorp/security-checker-action@v5
 
-  # Container Layer (Docker) & Vulnerability Scan
+  # ---------------------------------------------------------------
+  # JOB 2 - Docker Build + Trivy Vulnerability Scan (BC02)
+  # ---------------------------------------------------------------
   docker-security:
+    name: Docker Build and Security Scan
     needs: tests
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
 
-    - name: Build Docker Image
-      run: docker build -t lsj-app:${{ github.sha }} .
+    - name: Build Docker Image (production stage)
+      run: docker build --target prod -t lsj-app:${{ github.sha }} .
 
-    - name: Run Trivy vulnerability scanner
+    - name: Run Trivy vulnerability scanner (CRITICAL + HIGH only)
       uses: aquasecurity/trivy-action@master
       with:
         image-ref: 'lsj-app:${{ github.sha }}'
         format: 'table'
-        exit-code: '1' # Fails the build if vulnerabilities are found
+        exit-code: '1'
         ignore-unfixed: true
         vuln-type: 'os,library'
         severity: 'CRITICAL,HIGH'
 
-  # Deployment Stage (Simulated for Certification Points)
+  # ---------------------------------------------------------------
+  # JOB 3 - Simulated Deployment to AWS EC2 (BC01 / BC02)
+  # Note: Deployment is simulated for certification purposes.
+  # In production, this job would SSH into EC2 and run docker compose.
+  # ---------------------------------------------------------------
   deploy:
+    name: Deploy to AWS EC2 (Simulated)
     needs: docker-security
     if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     steps:
-    - name: Deploy to AWS (Simulated)
+    - name: Simulate deployment steps to AWS EC2
       run: |
-        echo "🚀 Deployment started on AWS RDS & EC2..."
-        echo "1. Connect via SSH"
-        echo "2. CI/CD Registry Login"
-        echo "3. Pulling image lsj-app:${{ github.sha }}"
-        echo "4. Docker Compose Restart"
-        echo "✅ Application successfully deployed!"
+        echo "=================================================="
+        echo "  DEPLOYMENT PIPELINE - Les Saveurs Du Jardin"
+        echo "  Target: AWS EC2 (eu-west-3 - Paris)"
+        echo "  Image : lsj-app:${{ github.sha }}"
+        echo "=================================================="
+        echo ""
+        echo "Step 1: Connect to EC2 via SSH..."
+        echo "  ssh -i lsj-key.pem ubuntu@EC2_PUBLIC_IP"
+        echo ""
+        echo "Step 2: Pull latest application code..."
+        echo "  git pull origin main"
+        echo ""
+        echo "Step 3: Restart Docker stack with new image..."
+        echo "  docker compose pull"
+        echo "  docker compose up -d --build"
+        echo ""
+        echo "Step 4: Run database migrations..."
+        echo "  docker compose exec app php bin/console doctrine:migrations:migrate --no-interaction"
+        echo ""
+        echo "Step 5: Clear Symfony cache..."
+        echo "  docker compose exec app php bin/console cache:clear"
+        echo ""
+        echo "Deployment completed successfully."

@@ -1,4 +1,6 @@
 {
+    "name": "armsalihu/les-saveurs-du-jardin",
+    "description": "Enterprise ERP portal for multi-site retail management - ASD DevOps certification project",
     "type": "project",
     "license": "proprietary",
     "minimum-stability": "stable",
