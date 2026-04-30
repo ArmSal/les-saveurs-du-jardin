@@ -1,16 +1,17 @@
-﻿# Docker Compose - Les Saveurs Du Jardin (Full Stack)
+# Docker Compose - Les Saveurs Du Jardin (Full Stack)
 
 services:
   # PHP-FPM Service (Application logic)
   app:
     build:
-      context: ./symfony_project
+      context: ..
+      dockerfile: docker/Dockerfile
       target: dev
     container_name: lsj-app
     volumes:
-      - ./symfony_project:/var/www/html
+      - ../symfony_project:/var/www/html
     env_file:
-      - .env
+      - ../symfony_project/.env
     depends_on:
       db:
         condition: service_healthy
@@ -22,8 +23,8 @@ services:
     ports:
       - "8080:80"
     volumes:
-      - ./symfony_project:/var/www/html
-      - ./symfony_project/docker/nginx/conf.d:/etc/nginx/conf.d
+      - ../symfony_project:/var/www/html
+      - ./nginx/conf.d:/etc/nginx/conf.d
     depends_on:
       - app
 
@@ -111,4 +112,5 @@ volumes:
   db-data:
   prometheus-data:
   grafana-data:
+
 
