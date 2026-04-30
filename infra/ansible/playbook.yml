@@ -61,7 +61,7 @@
         state: present
 
     # ==========================================
-    # DEPLOYMENT TASKS (BC01 / BC02)
+    # DEPLOYMENT TASKS
     # ==========================================
     
     - name: Assurer que le répertoire de l'application existe

@@ -10,7 +10,7 @@
 ## TABLE DES MATIÈRES
 
 1. [PRÉSENTATION DU PROJET](#1-présentation-du-projet)
-2. [ARCHITECTURE TECHNIQUE & DEVOPS](#2-architecture-technique--devops)
+2. [ARCHITECTURE TECHNIQUE & INFRASTRUCTURE](#2-architecture-technique--infrastructure)
 3. [MODULES FONCTIONNELS MÉTIERS](#3-modules-fonctionnels-métiers)
 4. [SYSTÈME DE PERMISSIONS (RBAC)](#4-système-de-permissions-rbac)
 5. [MODÈLE DE DONNÉES & ENTITÉS](#5-modèle-de-données--entités)
@@ -40,7 +40,7 @@ Le système gère quatre types de profils avec des vues différenciées :
 
 ---
 
-## 2. ARCHITECTURE TECHNIQUE & DEVOPS
+## 2. ARCHITECTURE TECHNIQUE & INFRASTRUCTURE
 
 ### 2.1 Stack Technologique Professionnelle
 | Composant | Technologie | Rôle |
@@ -49,7 +49,7 @@ Le système gère quatre types de profils avec des vues différenciées :
 | **Base de données** | MySQL 8.0 | Stockage relationnel persistant |
 | **Infrastructure** | Docker & Docker Compose | Conteneurisation des services |
 | **Serveur Web** | Nginx | Reverse proxy et gestion des assets |
-| **Supervision** | Prometheus & Grafana | Monitoring et Alerting (BC03) |
+| **Supervision** | Prometheus & Grafana | Monitoring et Alerting |
 | **Frontend** | Twig + Tailwind CSS | Interface réactive et moderne |
 
 ### 2.2 Structure des Répertoires (Standard Symfony)
@@ -134,7 +134,7 @@ L'interface a été conçue pour offrir une expérience "Premium" :
 
 ## 7. ÉCOSYSTÈME DE DÉPLOIEMENT (CI/CD)
 
-Conformément aux exigences du titre **DevOps**, le projet inclut :
+Conformément aux standards de production, le projet inclut :
 - **Automatisation CI** : Pipeline GitHub Actions pour le linting, les tests unitaires et le build Docker.
 - **Security Scans** : Audit automatique des vulnérabilités PHP (Symfony Security Check).
 - **Continuous Deployment** : Préparation au déploiement via Terraform (Infrastructure) et Ansible (Configuration).
@@ -146,7 +146,7 @@ Conformément aux exigences du titre **DevOps**, le projet inclut :
 - **Protection CSRF** : Active sur l'ensemble des formulaires métiers.
 - **Hachage Sécurisé** : Utilisation de l'algorithme Argon2id pour les mots de passe.
 - **Optimisation Performance** : Mise en cache Symfony et compression des assets via Nginx.
-- **Supervision (BC03)** : Collecte de métriques (CPU, RAM, temps de réponse) pour l'alerting proactif.
+- **Supervision** : Collecte de métriques (CPU, RAM, temps de réponse) pour l'alerting proactif.
 
 ---
 **Document révisé - Avril 2026**

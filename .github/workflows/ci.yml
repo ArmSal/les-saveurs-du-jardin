@@ -1,4 +1,4 @@
-# CI/CD Pipeline - Les Saveurs Du Jardin (ASD DevOps Certification)
+# CI/CD Pipeline - Les Saveurs Du Jardin
 
 name: CI Pipeline
 
@@ -10,7 +10,7 @@ on:
 
 jobs:
   # ---------------------------------------------------------------
-  # JOB 1 - PHP Tests + Security Check (BC02)
+  # JOB 1 - PHP Tests + Security Check
   # ---------------------------------------------------------------
   tests:
     name: PHP Tests (MySQL 8.0)
@@ -72,11 +72,11 @@ jobs:
         DATABASE_URL: "mysql://app:admin123@127.0.0.1:3306/lsj_db?serverVersion=8.0&charset=utf8mb4"
       run: vendor/bin/phpunit --configuration phpunit.dist.xml --testdox --stop-on-failure
 
-    - name: Security Check - Symfony CVE Audit (BC02)
+    - name: Security Check - Symfony CVE Audit
       uses: symfonycorp/security-checker-action@v5
 
   # ---------------------------------------------------------------
-  # JOB 2 - Docker Build + Trivy Vulnerability Scan (BC02)
+  # JOB 2 - Docker Build + Trivy Vulnerability Scan
   # ---------------------------------------------------------------
   docker-security:
     name: Docker Build, Scan and Push to GHCR
@@ -125,8 +125,8 @@ jobs:
         docker push $IMAGE_ID:latest
 
   # ---------------------------------------------------------------
-  # JOB 3 - Simulated Deployment to AWS EC2 (BC01 / BC02)
-  # Note: Deployment is simulated for certification purposes.
+  # JOB 3 - Simulated Deployment to AWS EC2
+  # Note: Deployment is simulated for testing purposes.
   # In production, this job would SSH into EC2 and run docker compose.
   # ---------------------------------------------------------------
   deploy:

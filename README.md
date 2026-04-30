@@ -8,9 +8,7 @@
 ## 📖 Executive Summary
 **Les Saveurs Du Jardin (LSDJ)** is a high-performance Enterprise Resource Planning (ERP) portal designed for multisite retail management. It centralizes Human Resources, Logistics, and General Administration into a unified, secure, and scalable platform. 
 
-This project serves as a comprehensive demonstration of **DevOps Excellence**, implementing advanced CI/CD pipelines, containerized micro-services, and real-time infrastructure monitoring.
-
----
+This project serves as a comprehensive demonstration of enterprise-grade architecture, implementing advanced CI/CD pipelines, containerized micro-services, and real-time infrastructure monitoring.
 
 ## 🚀 Key Business Modules
 
@@ -48,17 +46,18 @@ The portal features a modern, responsive interface optimized for Desktop, Tablet
 *   **Interface**: Twig Template Engine + Tailwind CSS (JIT)
 *   **Reporting**: Dompdf Engine for professional PDF generation.
 
-### DevOps & Infrastructure (ASD Path)
-This platform implements the three pillars of the **Administrateur Systèmes DevOps** certification:
+### DevOps & Infrastructure
 
-1.  **Infrastructure as Code (BC01)**: Automated provisioning and deployment targeting Cloud environments.
-2.  **CI/CD Pipeline (BC02)**: Robust GitHub Actions workflow including:
-    *   Security vulnerabilities scanning (Symfony Check).
-    *   Automated Unit & Functional Testing (PHPUnit).
-    *   Production-ready Docker Image builds.
-3.  **Observability & Monitoring (BC03)**:
-    *   **Prometheus**: Time-series metrics collection.
-    *   **Grafana**: Professional dashboards for system and application health.
+This platform implements the three pillars of modern infrastructure:
+
+1.  **Infrastructure as Code**: Automated provisioning and deployment targeting Cloud environments.
+2.  **CI/CD Pipeline**: Robust GitHub Actions workflow including:
+    *   Automated PHPUnit testing (Security & Auth routes)
+    *   Trivy container vulnerability scanning
+    *   Docker image build & GHCR registry push
+3.  **Observability & Monitoring**:
+    *   Prometheus for host & container metrics scraping
+    *   Grafana for real-time visualization and alerting thresholds (CPU, RAM, Disk)ystem and application health.
     *   **Alerting**: Configured thresholds for critical performance indicators.
 
 ---
