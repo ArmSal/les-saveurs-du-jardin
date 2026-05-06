@@ -73,5 +73,5 @@ compose.override.yaml
 /docker/grafana/grafana-data/
 .env.local
 docker-compose.override.yml
-
+/docker/.env
 /docker/alertmanager/discord_webhook_url
