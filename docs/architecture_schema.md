@@ -1,7 +1,7 @@
-﻿# Architecture Technique - LSDJ
+# Architecture Technique - LSDJ
 
 ## 1. Infrastructure Cloud (AWS)
-L'infrastructure est provisionnÃ©e via **Terraform** sur AWS.
+L'infrastructure est provisionnée via **Terraform** sur AWS.
 
 ```mermaid
 graph TD
@@ -30,12 +30,12 @@ graph TD
   GRAF -->|Visualize| PROM
 ```
 
-## 2. Pipeline CI/CD & DÃ©ploiement
-Le flux de livraison est automatisÃ© via **GitHub Actions**.
+## 2. Pipeline CI/CD & Déploiement
+Le flux de livraison est automatisé via **GitHub Actions**.
 
 ```mermaid
 sequenceDiagram
-  participant Dev as DÃ©veloppeur
+  participant Dev as Développeur
   participant GH as GitHub Actions (CI/CD)
   participant AWS as Infrastructure Cloud (AWS)
 
@@ -43,19 +43,19 @@ sequenceDiagram
   GH->>GH: PHP Security Check
   GH->>GH: Tests Unitaires (PHPUnit)
   GH->>GH: Build Docker Image (Stage: prod)
-  GH->>GH: Scan de vulnÃ©rabilitÃ©s (Trivy)
+  GH->>GH: Scan de vulnérabilités (Trivy)
   GH->>AWS: Provisionnement (Terraform)
-  GH->>AWS: DÃ©ploiement (Ansible)
+  GH->>AWS: Déploiement (Ansible)
   GH->>AWS: Configure (Ansible)
   GH->>AWS: Deploy Docker Compose
   AWS-->>Dev: Green Deployment
 ```
 
-## 3. SystÃ¨me de Supervision
-La pile de monitoring est hÃ©bergÃ©e sur l'EC2 via Docker.
+## 3. Système de Supervision
+La pile de monitoring est hébergée sur l'EC2 via Docker.
 
-*  **Prometheus** : Collecte les mÃ©triques (Scraping).
-*  **Grafana** : Visualisation des donnÃ©es (Dashboards).
-*  **Node Exporter** : MÃ©triques systÃ¨me (CPU, Disque, RAM).
-*  **Alerting** : Seuils critiques configurÃ©s (CPU > 80%, Disque > 90%).
+*  **Prometheus** : Collecte les métriques (Scraping).
+*  **Grafana** : Visualisation des données (Dashboards).
+*  **Node Exporter** : Métriques système (CPU, Disque, RAM).
+*  **Alerting** : Seuils critiques configurés (CPU > 80%, Disque > 90%).
 
