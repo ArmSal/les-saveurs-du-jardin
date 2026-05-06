@@ -1,0 +1,71 @@
+{
+  "description": "Database monitoring (MySQL)",
+  "editable": true,
+  "id": null,
+  "panels": [
+    {
+      "title": "MySQL Health",
+      "type": "row",
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 0 }
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 4, "w": 6, "x": 0, "y": 1 },
+      "id": 1,
+      "title": "MySQL Status",
+      "type": "stat",
+      "targets": [
+        { "expr": "mysql_up", "refId": "A" }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [
+            { "options": { "from": 0.5, "result": { "color": "green", "text": "UP" }, "to": 1.5 }, "type": "range" },
+            { "options": { "from": -0.5, "result": { "color": "red", "text": "DOWN" }, "to": 0.5 }, "type": "range" }
+          ]
+        }
+      }
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 4, "w": 6, "x": 6, "y": 1 },
+      "id": 2,
+      "title": "Active Connections",
+      "type": "stat",
+      "targets": [
+        { "expr": "mysql_global_status_threads_connected", "refId": "A" }
+      ],
+      "fieldConfig": {
+        "defaults": { "color": { "mode": "thresholds" }, "thresholds": { "steps": [{ "color": "green", "value": null }, { "color": "red", "value": 100 }] } }
+      }
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 5 },
+      "id": 3,
+      "title": "Query Throughput",
+      "type": "timeseries",
+      "targets": [
+        { "expr": "rate(mysql_global_status_queries[5m])", "legendFormat": "Queries/s", "refId": "A" }
+      ]
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 5 },
+      "id": 4,
+      "title": "Slow Queries Rate",
+      "type": "timeseries",
+      "targets": [
+        { "expr": "rate(mysql_global_status_slow_queries[5m])", "legendFormat": "Slow/s", "refId": "A" }
+      ]
+    }
+  ],
+  "refresh": "30s",
+  "schemaVersion": 36,
+  "style": "dark",
+  "tags": ["lsdj", "mysql"],
+  "timezone": "browser",
+  "title": "LSDJ - 3. Base de Données",
+  "uid": "lsdj-db",
+  "version": 1
+}

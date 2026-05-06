@@ -26,7 +26,7 @@ jobs:
           MYSQL_DATABASE: lsj_db_test
           MYSQL_ROOT_PASSWORD: root
           MYSQL_USER: app
-          MYSQL_PASSWORD: admin123
+          MYSQL_PASSWORD: ${{ secrets.MYSQL_PASSWORD_TEST }}
         ports:
           - 3306:3306
         options: >-
@@ -62,7 +62,7 @@ jobs:
 
     - name: Prepare test database (MySQL)
       env:
-        DATABASE_URL: "mysql://app:admin123@127.0.0.1:3306/lsj_db?serverVersion=8.0&charset=utf8mb4"
+        DATABASE_URL: "mysql://app:${{ secrets.MYSQL_PASSWORD_TEST }}@127.0.0.1:3306/lsj_db?serverVersion=8.0&charset=utf8mb4"
       run: |
         cd symfony_project
         php bin/console doctrine:database:create --env=test --if-not-exists
@@ -70,7 +70,7 @@ jobs:
 
     - name: Run PHPUnit Tests
       env:
-        DATABASE_URL: "mysql://app:admin123@127.0.0.1:3306/lsj_db?serverVersion=8.0&charset=utf8mb4"
+        DATABASE_URL: "mysql://app:${{ secrets.MYSQL_PASSWORD_TEST }}@127.0.0.1:3306/lsj_db?serverVersion=8.0&charset=utf8mb4"
       run: cd symfony_project && php vendor/bin/phpunit --configuration phpunit.dist.xml --testdox --stop-on-failure
 
     - name: Security Check - Symfony CVE Audit
@@ -133,40 +133,36 @@ jobs:
   # In production, this job would SSH into EC2 and run docker compose.
   # ---------------------------------------------------------------
   deploy:
-    name: Deploy to AWS EC2 (Simulated)
+    name: Deploy to AWS EC2
     needs: docker-security
     if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     steps:
-    - name: Simulate deployment steps to AWS EC2
-      run: |
-        echo "=================================================="
-        echo "  DEPLOYMENT PIPELINE - Les Saveurs Du Jardin"
-        echo "  Target: AWS EC2 (eu-west-3 - Paris)"
-        echo "  Image : lsj-app:${{ github.sha }}"
-        echo "=================================================="
-        echo ""
-        echo "Step 1: Connect to EC2 via SSH..."
-        echo "  ssh -i lsj-key.pem ubuntu@EC2_PUBLIC_IP"
-        echo ""
-        echo "Step 2: CI/CD Registry Login..."
-        echo "  echo \${{ secrets.GITHUB_TOKEN }} | docker login ghcr.io -u \${{ github.actor }} --password-stdin"
-        echo ""
-        echo "Step 3: Pull latest application code and image..."
-        echo "  git pull origin main"
-        REPO_LC=$(echo "${{ github.repository }}" | tr '[:upper:]' '[:lower:]')
-        echo "  docker pull ghcr.io/$REPO_LC/lsj-app:latest"
-        echo ""
-        echo "Step 4: Restart Docker stack with new image..."
-        echo "  docker compose pull"
-        echo "  docker compose up -d --build"
-        echo ""
-        echo "Step 4: Run database migrations..."
-        echo "  docker compose exec app php bin/console doctrine:migrations:migrate --no-interaction"
-        echo ""
-        echo "Step 5: Clear Symfony cache..."
-        echo "  docker compose exec app php bin/console cache:clear"
-        echo ""
-        echo "Deployment completed successfully."
+    - name: Deploying to EC2 via SSH
+      uses: appleboy/ssh-action@v1.0.3
+      with:
+        host: ${{ secrets.EC2_HOST }}
+        username: ${{ secrets.EC2_USER }}
+        key: ${{ secrets.EC2_SSH_KEY }}
+        script: |
+          # 1. Naviguer vers le dossier du projet (à ajuster si différent)
+          cd ~/les-saveurs-du-jardin || exit
+          
+          # 2. Mettre à jour les fichiers de configuration (compose, configs nginx, etc.)
+          git pull origin main
+          
+          # 3. Se connecter à GHCR pour pouvoir pull l'image privée
+          echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+          
+          # 4. Télécharger la nouvelle image et redémarrer
+          docker compose pull
+          docker compose up -d
+          
+          # 5. Tâches de maintenance Symfony
+          docker compose exec -T app php bin/console doctrine:migrations:migrate --no-interaction --allow-no-migration
+          docker compose exec -T app php bin/console cache:clear
+          
+          # 6. Nettoyage des anciennes images inutilisées
+          docker image prune -f
 
 

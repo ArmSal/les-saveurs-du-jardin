@@ -1,0 +1,75 @@
+{
+  "description": "Infrastructure monitoring (CPU, RAM, Disk, Docker)",
+  "editable": true,
+  "id": null,
+  "panels": [
+    {
+      "title": "System Overview",
+      "type": "row",
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 0 }
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 6, "w": 8, "x": 0, "y": 1 },
+      "id": 1,
+      "title": "CPU Usage (%)",
+      "type": "gauge",
+      "targets": [
+        { "expr": "100 - (avg by(instance) (rate(node_cpu_seconds_total{mode=\"idle\"}[5m])) * 100)", "refId": "A" }
+      ]
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 6, "w": 8, "x": 8, "y": 1 },
+      "id": 2,
+      "title": "RAM Usage (%)",
+      "type": "gauge",
+      "targets": [
+        { "expr": "100 * (1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes))", "refId": "A" }
+      ]
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 6, "w": 8, "x": 16, "y": 1 },
+      "id": 3,
+      "title": "Disk Usage (%)",
+      "type": "gauge",
+      "targets": [
+        { "expr": "100 - ((sum(node_filesystem_avail_bytes) * 100) / sum(node_filesystem_size_bytes))", "refId": "A" }
+      ]
+    },
+    {
+      "title": "Containers (cAdvisor)",
+      "type": "row",
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 7 }
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 8 },
+      "id": 4,
+      "title": "Container CPU by Service",
+      "type": "timeseries",
+      "targets": [
+        { "expr": "rate(container_cpu_usage_seconds_total{id!=\"/\"}[5m]) * 100", "legendFormat": "{{name}}", "refId": "A" }
+      ]
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 8 },
+      "id": 5,
+      "title": "Container RAM by Service",
+      "type": "timeseries",
+      "targets": [
+        { "expr": "container_memory_usage_bytes{id!=\"/\"}", "legendFormat": "{{name}}", "refId": "A" }
+      ]
+    }
+  ],
+  "refresh": "30s",
+  "schemaVersion": 36,
+  "style": "dark",
+  "tags": ["lsdj", "infra"],
+  "timezone": "browser",
+  "title": "LSDJ - 1. Infrastructure",
+  "uid": "lsdj-infra",
+  "version": 1
+}

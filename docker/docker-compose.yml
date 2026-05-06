@@ -133,6 +133,7 @@ services:
     depends_on:
       - app
 
+  # MySQL Exporter
   mysqld-exporter:
     image: prom/mysqld-exporter:latest
     container_name: lsj-mysqld-exporter
@@ -140,6 +141,18 @@ services:
       - ./mysql/exporter.cnf:/.my.cnf:ro
     depends_on:
       - db
+
+  # Nginx Exporter
+  nginx-exporter:
+    image: nginx/nginx-prometheus-exporter:latest
+    container_name: lsj-nginx-exporter
+    command:
+      - -nginx.scrape-uri=http://web/nginx_status
+    ports:
+      - "9113:9113"
+    depends_on:
+      - web
+
 
 
 

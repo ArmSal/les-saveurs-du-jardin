@@ -75,3 +75,4 @@ compose.override.yaml
 docker-compose.override.yml
 /docker/.env
 /docker/alertmanager/discord_webhook_url
+/docker/test_alert.ps1

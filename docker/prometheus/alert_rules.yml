@@ -29,3 +29,45 @@ groups:
           severity: warning
         annotations:
           summary: "Temps de réponse PHP-FPM supérieur à 2 secondes"
+
+      # --- NOUVELLES RÈGLES MÉTIER (BC03) ---
+
+      # Taux d'erreur HTTP 5xx > 5%
+      - alert: HttpHighErrorRate
+        expr: (rate(nginx_http_requests_total{status=~"5.."}[5m]) / rate(nginx_http_requests_total[5m])) > 0.05
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Taux d'erreur HTTP élevé (> 5%) sur Nginx"
+          description: "Le serveur renvoie beaucoup d'erreurs 5xx."
+
+      # Connexions MySQL saturées
+      - alert: MysqlTooManyConnections
+        expr: mysql_global_status_threads_connected > 80
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Nombre élevé de connexions MySQL"
+          description: "Plus de 80 connexions actives sur la base de données."
+
+      # Slow Queries MySQL
+      - alert: MysqlSlowQueries
+        expr: increase(mysql_global_status_slow_queries[10m]) > 5
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Détection de requêtes lentes (Slow Queries)"
+          description: "Plus de 5 requêtes lentes détectées ces 10 dernières minutes."
+
+      # Workers PHP-FPM saturés
+      - alert: PhpFpmWorkersSaturated
+        expr: (phpfpm_active_processes / phpfpm_total_processes) > 0.8
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Workers PHP-FPM saturés (> 80%)"
+          description: "Presque tous les workers PHP sont occupés."

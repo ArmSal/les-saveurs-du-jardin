@@ -1,33 +1,50 @@
 # Architecture Technique - LSDJ
 
+![Schéma d'Architecture Technique](./architecture_schema_visual.png)
+
 ## 1. Infrastructure Cloud (AWS)
 L'infrastructure est provisionnée via **Terraform** sur AWS.
 
 ```mermaid
 graph TD
+  subgraph "Public Internet"
+    User((Utilisateur))
+    Discord[Discord Notification]
+  end
+
   subgraph "AWS Cloud (eu-west-3)"
     subgraph "VPC (10.0.0.0/16)"
       subgraph "Public Subnet (10.0.1.0/24)"
         EC2["EC2 Instance (Docker Engine)"]
-        NGINX["Nginx Container (Port 8080)"]
-        APP["Symfony App (PHP 8.2)"]
-        PROM["Prometheus (Monitoring)"]
-        GRAF["Grafana (Dashboards)"]
-      end
-      
-      subgraph "Private Subnets (10.0.2.0/24)"
-        DB[(AWS RDS: MySQL 8.0)]
-        SG_RDS["Security Group (allow 3306 from EC2)"]
+        
+        subgraph "Docker Stack"
+          NGINX["Nginx (Port 8080)"]
+          APP["Symfony App (PHP 8.2)"]
+          DB_SVC["MySQL Container (Port 3307)"]
+          
+          subgraph "Monitoring & Alerting"
+            PROM["Prometheus (9090)"]
+            GRAF["Grafana (3000)"]
+            AM["Alertmanager (9093)"]
+            EXP["Exporters (Nginx, PHP, MySQL, Node)"]
+          end
+        end
       end
     end
   end
 
-  User((Utilisateur)) -->|Port 8080| NGINX
+  User -->|HTTPS:8080| NGINX
   NGINX --> APP
-  APP -->|SQL| DB
-  PROM -->|Metrics| APP
-  PROM -->|Metrics| EC2
-  GRAF -->|Visualize| PROM
+  APP -->|SQL:3306| DB_SVC
+  
+  EXP -->|Scrape| NGINX
+  EXP -->|Scrape| APP
+  EXP -->|Scrape| DB_SVC
+  PROM -->|Scrape| EXP
+  
+  GRAF -->|Query| PROM
+  PROM -->|Alerts| AM
+  AM -->|Webhook| Discord
 ```
 
 ## 2. Pipeline CI/CD & Déploiement
