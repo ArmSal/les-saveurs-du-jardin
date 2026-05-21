@@ -76,6 +76,7 @@ docker-compose.override.yml
 /docker/.env
 /docker/alertmanager/discord_webhook_url
 /docker/test_alert.ps1
+/docker/nginx/ssl/
 
 # Ansible - Secrets (ne jamais commiter en clair)
 ansible/vault/secrets.yml
