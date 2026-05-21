@@ -71,3 +71,57 @@ groups:
         annotations:
           summary: "Workers PHP-FPM saturés (> 80%)"
           description: "Presque tous les workers PHP sont occupés."
+
+  # --- KPI MÉTIER (BC03/CP1) ---
+  - name: LSDJ_Business_KPI
+    rules:
+
+      # Mémoire container app saturée (> 90% de la limite)
+      - alert: AppContainerHighMemory
+        expr: |
+          (container_memory_usage_bytes{name="lsj-app"} /
+           container_spec_memory_limit_bytes{name="lsj-app"}) > 0.9
+        for: 2m
+        labels:
+          severity: warning
+          kpi: metier
+        annotations:
+          summary: "Container lsj-app utilise > 90% de sa mémoire allouée"
+          description: "Risque d'OOM Kill imminent sur l'application Symfony."
+
+      # Taux d'erreurs HTTP 4xx élevé (erreurs côté client / pages manquantes)
+      - alert: HttpHigh4xxRate
+        expr: |
+          (rate(nginx_http_requests_total{status=~"4.."}[5m]) /
+           rate(nginx_http_requests_total[5m])) > 0.10
+        for: 3m
+        labels:
+          severity: warning
+          kpi: metier
+        annotations:
+          summary: "Taux d'erreurs HTTP 4xx > 10% sur Nginx"
+          description: "Beaucoup de requêtes échouent côté client (404, 403…)."
+
+      # Redémarrage inattendu du container applicatif
+      - alert: AppContainerRestarted
+        expr: increase(container_start_time_seconds{name="lsj-app"}[10m]) > 0
+        for: 0m
+        labels:
+          severity: critical
+          kpi: metier
+        annotations:
+          summary: "Le container lsj-app a redémarré de façon inattendue"
+          description: "Un crash ou redémarrage a été détecté sur l'application principale."
+
+      # RAM hôte critique (> 90%)
+      - alert: HostHighMemoryUsage
+        expr: |
+          ((node_memory_MemTotal_bytes - node_memory_MemAvailable_bytes)
+           / node_memory_MemTotal_bytes) > 0.90
+        for: 5m
+        labels:
+          severity: critical
+          kpi: infra
+        annotations:
+          summary: "RAM hôte utilisée à plus de 90%"
+          description: "Le serveur EC2 manque de mémoire disponible."

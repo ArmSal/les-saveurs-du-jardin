@@ -146,7 +146,7 @@ jobs:
         key: ${{ secrets.EC2_SSH_KEY }}
         script: |
           # 1. Naviguer vers le dossier du projet (à ajuster si différent)
-          cd ~/les-saveurs-du-jardin || exit
+          cd ~/les-saveurs-du-jardin/docker || exit
           
           # 2. Mettre à jour les fichiers de configuration (compose, configs nginx, etc.)
           git pull origin main

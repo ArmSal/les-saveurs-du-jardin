@@ -1,1 +1,165 @@
-﻿
+---
+# =============================================================================
+# Playbook Ansible - Provisionnement EC2 "Les Saveurs du Jardin"
+# =============================================================================
+# Usage :
+#   ansible-playbook -i inventory/hosts.ini ansible/playbook.yml \
+#     --private-key ~/.ssh/lsj-ec2-key.pem
+#
+# Prérequis : ansible-vault encrypt_string pour les variables sensibles
+# =============================================================================
+
+- name: Provisionnement du serveur EC2 - Les Saveurs du Jardin
+  hosts: ec2
+  become: true
+  vars:
+    project_repo: "https://github.com/{{ github_user }}/les-saveurs-du-jardin.git"
+    project_dir: "/home/ubuntu/les-saveurs-du-jardin"
+    compose_dir: "{{ project_dir }}/docker"
+    docker_compose_version: "v2.27.0"
+
+  tasks:
+
+    # ------------------------------------------------------------------
+    # 1. Mise à jour du système
+    # ------------------------------------------------------------------
+    - name: Mise à jour des paquets APT
+      apt:
+        update_cache: true
+        upgrade: dist
+        cache_valid_time: 3600
+
+    - name: Installation des dépendances système
+      apt:
+        name:
+          - apt-transport-https
+          - ca-certificates
+          - curl
+          - gnupg
+          - lsb-release
+          - git
+          - unzip
+        state: present
+
+    # ------------------------------------------------------------------
+    # 2. Installation de Docker CE
+    # ------------------------------------------------------------------
+    - name: Ajout de la clé GPG officielle Docker
+      apt_key:
+        url: https://download.docker.com/linux/ubuntu/gpg
+        state: present
+
+    - name: Ajout du dépôt Docker
+      apt_repository:
+        repo: "deb [arch=amd64] https://download.docker.com/linux/ubuntu {{ ansible_distribution_release }} stable"
+        state: present
+
+    - name: Installation de Docker CE
+      apt:
+        name:
+          - docker-ce
+          - docker-ce-cli
+          - containerd.io
+          - docker-buildx-plugin
+          - docker-compose-plugin
+        state: present
+        update_cache: true
+
+    - name: Démarrage et activation du service Docker
+      service:
+        name: docker
+        state: started
+        enabled: true
+
+    - name: Ajout de l'utilisateur ubuntu au groupe docker
+      user:
+        name: ubuntu
+        groups: docker
+        append: true
+
+    # ------------------------------------------------------------------
+    # 3. Clonage / mise à jour du dépôt
+    # ------------------------------------------------------------------
+    - name: Clonage du dépôt Git
+      git:
+        repo: "{{ project_repo }}"
+        dest: "{{ project_dir }}"
+        version: main
+        force: true
+      become_user: ubuntu
+
+    # ------------------------------------------------------------------
+    # 4. Configuration de l'environnement Docker
+    # ------------------------------------------------------------------
+    - name: Copie du fichier .env (depuis .env.example)
+      copy:
+        src: "{{ compose_dir }}/.env.example"
+        dest: "{{ compose_dir }}/.env"
+        remote_src: true
+        force: false  # Ne pas écraser si déjà présent
+      become_user: ubuntu
+
+    - name: Injection des variables sensibles dans .env
+      lineinfile:
+        path: "{{ compose_dir }}/.env"
+        regexp: "^{{ item.key }}="
+        line: "{{ item.key }}={{ item.value }}"
+      loop:
+        - { key: "MYSQL_ROOT_PASSWORD", value: "{{ mysql_root_password }}" }
+        - { key: "MYSQL_PASSWORD",      value: "{{ mysql_password }}" }
+        - { key: "GF_SECURITY_ADMIN_PASSWORD", value: "{{ grafana_admin_password }}" }
+      no_log: true  # Masquer les valeurs dans les logs Ansible
+
+    # ------------------------------------------------------------------
+    # 5. Démarrage de la stack Docker Compose
+    # ------------------------------------------------------------------
+    - name: Authentification à GHCR
+      shell: |
+        echo "{{ ghcr_token }}" | docker login ghcr.io -u "{{ github_user }}" --password-stdin
+      no_log: true
+      become_user: ubuntu
+
+    - name: Pull des dernières images depuis GHCR
+      shell: docker compose pull
+      args:
+        chdir: "{{ compose_dir }}"
+      become_user: ubuntu
+
+    - name: Démarrage de la stack Docker Compose
+      shell: docker compose up -d
+      args:
+        chdir: "{{ compose_dir }}"
+      become_user: ubuntu
+
+    # ------------------------------------------------------------------
+    # 6. Post-déploiement Symfony
+    # ------------------------------------------------------------------
+    - name: Attente que le container app soit prêt
+      wait_for:
+        timeout: 20
+
+    - name: Exécution des migrations Doctrine
+      shell: docker compose exec -T app php bin/console doctrine:migrations:migrate --no-interaction --allow-no-migration
+      args:
+        chdir: "{{ compose_dir }}"
+      become_user: ubuntu
+
+    - name: Vidage du cache Symfony
+      shell: docker compose exec -T app php bin/console cache:clear
+      args:
+        chdir: "{{ compose_dir }}"
+      become_user: ubuntu
+
+    # ------------------------------------------------------------------
+    # 7. Vérification finale
+    # ------------------------------------------------------------------
+    - name: Vérification que les containers sont actifs
+      shell: docker compose ps --format json
+      args:
+        chdir: "{{ compose_dir }}"
+      register: compose_ps
+      become_user: ubuntu
+
+    - name: Affichage de l'état des services
+      debug:
+        msg: "{{ compose_ps.stdout }}"
