@@ -21,12 +21,12 @@ services:
     image: nginx:alpine
     container_name: lsj-web
     ports:
-      - "8080:80"
+      - "80:80"
       - "443:443"
     volumes:
       - ../symfony_project:/var/www/html
       - ./nginx/conf.d:/etc/nginx/conf.d
-      - ./nginx/ssl:/etc/nginx/ssl:ro
+      - /etc/letsencrypt:/etc/letsencrypt:ro
     depends_on:
       - app
 
