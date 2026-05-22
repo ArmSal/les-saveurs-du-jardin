@@ -1,0 +1,11 @@
+# Exemple de configuration des variables personnalisees
+# Renommez ce fichier en 'terraform.tfvars' pour l'utiliser localement
+
+# Region de deploiement
+aws_region = "eu-west-3"
+
+# Type d'instance EC2
+instance_type = "t2.micro"
+
+# Nom de votre cle SSH AWS (.pem) sans l'extension
+key_name = "lsdj"
