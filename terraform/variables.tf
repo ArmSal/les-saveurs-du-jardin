@@ -9,7 +9,7 @@ variable "aws_region" {
 variable "instance_type" {
   description = "Type de l'instance EC2"
   type        = string
-  default     = "t3.small" # Gratuit (Free Tier)
+  default     = "t3.small"
 }
 
 # Nom de la paire de cles SSH creee sur AWS

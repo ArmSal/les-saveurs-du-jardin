@@ -14,13 +14,13 @@ provider "aws" {
   region = var.aws_region
 }
 
-# Recuperer dynamiquement la derniere AMI officielle d'Ubuntu 22.04 LTS
+# Recuperer dynamiquement la derniere AMI officielle d'Ubuntu 24.04 LTS
 data "aws_ami" "ubuntu" {
   most_recent = true
 
   filter {
     name   = "name"
-    values = ["ubuntu/images/hvm-ssd/ubuntu-jammy-22.04-amd64-server-*"]
+    values = ["ubuntu/images/hvm-ssd/ubuntu-noble-24.04-amd64-server-*"]
   }
 
   filter {
@@ -40,9 +40,9 @@ resource "aws_instance" "lsdj_server" {
   # Association du groupe de securite
   vpc_security_group_ids = [aws_security_group.lsdj_sg.id]
 
-  # Configuration du disque dur principal (20 Go standard)
+  # Configuration du disque dur principal (30 Go standard)
   root_block_device {
-    volume_size = 20
+    volume_size = 30
     volume_type = "gp2"
   }
 
