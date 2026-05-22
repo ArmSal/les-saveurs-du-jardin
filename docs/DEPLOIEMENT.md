@@ -80,8 +80,12 @@ Sur votre machine locale Windows 11, vous pouvez utiliser les scripts PowerShell
    ```powershell
    cd c:\laragon\www\DevOps\les-saveurs-du-jardin
    ```
-2. Exécutez le script de diagnostic :
+2. Pour vérifier votre environnement local :
    ```powershell
    .\scripts\verify\check_services.ps1
    ```
-   *Le script va tester la connexion à tous les conteneurs et vous indiquer si les pages web répondent correctement.*
+3. Pour vérifier l'instance de production sur AWS EC2 (ex: `35.180.116.20`) :
+   ```powershell
+   .\scripts\verify\check_services.ps1 -TargetHost 35.180.116.20
+   ```
+   *Le script testera la connexion HTTP à l'adresse indiquée sur tous les ports exposés par l'application et la supervision.*
