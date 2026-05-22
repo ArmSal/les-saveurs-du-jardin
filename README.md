@@ -57,8 +57,8 @@ This platform implements the three pillars of modern infrastructure:
   *  Docker image build & GHCR registry push
 3. **Observability & Monitoring**:
   *  Prometheus for host & container metrics scraping
-  *  Grafana for real-time visualization and alerting thresholds (CPU, RAM, Disk)ystem and application health.
-  *  **Alerting**: Configured thresholds for critical performance indicators.
+  *  Grafana for real-time visualization of system and application health.
+  *  **Alerting**: Configured thresholds (CPU, RAM, Disk) for critical performance indicators.
 
 ---
 
@@ -106,8 +106,12 @@ Once the containers are running, you can access the interfaces below:
 
 ## Project Documentation
 Detailed technical specifications and architectural diagrams are available in the `/docs` directory:
-*  ðŸ“„ [Technical Specifications (CDC)](docs/CAHIER_DES_CHARGES.md)
-*  ðŸ“Š [Architecture Schema](docs/architecture_schema.md)
+*  📄 [Technical Specifications (CDC)](docs/CAHIER_DES_CHARGES.md)
+*  📊 [Architecture Schema](docs/architecture_schema.md)
+*  🚀 [Deployment Guide](docs/DEPLOIEMENT.md)
+*  🛡️ [Security Documentation](docs/SECURITE.md)
+*  📈 [Supervision & Monitoring](docs/SUPERVISION.md)
+*  ☁️ [AWS EC2 Configuration Guide](docs/config_ec2_aws.md)
 
 ---
 

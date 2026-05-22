@@ -18,7 +18,7 @@ graph TD
         EC2["EC2 Instance (Docker Engine)"]
         
         subgraph "Docker Stack"
-          NGINX["Nginx (Port 8080)"]
+          NGINX["Nginx (Port 80 / 443)"]
           APP["Symfony App (PHP 8.2)"]
           DB_SVC["MySQL Container (Port 3307)"]
           
@@ -33,7 +33,7 @@ graph TD
     end
   end
 
-  User -->|HTTPS:8080| NGINX
+  User -->|HTTP:80 / HTTPS:443| NGINX
   NGINX --> APP
   APP -->|SQL:3306| DB_SVC
   

@@ -13,9 +13,11 @@ Dans la console AWS, modifiez les "Inbound Rules" de votre instance :
 | Type | Port | Source | Description |
 | :--- | :--- | :--- | :--- |
 | **SSH** | 22 | My IP / All | Accès pour SSH et GitHub Actions |
-| **HTTP** | 8080 | Custom (0.0.0.0/0) | Accès public à votre application |
-| **Custom** | 3000 | My IP | Accès sécurisé à Grafana |
-| **Custom** | 9090 | My IP | Accès sécurisé à Prometheus |
+| **HTTP** | 80 | Custom (0.0.0.0/0) | Accès public à votre application (non sécurisé) |
+| **HTTPS** | 443 | Custom (0.0.0.0/0) | Accès public sécurisé (SSL/TLS) |
+| **Custom** | 3000 | My IP / All | Accès à Grafana pour la supervision |
+| **Custom** | 9090 | My IP / All | Accès à Prometheus (optionnel) |
+| **Custom** | 8081 | My IP / All | Accès à Adminer (optionnel) |
 
 ## 3. Installation des outils sur l'EC2
 Connectez-vous à votre instance en SSH et lancez ces commandes :
