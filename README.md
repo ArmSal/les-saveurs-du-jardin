@@ -1,4 +1,4 @@
-﻿# Les Saveurs Du Jardin (LSDJ) - Enterprise Management Portal
+# Les Saveurs Du Jardin (LSDJ) - Enterprise Management Portal
 
 [![CI/CD Pipeline](https://github.com/ArmSal/les-saveurs-du-jardin/actions/workflows/devops-ci.yml/badge.svg)](https://github.com/ArmSal/les-saveurs-du-jardin/actions)
 [![Symfony](https://img.shields.io/badge/Framework-Symfony%207.4%20LTS-black?logo=symfony)](https://symfony.com)
@@ -68,20 +68,39 @@ This platform implements the three pillars of modern infrastructure:
 *  Docker & Docker Compose
 *  Git
 
-### Quick Start (Development)
+### Quick Start (Windows 11)
+You can set up and run the environment automatically using the provided PowerShell scripts:
+
+```powershell
+# 1. Check your local prerequisites (Git, Docker)
+.\scripts\provision\install_dependencies.ps1
+
+# 2. Setup your local environment files and run Docker Compose
+.\scripts\provision\setup_project.ps1
+
+# 3. Verify that all micro-services are healthy and reachable
+.\scripts\verify\check_services.ps1
+```
+
+### Manual Quick Start (Linux/macOS)
 ```bash
 # Clone the repository
 git clone https://github.com/ArmSal/les-saveurs-du-jardin.git
 
-# Launch the environment
+# Navigate to the docker directory and launch the containers
+cd docker
 docker compose up -d --build
-
-# Run Database Migrations
-docker compose exec app php bin/console doctrine:migrations:migrate
 ```
-*  **Web Portal**: [http://localhost:8080](http://localhost:8080)
+
+### Accessing the Local Services
+Once the containers are running, you can access the interfaces below:
+*  **Web Portal**: [http://localhost:80](http://localhost:80)
 *  **Database Management (Adminer)**: [http://localhost:8081](http://localhost:8081)
 *  **Monitoring (Grafana)**: [http://localhost:3000](http://localhost:3000)
+*  **Prometheus UI**: [http://localhost:9090](http://localhost:9090)
+*  **Alertmanager**: [http://localhost:9093](http://localhost:9093)
+*  **cAdvisor (Docker Metrics)**: [http://localhost:8082](http://localhost:8082)
+*  **Node Exporter**: [http://localhost:9100](http://localhost:9100)
 
 ---
 
