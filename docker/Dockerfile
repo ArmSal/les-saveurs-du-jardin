@@ -3,6 +3,9 @@
 # --- Stage 1: Build & Dependencies ---
 FROM php:8.2-fpm-alpine AS base
 
+# Upgrade vulnerable base packages before installing anything else
+RUN apk add --no-cache --upgrade curl libcurl
+
 # Install system dependencies
 RUN apk add --no-cache \
     bash \
