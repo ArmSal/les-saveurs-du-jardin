@@ -22,7 +22,7 @@
                             {% if shortcut.icon is empty %}
                                 <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"></path></svg>
                             {% elseif shortcut.icon|trim|slice(0, 4) == '<svg' %}
-                                {{ shortcut.icon|raw }}
+                                {{ shortcut.icon|striptags('<svg><path><circle><rect><line><polyline><polygon><g><defs><use><symbol><title><desc><clipPath><linearGradient><radialGradient><stop><mask><filter><animate><animateTransform>')|raw }}
                             {% elseif shortcut.icon|trim|slice(0, 4) == 'http' %}
                                 <img src="{{ shortcut.icon }}" alt="{{ shortcut.label }}" class="w-full h-full object-cover">
                             {% else %}

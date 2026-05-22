@@ -421,8 +421,11 @@
 
 {% block javascripts %}
 {{ parent() }}
+<meta name="csrf-token" content="{{ csrf_token('access_admin') }}">
 <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
 <script>
+    const csrfToken = () => document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+
     function accessManager() {
         return {
             activeTab: 'matrix',
@@ -445,7 +448,7 @@
                 try {
                     const response = await fetch('{{ path('admin_access_role_add') }}', {
                         method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
+                        headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrfToken() },
                         body: JSON.stringify({ 
                             name: this.newRoleName, 
                             label: this.newRoleLabel,
@@ -468,7 +471,7 @@
                 try {
                     const response = await fetch(`{{ path('admin_access_role_edit', {id: 'ROLE_ID'}) }}`.replace('ROLE_ID', this.editRoleId), {
                         method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
+                        headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrfToken() },
                         body: JSON.stringify({ 
                             label: this.editRoleLabel,
                             isContact: this.editRoleContact
@@ -490,7 +493,7 @@
                 try {
                     const response = await fetch(`{{ path('admin_access_role_delete', {id: 'ROLE_ID'}) }}`.replace('ROLE_ID', id), {
                         method: 'POST',
-                        headers: { 'Content-Type': 'application/json' }
+                        headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrfToken() }
                     });
                     if (response.ok) {
                         showToast('Rôle supprimé', 'success');
@@ -508,7 +511,7 @@
                 try {
                     const response = await fetch('{{ path('admin_access_magasin_add') }}', {
                         method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
+                        headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrfToken() },
                         body: JSON.stringify({ nom: this.newMagasinNom })
                     });
                     if (response.ok) {
@@ -527,7 +530,7 @@
                 try {
                     const response = await fetch(`{{ path('admin_access_magasin_edit', {id: 'MAGASIN_ID'}) }}`.replace('MAGASIN_ID', this.editMagasinId), {
                         method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
+                        headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrfToken() },
                         body: JSON.stringify({ nom: this.editMagasinNom })
                     });
                     if (response.ok) {
@@ -545,7 +548,8 @@
                 if (!confirm(`Supprimer le magasin "${nom}" ?`)) return;
                 try {
                     const response = await fetch(`{{ path('admin_access_magasin_delete', {id: 'MAGASIN_ID'}) }}`.replace('MAGASIN_ID', id), {
-                        method: 'POST'
+                        method: 'POST',
+                        headers: { 'X-CSRF-TOKEN': csrfToken() }
                     });
                     if (response.ok) {
                         showToast('Magasin supprimé', 'success');
@@ -568,7 +572,7 @@
         try {
             const response = await fetch('{{ path('admin_access_update') }}', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrfToken() },
                 body: JSON.stringify({ moduleKey, roleName, accessLevel })
             });
 

@@ -70,24 +70,9 @@ class RHController extends AbstractController
                 $userMagasin = $currentUser->getMagasin();
                 $pendingQB->andWhere('u.magasin = :my_mag')->setParameter('my_mag', $userMagasin);
                 $historyQuery->andWhere('u.magasin = :my_mag')->setParameter('my_mag', $userMagasin);
-                
-                // DEBUG: Log the query for ACCES MAGASIN users
-                error_log(sprintf('[CONGE DEBUG] User: %s, Magasin: "%s", canEdit: %s, isMagasinOnly: %s', 
-                    $currentUser->getPrenom() . ' ' . $currentUser->getNom(),
-                    $userMagasin ?? 'NULL',
-                    $canEdit ? 'true' : 'false',
-                    $isMagasinOnly ? 'true' : 'false'
-                ));
-                
-                // DEBUG: Show the actual SQL query
-                $sql = $pendingQB->getQuery()->getSQL();
-                $params = $pendingQB->getQuery()->getParameters();
-                error_log(sprintf('[CONGE DEBUG] SQL: %s', $sql));
-                error_log(sprintf('[CONGE DEBUG] Params: %s', json_encode($params->getKeys())));
             }
-            
+
             $pending = $pendingQB->getQuery()->getResult();
-            error_log(sprintf('[CONGE DEBUG] Pending count: %d', count($pending)));
             
             // Get all employees for calculating magasin stats
             $allEmployesQB = $userRepo->createQueryBuilder('u')

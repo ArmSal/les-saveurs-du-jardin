@@ -35,6 +35,7 @@
                 Nouvelle Entrée Rapide
             </h2>
             <form action="{{ path('admin_shortcuts_new') }}" method="POST" enctype="multipart/form-data" class="grid grid-cols-1 md:grid-cols-4 gap-4" onsubmit="return validateNewForm()">
+                <input type="hidden" name="_token" value="{{ csrf_token('shortcut_form') }}">
                 <div class="md:col-span-2">
                     <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">Libellé du Bouton <span class="text-rose-500">*</span></label>
                     <input type="text" name="label" required class="w-full h-10 px-3 text-sm font-semibold text-slate-800 bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-100 focus:border-indigo-400 outline-none transition-all" placeholder="Ex: Catalogue">
@@ -79,7 +80,7 @@
                         <div class="w-12 h-12 bg-slate-50 rounded-lg flex items-center justify-center {{ s.colorClass|default('text-slate-600') }} group-hover:scale-105 transition-transform border border-slate-100">
                             {% if s.icon %}
                                 {% if '<svg' in s.icon %}
-                                    {{ s.icon|raw }}
+                                    {{ s.icon|striptags('<svg><path><circle><rect><line><polyline><polygon><g><defs><use><symbol><title><desc><clipPath><linearGradient><radialGradient><stop><mask><filter><animate><animateTransform>')|raw }}
                                 {% else %}
                                     <img src="{{ path('app_media_shortcut', {filename: s.icon}) }}" class="w-7 h-7 object-contain">
                                 {% endif %}
@@ -96,6 +97,7 @@
                     <div class="flex items-center justify-between pt-3 border-t border-slate-100">
                         <div class="flex gap-2">
                             <form action="{{ path('admin_shortcuts_delete', {id: s.id}) }}" method="POST" onsubmit="return confirm('Supprimer ce raccourci ?')">
+                                <input type="hidden" name="_token" value="{{ csrf_token('shortcut_form') }}">
                                 <button class="w-8 h-8 bg-rose-50 text-rose-500 rounded-lg flex items-center justify-center hover:bg-rose-500 hover:text-white transition-all">
                                     <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
                                 </button>

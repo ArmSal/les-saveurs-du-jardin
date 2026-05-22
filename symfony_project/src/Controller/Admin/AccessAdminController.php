@@ -15,15 +15,25 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use App\Service\AccessHelper;
 use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Component\Security\Csrf\CsrfToken;
+use Symfony\Component\Security\Csrf\CsrfTokenManagerInterface;
 
 #[Route('/admin/access')]
 class AccessAdminController extends AbstractController
 {
     private AccessHelper $access;
+    private CsrfTokenManagerInterface $csrfTokenManager;
 
-    public function __construct(AccessHelper $access)
+    public function __construct(AccessHelper $access, CsrfTokenManagerInterface $csrfTokenManager)
     {
         $this->access = $access;
+        $this->csrfTokenManager = $csrfTokenManager;
+    }
+
+    private function validateCsrf(Request $request): bool
+    {
+        $token = $request->headers->get('X-CSRF-TOKEN');
+        return $this->csrfTokenManager->isTokenValid(new CsrfToken('access_admin', $token));
     }
 
     private array $modules = [
@@ -74,6 +84,9 @@ class AccessAdminController extends AbstractController
     {
         if (!$this->access->canEdit('access_management')) {
             return new JsonResponse(['error' => 'Forbidden'], 403);
+        }
+        if (!$this->validateCsrf($request)) {
+            return new JsonResponse(['error' => 'Invalid CSRF token'], 403);
         }
 
         $data = json_decode($request->getContent(), true);
@@ -144,6 +157,9 @@ class AccessAdminController extends AbstractController
         if (!$this->access->canEdit('access_management')) {
             return new JsonResponse(['error' => 'Forbidden'], 403);
         }
+        if (!$this->validateCsrf($request)) {
+            return new JsonResponse(['error' => 'Invalid CSRF token'], 403);
+        }
 
         $data = json_decode($request->getContent(), true);
         $name = $data['name'] ?? null;
@@ -194,6 +210,9 @@ class AccessAdminController extends AbstractController
         if (!$this->access->canEdit('access_management')) {
             return new JsonResponse(['error' => 'Forbidden'], 403);
         }
+        if (!$this->validateCsrf($request)) {
+            return new JsonResponse(['error' => 'Invalid CSRF token'], 403);
+        }
 
         $data = json_decode($request->getContent(), true);
         $label = $data['label'] ?? null;
@@ -216,10 +235,13 @@ class AccessAdminController extends AbstractController
     }
 
     #[Route('/role/delete/{id}', name: 'admin_access_role_delete', methods: ['POST', 'DELETE'])]
-    public function deleteRole(Role $role, EntityManagerInterface $em): JsonResponse
+    public function deleteRole(Role $role, Request $request, EntityManagerInterface $em): JsonResponse
     {
         if (!$this->access->canEdit('access_management')) {
             return new JsonResponse(['error' => 'Forbidden'], 403);
+        }
+        if (!$this->validateCsrf($request)) {
+            return new JsonResponse(['error' => 'Invalid CSRF token'], 403);
         }
 
         if ($role->getName() === 'ROLE_DIRECTEUR') {
@@ -245,6 +267,9 @@ class AccessAdminController extends AbstractController
         if (!$this->access->canEdit('access_management')) {
             return new JsonResponse(['error' => 'Forbidden'], 403);
         }
+        if (!$this->validateCsrf($request)) {
+            return new JsonResponse(['error' => 'Invalid CSRF token'], 403);
+        }
 
         $data = json_decode($request->getContent(), true);
         $nom = $data['nom'] ?? null;
@@ -265,6 +290,10 @@ class AccessAdminController extends AbstractController
     #[Route('/magasin/edit/{id}', name: 'admin_access_magasin_edit', methods: ['POST'])]
     public function editMagasin(Magasin $magasin, Request $request, EntityManagerInterface $em): JsonResponse
     {
+        if (!$this->validateCsrf($request)) {
+            return new JsonResponse(['error' => 'Invalid CSRF token'], 403);
+        }
+
         $data = json_decode($request->getContent(), true);
         $nom = $data['nom'] ?? null;
 
@@ -279,10 +308,13 @@ class AccessAdminController extends AbstractController
     }
 
     #[Route('/magasin/delete/{id}', name: 'admin_access_magasin_delete', methods: ['POST', 'DELETE'])]
-    public function deleteMagasin(Magasin $magasin, EntityManagerInterface $em): JsonResponse
+    public function deleteMagasin(Magasin $magasin, Request $request, EntityManagerInterface $em): JsonResponse
     {
         if (!$this->access->canEdit('access_management')) {
             return new JsonResponse(['error' => 'Forbidden'], 403);
+        }
+        if (!$this->validateCsrf($request)) {
+            return new JsonResponse(['error' => 'Invalid CSRF token'], 403);
         }
 
         if (count($magasin->getUsers()) > 0) {

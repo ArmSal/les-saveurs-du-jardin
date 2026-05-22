@@ -86,7 +86,17 @@ function showConfirmModal(title, message, onConfirm, onCancel) {
             if (onCancel) onCancel();
         }
     });
-    
+
+    // Close on ESC key
+    const onKeyDown = (e) => {
+        if (e.key === 'Escape') {
+            document.removeEventListener('keydown', onKeyDown);
+            closeModal();
+            if (onCancel) onCancel();
+        }
+    };
+    document.addEventListener('keydown', onKeyDown);
+
     // Animate in
     requestAnimationFrame(() => {
         content.classList.remove('scale-95', 'opacity-0');
@@ -170,7 +180,17 @@ function showAlertModal(title, message, type = 'success', onClose) {
             if (onClose) onClose();
         }
     });
-    
+
+    // Close on ESC key
+    const onKeyDown = (e) => {
+        if (e.key === 'Escape') {
+            document.removeEventListener('keydown', onKeyDown);
+            closeModal();
+            if (onClose) onClose();
+        }
+    };
+    document.addEventListener('keydown', onKeyDown);
+
     // Animate in
     requestAnimationFrame(() => {
         content.classList.remove('scale-95', 'opacity-0');

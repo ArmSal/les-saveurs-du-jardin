@@ -172,6 +172,7 @@ async function markAllNotificationsAsRead(event) {
         }
     } catch (error) {
         console.error('Error marking notifications as read:', error);
+        if (window.showToast) window.showToast('Erreur : impossible de marquer les notifications comme lues.', 'error');
     }
 }
 
@@ -183,31 +184,44 @@ async function handleNotifClick(id, event) {
         // Optimistic UI update
         item.classList.remove('unread');
         const indicator = item.querySelector('.notif-dot-indicator');
+        let replacedIndicator = null;
         if (indicator) {
             const spacer = document.createElement('div');
             spacer.className = 'w-[6px] flex-shrink-0';
+            replacedIndicator = { spacer, indicator };
             indicator.replaceWith(spacer);
         }
 
-        // Update badge count
+        // Update badge count optimistically
         const badge = document.getElementById('global-notif-badge');
         const countEl = document.getElementById('global-notif-count');
+        const prevCount = countEl ? parseInt(countEl.innerText) : 0;
         if (badge && countEl) {
-            const count = parseInt(countEl.innerText) - 1;
-            if (count <= 0) {
-                badge.remove();
+            const newCount = prevCount - 1;
+            if (newCount <= 0) {
+                badge.style.display = 'none';
             } else {
-                countEl.innerText = count;
+                countEl.innerText = newCount;
             }
         }
 
         try {
-            fetch(`/notifications/mark-read/${id}`, {
+            const response = await fetch(`/notifications/mark-read/${id}`, {
                 method: 'POST',
                 headers: { 'X-Requested-With': 'XMLHttpRequest' }
             });
+            if (!response.ok) throw new Error('Server error');
         } catch (e) {
             console.error('Failed to mark as read:', e);
+            // Revert optimistic UI changes
+            item.classList.add('unread');
+            if (replacedIndicator) {
+                replacedIndicator.spacer.replaceWith(replacedIndicator.indicator);
+            }
+            if (badge && countEl) {
+                badge.style.display = '';
+                countEl.innerText = prevCount;
+            }
         }
     }
 

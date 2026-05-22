@@ -50,6 +50,9 @@ COPY symfony_project/composer.* ./
 # Install dev dependencies
 RUN composer install --no-scripts --no-autoloader
 
+EXPOSE 9000
+USER www-data
+
 ENTRYPOINT ["docker-entrypoint"]
 CMD ["php-fpm"]
 
@@ -70,6 +73,9 @@ RUN composer install --no-dev --optimize-autoloader --no-scripts
 
 # Create var directory and set permissions
 RUN mkdir -p /var/www/html/var && chown -R www-data:www-data /var/www/html/var
+
+EXPOSE 9000
+USER www-data
 
 ENTRYPOINT ["docker-entrypoint"]
 CMD ["php-fpm"]

@@ -45,7 +45,10 @@ class ShortcutController extends AbstractController
         if (!$this->access->canEdit('shortcuts')) {
             throw $this->createAccessDeniedException();
         }
-        
+        if (!$this->isCsrfTokenValid('shortcut_form', $request->request->get('_token'))) {
+            throw $this->createAccessDeniedException('Invalid CSRF token.');
+        }
+
         $shortcut = new PortalShortcut();
         $shortcut->setLabel($request->request->get('label'));
         $shortcut->setUrl($request->request->get('url'));
@@ -90,6 +93,9 @@ class ShortcutController extends AbstractController
         }
         
         if ($request->isMethod('POST')) {
+            if (!$this->isCsrfTokenValid('shortcut_form', $request->request->get('_token'))) {
+                throw $this->createAccessDeniedException('Invalid CSRF token.');
+            }
             $shortcut->setLabel($request->request->get('label'));
             $shortcut->setUrl($request->request->get('url'));
             $shortcut->setColorClass($request->request->get('colorClass'));
@@ -131,10 +137,13 @@ class ShortcutController extends AbstractController
     }
 
     #[Route('/delete/{id}', name: 'admin_shortcuts_delete', methods: ['POST'])]
-    public function delete(PortalShortcut $shortcut, EntityManagerInterface $em): Response
+    public function delete(PortalShortcut $shortcut, Request $request, EntityManagerInterface $em): Response
     {
         if (!$this->access->canEdit('shortcuts')) {
             throw $this->createAccessDeniedException();
+        }
+        if (!$this->isCsrfTokenValid('shortcut_form', $request->request->get('_token'))) {
+            throw $this->createAccessDeniedException('Invalid CSRF token.');
         }
         
         // Delete physical file if it was an upload

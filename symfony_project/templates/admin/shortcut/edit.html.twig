@@ -17,7 +17,7 @@
                 <div class="w-14 h-14 bg-slate-50 rounded-lg flex items-center justify-center {{ shortcut.colorClass|default('text-slate-600') }} border border-slate-100">
                     {% if shortcut.icon %}
                         {% if '<svg' in shortcut.icon %}
-                            {{ shortcut.icon|raw }}
+                            {{ shortcut.icon|striptags('<svg><path><circle><rect><line><polyline><polygon><g><defs><use><symbol><title><desc><clipPath><linearGradient><radialGradient><stop><mask><filter><animate><animateTransform>')|raw }}
                         {% else %}
                             <img src="{{ path('app_media_shortcut', {filename: shortcut.icon}) }}" class="w-8 h-8 object-contain">
                         {% endif %}
@@ -32,6 +32,7 @@
             </div>
 
             <form action="{{ path('admin_shortcuts_edit', {id: shortcut.id}) }}" method="POST" enctype="multipart/form-data" class="p-6 space-y-4" onsubmit="return validateEditForm()">
+                <input type="hidden" name="_token" value="{{ csrf_token('shortcut_form') }}">
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                         <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">Libellé <span class="text-rose-500">*</span></label>
