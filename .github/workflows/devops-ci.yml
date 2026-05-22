@@ -129,9 +129,7 @@ jobs:
         docker push $IMAGE_ID:latest
 
   # ---------------------------------------------------------------
-  # JOB 3 - Simulated Deployment to AWS EC2
-  # Note: Deployment is simulated for testing purposes.
-  # In production, this job would SSH into EC2 and run docker compose.
+  # JOB 3 - Deployment to AWS EC2 via SSH
   # ---------------------------------------------------------------
   deploy:
     name: Deploy to AWS EC2
@@ -146,16 +144,16 @@ jobs:
         username: ${{ secrets.EC2_USER }}
         key: ${{ secrets.EC2_SSH_KEY }}
         script: |
-          # 1. Naviguer vers le dossier du projet (à ajuster si différent)
+          # 1. Naviguer vers le dossier du projet
           cd ~/les-saveurs-du-jardin/docker || exit
           
-          # 2. Mettre à jour les fichiers de configuration (compose, configs nginx, etc.)
+          # 2. Mettre à jour les fichiers de configuration
           git pull origin main
           
-          # 3. Se connecter à GHCR pour pouvoir pull l'image privée
+          # 3. Se connecter à GHCR
           echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
           
-          # 4. Télécharger la nouvelle image et redémarrer
+          # 4. Télécharger la nouvelle image et redémarrer les services
           docker compose pull
           docker compose up -d
           
@@ -163,7 +161,5 @@ jobs:
           docker compose exec -T app php bin/console doctrine:migrations:migrate --no-interaction --allow-no-migration
           docker compose exec -T app php bin/console cache:clear
           
-          # 6. Nettoyage des anciennes images inutilisées
+          # 6. Nettoyage des anciennes images
           docker image prune -f
-
-
