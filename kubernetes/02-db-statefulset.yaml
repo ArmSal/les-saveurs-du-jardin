@@ -1,0 +1,110 @@
+# =============================================================================
+# Base de données MySQL - StatefulSet + Service
+# =============================================================================
+# StatefulSet garantit l'identité stable du pod et la persistance des données.
+# Le PersistentVolumeClaim assure que les données survivent aux redémarrages.
+# Compétence ASD couverte : CP6 - Gérer le stockage des données
+# =============================================================================
+
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: mysql-pvc
+  namespace: lsdj
+  labels:
+    app.kubernetes.io/name: les-saveurs-du-jardin
+    app.kubernetes.io/component: database
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi
+  storageClassName: gp2  # AWS EBS General Purpose SSD
+
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: lsdj-db
+  namespace: lsdj
+  labels:
+    app.kubernetes.io/name: les-saveurs-du-jardin
+    app.kubernetes.io/component: database
+spec:
+  serviceName: lsdj-db
+  replicas: 1
+  selector:
+    matchLabels:
+      app: lsdj-db
+  template:
+    metadata:
+      labels:
+        app: lsdj-db
+        app.kubernetes.io/component: database
+    spec:
+      containers:
+        - name: mysql
+          image: mysql:8.0
+          ports:
+            - containerPort: 3306
+              name: mysql
+          envFrom:
+            - configMapRef:
+                name: lsdj-config
+          env:
+            - name: MYSQL_ROOT_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: lsdj-secrets
+                  key: MYSQL_ROOT_PASSWORD
+            - name: MYSQL_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: lsdj-secrets
+                  key: MYSQL_PASSWORD
+          volumeMounts:
+            - name: mysql-storage
+              mountPath: /var/lib/mysql
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "250m"
+            limits:
+              memory: "512Mi"
+              cpu: "1000m"
+          livenessProbe:
+            exec:
+              command: ["mysqladmin", "ping", "-h", "localhost"]
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+          readinessProbe:
+            exec:
+              command: ["mysqladmin", "ping", "-h", "localhost"]
+            initialDelaySeconds: 10
+            periodSeconds: 5
+      volumes:
+        - name: mysql-storage
+          persistentVolumeClaim:
+            claimName: mysql-pvc
+
+---
+# Service ClusterIP : MySQL accessible uniquement en interne
+apiVersion: v1
+kind: Service
+metadata:
+  name: lsdj-db
+  namespace: lsdj
+  labels:
+    app.kubernetes.io/name: les-saveurs-du-jardin
+    app.kubernetes.io/component: database
+spec:
+  selector:
+    app: lsdj-db
+  ports:
+    - name: mysql
+      port: 3306
+      targetPort: 3306
+  type: ClusterIP

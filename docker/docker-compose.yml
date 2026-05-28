@@ -282,8 +282,9 @@ services:
   mysqld-exporter:
     image: prom/mysqld-exporter:v0.15.1
     container_name: lsj-mysqld-exporter
-    volumes:
-      - ./mysql/exporter.cnf:/.my.cnf:ro
+    environment:
+      # Identifiants injectés via variable d'environnement (pas de mot de passe en clair)
+      - DATA_SOURCE_NAME=${MYSQL_EXPORTER_DSN}
     depends_on:
       - db
     networks:

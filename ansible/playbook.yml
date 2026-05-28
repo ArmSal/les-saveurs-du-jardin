@@ -151,7 +151,36 @@
       become_user: ubuntu
 
     # ------------------------------------------------------------------
-    # 7. Vérification finale
+    # 7. Stratégie de sauvegarde MySQL (CP6 - Gérer le stockage des données)
+    # ------------------------------------------------------------------
+    - name: Création du répertoire de sauvegardes
+      file:
+        path: /home/ubuntu/backups/mysql
+        state: directory
+        owner: ubuntu
+        group: ubuntu
+        mode: "0750"
+
+    - name: Copie du script de sauvegarde MySQL
+      copy:
+        src: "{{ project_dir }}/scripts/backup/backup_mysql.sh"
+        dest: /home/ubuntu/backup_mysql.sh
+        owner: ubuntu
+        group: ubuntu
+        mode: "0750"
+        remote_src: true
+
+    - name: Configuration du cron de sauvegarde MySQL (quotidien à 03h00)
+      cron:
+        name: "Sauvegarde MySQL quotidienne LSDJ"
+        user: ubuntu
+        minute: "0"
+        hour: "3"
+        job: "/home/ubuntu/backup_mysql.sh >> /home/ubuntu/backups/mysql/backup.log 2>&1"
+        state: present
+
+    # ------------------------------------------------------------------
+    # 8. Vérification finale
     # ------------------------------------------------------------------
     - name: Vérification que les containers sont actifs
       shell: docker compose ps --format json

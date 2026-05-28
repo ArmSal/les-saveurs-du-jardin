@@ -1,0 +1,914 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ASD - Administrateur Systèmes DevOps - Présentation</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bleu: #2c3e7d;
+            --bleu-dark: #1a2a5e;
+            --bleu-light: #e8eaf6;
+            --rose: #e91e63;
+            --rose-light: #fce4ec;
+            --vert: #2e7d32;
+            --vert-light: #e8f5e9;
+            --orange: #ef6c00;
+            --orange-light: #fff3e0;
+            --gris-50: #fafafa;
+            --gris-100: #f5f5f5;
+            --gris-200: #eeeeee;
+            --gris-600: #757575;
+            --gris-800: #424242;
+            --radius: 10px;
+            --shadow-sm: 0 1px 3px rgba(0,0,0,0.08);
+            --shadow-md: 0 4px 12px rgba(0,0,0,0.1);
+            --shadow-lg: 0 8px 24px rgba(0,0,0,0.12);
+        }
+
+        @page { size: A4; margin: 10mm; }
+        @media print {
+            * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+            .page-break { page-break-before: always; }
+            body { font-size: 0.78rem; }
+            .header { padding: 1rem 1.2rem; }
+            .card { box-shadow: none !important; border: 1px solid var(--gris-200); }
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            font-size: 0.85rem;
+            line-height: 1.5;
+            color: var(--gris-800);
+            background: var(--gris-50);
+        }
+
+        .container {
+            max-width: 210mm;
+            margin: 0 auto;
+            padding: 0 1rem;
+        }
+
+        /* —— HEADER —— */
+        .header {
+            background: linear-gradient(135deg, var(--bleu) 0%, var(--bleu-dark) 60%, #0d1b3e 100%);
+            color: white;
+            padding: 1.8rem 2rem;
+            border-radius: 0 0 var(--radius) var(--radius);
+            margin-bottom: 1.5rem;
+            position: relative;
+            overflow: hidden;
+        }
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: relative;
+            z-index: 1;
+        }
+        .badge-diploma {
+            display: inline-block;
+            background: var(--rose);
+            font-size: 1.1rem;
+            padding: 0.25rem 1rem;
+            border-radius: 25px;
+            font-weight: 800;
+            letter-spacing: 1px;
+            box-shadow: 0 2px 8px rgba(233,30,99,0.4);
+        }
+        .header h1 {
+            font-weight: 800;
+            font-size: 1.4rem;
+            margin: 0.5rem 0 0.2rem;
+            letter-spacing: -0.3px;
+        }
+        .header .subtitle {
+            opacity: 0.8;
+            font-weight: 300;
+            font-size: 0.85rem;
+        }
+        .header .school-name {
+            font-weight: 700;
+            font-size: 1.2rem;
+            letter-spacing: 1px;
+        }
+        .header .school-tag {
+            font-size: 0.75rem;
+            opacity: 0.7;
+            font-weight: 400;
+        }
+
+        /* —— SECTIONS —— */
+        .section-title {
+            color: var(--bleu);
+            font-weight: 700;
+            font-size: 1rem;
+            margin: 1.6rem 0 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 3px solid var(--rose);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .section-icon {
+            width: 28px;
+            height: 28px;
+            border-radius: 6px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.9rem;
+            flex-shrink: 0;
+        }
+
+        /* —— CARDS —— */
+        .card {
+            background: white;
+            border-radius: var(--radius);
+            padding: 1rem 1.2rem;
+            margin-bottom: 0.8rem;
+            box-shadow: var(--shadow-sm);
+            border: 1px solid var(--gris-200);
+            transition: box-shadow 0.2s;
+        }
+        .card:hover { box-shadow: var(--shadow-md); }
+        .card p { margin: 0.3rem 0; }
+        .card-info { border-left: 4px solid var(--bleu); }
+        .card-alert { border-left: 4px solid var(--orange); background: var(--orange-light); }
+        .card-important { border-left: 4px solid var(--rose); background: var(--rose-light); }
+        .card-success { border-left: 4px solid var(--vert); background: var(--vert-light); }
+
+        .card-label {
+            display: inline-block;
+            font-size: 0.65rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            padding: 0.15rem 0.5rem;
+            border-radius: 4px;
+            margin-bottom: 0.5rem;
+        }
+        .label-info { background: var(--bleu-light); color: var(--bleu); }
+        .label-alert { background: #ffe0b2; color: var(--orange); }
+        .label-important { background: #f8bbd0; color: #880e4f; }
+        .label-success { background: #c8e6c9; color: var(--vert); }
+
+        /* —— BLOCS COMPÉTENCES —— */
+        .blocs-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 0.7rem;
+            margin-bottom: 0.5rem;
+        }
+        .bloc-card {
+            background: white;
+            border: 2px solid var(--bleu-light);
+            border-radius: var(--radius);
+            padding: 0.8rem 1rem;
+            box-shadow: var(--shadow-sm);
+            display: flex;
+            gap: 0.8rem;
+            align-items: flex-start;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+        .bloc-card:hover {
+            border-color: var(--bleu);
+            box-shadow: var(--shadow-md);
+        }
+        .bloc-number {
+            background: var(--bleu);
+            color: white;
+            font-weight: 800;
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.85rem;
+            flex-shrink: 0;
+        }
+        .bloc-content strong { color: var(--bleu); font-size: 0.82rem; }
+        .bloc-content small { color: var(--gris-600); font-size: 0.75rem; line-height: 1.4; display: block; margin-top: 0.2rem; }
+
+        /* —— ORGANISATION —— */
+        .orga-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.8rem;
+            margin-bottom: 0.8rem;
+        }
+        .orga-card {
+            background: white;
+            border-radius: var(--radius);
+            padding: 1rem;
+            text-align: center;
+            box-shadow: var(--shadow-sm);
+            border: 1px solid var(--gris-200);
+        }
+        .orga-card .orga-icon {
+            font-size: 1rem;
+            margin-bottom: 0.4rem;
+            color: var(--bleu);
+            font-weight: 700;
+        }
+        .orga-card .orga-title {
+            font-weight: 700;
+            font-size: 0.8rem;
+            color: var(--bleu);
+            margin-bottom: 0.3rem;
+        }
+        .orga-card .orga-mode {
+            display: inline-block;
+            font-size: 0.65rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            padding: 0.15rem 0.5rem;
+            border-radius: 20px;
+            margin-bottom: 0.3rem;
+        }
+        .mode-distanciel { background: #e3f2fd; color: #1565c0; }
+        .mode-presentiel { background: var(--vert-light); color: var(--vert); }
+        .orga-card small { color: var(--gris-600); font-size: 0.72rem; }
+
+        /* —— ÉVALUATION —— */
+        .eval-volets {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.8rem;
+            margin-bottom: 1rem;
+        }
+        .volet-card {
+            background: white;
+            border-radius: var(--radius);
+            padding: 1rem;
+            box-shadow: var(--shadow-sm);
+            border-top: 4px solid var(--vert);
+        }
+        .volet-card h4 {
+            font-size: 0.82rem;
+            color: var(--bleu);
+            margin-bottom: 0.6rem;
+        }
+        .volet-card ul {
+            list-style: none;
+            padding: 0;
+        }
+        .volet-card li {
+            font-size: 0.78rem;
+            padding: 0.3rem 0;
+            padding-left: 1.2rem;
+            position: relative;
+        }
+        .volet-card li::before {
+            content: '›';
+            position: absolute;
+            left: 0;
+            color: var(--bleu);
+            font-weight: 700;
+            font-size: 1rem;
+        }
+
+        /* —— GRILLE ÉVALUATION —— */
+        .eval-table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            border-radius: var(--radius);
+            overflow: hidden;
+            box-shadow: var(--shadow-md);
+            margin-bottom: 1rem;
+            font-size: 0.73rem;
+        }
+        .eval-table thead th {
+            background: var(--bleu);
+            color: white;
+            padding: 0.6rem 0.5rem;
+            font-weight: 600;
+            font-size: 0.72rem;
+            text-align: center;
+        }
+        .eval-table thead th:first-child { text-align: left; padding-left: 0.8rem; }
+        .eval-table td {
+            padding: 0.45rem 0.5rem;
+            border-bottom: 1px solid var(--gris-200);
+            vertical-align: middle;
+        }
+        .eval-table tbody tr:hover td { background-color: #f5f7ff !important; }
+        .eval-table td:first-child {
+            font-weight: 600;
+            color: var(--bleu);
+            background: var(--gris-50) !important;
+            padding-left: 0.8rem;
+        }
+        .eval-table .section-row td {
+            background: var(--bleu) !important;
+            color: white;
+            font-weight: 700;
+            text-align: center;
+            font-size: 0.75rem;
+            padding: 0.5rem;
+            letter-spacing: 0.3px;
+        }
+        .eval-table .n0 { background-color: #ffebee !important; color: #c62828; font-size: 0.71rem; }
+        .eval-table .n1 { background-color: #fff8e1 !important; color: #e65100; font-size: 0.71rem; }
+        .eval-table .n2 { background-color: #e8f5e9 !important; color: #2e7d32; font-size: 0.71rem; }
+        .eval-table .note {
+            text-align: center;
+            font-weight: 700;
+            color: var(--bleu);
+            background: var(--bleu-light) !important;
+            font-size: 0.8rem;
+        }
+        .eval-table tfoot td {
+            background: var(--bleu) !important;
+            color: white !important;
+            font-weight: 700;
+            padding: 0.6rem;
+            font-size: 0.85rem;
+        }
+
+        /* —— PLANNING —— */
+        .planning-table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            border-radius: var(--radius);
+            overflow: hidden;
+            box-shadow: var(--shadow-md);
+            margin-bottom: 1rem;
+            font-size: 0.73rem;
+        }
+        .planning-table thead th {
+            background: var(--bleu);
+            color: white;
+            padding: 0.55rem;
+            font-weight: 600;
+            font-size: 0.72rem;
+        }
+        .planning-table td {
+            padding: 0.4rem 0.6rem;
+            border-bottom: 1px solid var(--gris-200);
+            vertical-align: top;
+        }
+        .planning-table td:first-child {
+            text-align: center;
+            font-weight: 700;
+            color: var(--bleu);
+            background: var(--gris-50);
+            width: 5%;
+        }
+        .planning-table .phase-row td {
+            font-weight: 700;
+            text-align: center;
+            font-size: 0.78rem;
+            padding: 0.5rem;
+            letter-spacing: 0.2px;
+        }
+        .phase-1 td { background: #e8f5e9 !important; color: #2e7d32 !important; border-left: 4px solid #4caf50; }
+        .phase-2 td { background: #e3f2fd !important; color: #1565c0 !important; border-left: 4px solid #2196f3; }
+        .phase-3 td { background: #fff3e0 !important; color: #e65100 !important; border-left: 4px solid #ff9800; }
+        .phase-4 td { background: #fce4ec !important; color: #880e4f !important; border-left: 4px solid #e91e63; }
+        .planning-table tbody tr:hover td { background-color: #f0f4ff !important; }
+        .planning-table .date { font-weight: 600; color: var(--bleu); }
+        .planning-table .topic { font-weight: 500; }
+        .planning-table .detail { color: var(--gris-600); font-size: 0.7rem; }
+        .planning-table .ferie {
+            color: #bbb;
+            font-style: italic;
+        }
+        .planning-table .ferie s { text-decoration-color: #ccc; }
+
+        /* —— SESSION INTENSIVE —— */
+        .intensive-table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            border-radius: var(--radius);
+            overflow: hidden;
+            box-shadow: var(--shadow-md);
+            margin-bottom: 1rem;
+            font-size: 0.75rem;
+        }
+        .intensive-table thead th {
+            background: var(--bleu);
+            color: white;
+            padding: 0.55rem;
+            font-weight: 600;
+        }
+        .intensive-table td {
+            padding: 0.45rem 0.8rem;
+            border-bottom: 1px solid var(--gris-200);
+        }
+        .intensive-table td:first-child {
+            font-weight: 700;
+            color: white;
+            background: var(--rose) !important;
+            text-align: center;
+            width: 8%;
+        }
+        .intensive-table tbody tr:hover td:not(:first-child) { background-color: #f5f7ff; }
+
+        /* —— RÉSUMÉ —— */
+        .resume-card {
+            background: white;
+            border-radius: var(--radius);
+            padding: 1.2rem 1.5rem;
+            box-shadow: var(--shadow-md);
+            border: 2px solid var(--bleu-light);
+            margin-bottom: 0.8rem;
+        }
+        .resume-card h3 {
+            color: var(--bleu);
+            font-size: 0.9rem;
+            margin-bottom: 0.8rem;
+        }
+        .resume-card ul {
+            list-style: none;
+            padding: 0;
+        }
+        .resume-card li {
+            padding: 0.35rem 0;
+            padding-left: 1.6rem;
+            position: relative;
+            font-size: 0.8rem;
+        }
+        .resume-card li::before {
+            content: '—';
+            position: absolute;
+            left: 0;
+            color: var(--bleu);
+            font-weight: 700;
+        }
+        .gain-card {
+            background: linear-gradient(135deg, var(--bleu) 0%, var(--bleu-dark) 100%);
+            color: white;
+            border-radius: var(--radius);
+            padding: 1rem 1.5rem;
+            box-shadow: var(--shadow-md);
+            font-size: 0.82rem;
+        }
+        .gain-card strong { color: #b3c7ff; }
+
+        /* —— VOLUME —— */
+        .volume-bar {
+            background: white;
+            border-radius: var(--radius);
+            padding: 0.8rem 1.2rem;
+            box-shadow: var(--shadow-sm);
+            border: 1px solid var(--gris-200);
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 0.5rem;
+        }
+        .volume-bar .total {
+            font-size: 1.3rem;
+            font-weight: 800;
+            color: var(--rose);
+        }
+
+        /* —— FOOTER —— */
+        footer {
+            margin-top: 2rem;
+            padding: 1rem;
+            border-top: 3px solid var(--bleu);
+            text-align: center;
+            color: var(--gris-600);
+            font-size: 0.7rem;
+        }
+        footer strong { color: var(--bleu); }
+
+        /* —— RNCP LINK —— */
+        a.rncp-link {
+            color: var(--rose);
+            font-weight: 700;
+            text-decoration: none;
+            border-bottom: 2px solid transparent;
+            transition: border-color 0.2s;
+        }
+        a.rncp-link:hover { border-bottom-color: var(--rose); }
+
+        /* —— EXAMEN TABLE —— */
+        .exam-table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            border-radius: var(--radius);
+            overflow: hidden;
+            box-shadow: var(--shadow-sm);
+            margin-bottom: 0.8rem;
+            font-size: 0.75rem;
+        }
+        .exam-table thead th {
+            background: var(--bleu);
+            color: white;
+            padding: 0.5rem 0.8rem;
+            font-weight: 600;
+            text-align: left;
+        }
+        .exam-table td {
+            padding: 0.4rem 0.8rem;
+            border-bottom: 1px solid var(--gris-200);
+        }
+        .exam-table tbody tr:hover td { background-color: #f5f7ff; }
+        .exam-table tfoot td {
+            background: var(--bleu) !important;
+            color: white !important;
+            font-weight: 700;
+            padding: 0.5rem 0.8rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+
+        <!-- ═══════ HEADER ═══════ -->
+        <div class="header">
+            <div class="header-content">
+                <div>
+                    <span class="badge-diploma">ASD</span>
+                    <h1>Administrateur Systèmes DevOps</h1>
+                    <div class="subtitle">Titre RNCP Niveau 6 (Bac+3/4) · Préparation B3 · 2025-2026</div>
+                </div>
+                <div style="text-align: right;">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 166.7 44" style="height: 36px; width: auto;">
+                        <g fill="white">
+                            <path d="M90.7,37.6c-2-0.8-3.3-2.7-3.3-4.8v-2.1l0,0V0h-6.1v30.6l0,0v2.1c0,6.2,5,11.2,11.2,11.3h3.3C93.5,42.5,91.7,40.2,90.7,37.6"></path>
+                            <path d="M98.5,32.5c0.3,4.1,3.9,6.4,7.4,6.3c2.5,0.1,4.9-1.2,6.1-3.4h6.3c-1.1,2.6-2.8,4.8-5.1,6.4c-2.1,1.5-4.7,2.3-7.3,2.2c-7.5,0-13.5-6.1-13.5-13.6c0-7.4,6-13.4,13.4-13.5c3.6-0.1,7,1.3,9.5,3.9c3,3.1,4.4,7.4,3.8,11.6L98.5,32.5z M113,27.8c-0.6-3.5-3.7-5.9-7.2-5.8c-4.5,0-7,3.2-7.2,5.8H113z"></path>
+                            <path d="M6.4,32.5c0.3,4.1,3.9,6.4,7.4,6.3c2.5,0.1,4.9-1.2,6.1-3.4h6.3c-1.1,2.6-2.8,4.8-5.1,6.4c-2.1,1.5-4.7,2.3-7.3,2.2C6.3,43.9,0.3,37.8,0.4,30.3C0.5,23,6.4,17,13.7,16.9c3.6-0.1,7,1.3,9.5,3.9c3,3.1,4.4,7.4,3.8,11.6L6.4,32.5z M21,27.8c-0.6-3.5-3.7-5.9-7.2-5.8c-4.5,0-7,3.2-7.2,5.8H21z"></path>
+                            <path d="M64.1,17c-7.3-0.2-13.4,5.5-13.6,12.8c0,0.2,0,0.4,0,0.6v0c0,1.2,0.2,2.3,0.4,3.5h-0.1c-1.2,2.7-3.9,4.5-6.9,4.4c-4.3,0-7.5-3.2-7.5-7.8c0-2.1,0.7-4.1,2.1-5.7c1.4-1.5,3.4-2.3,5.4-2.2c1.4,0,2.7,0.4,3.9,1.1c0.8-1.8,1.9-3.3,3.3-4.6c-2.2-1.4-4.8-2.1-7.5-2.1c-7.5,0.2-13.4,6.4-13.2,13.8c0.2,7.5,6.4,13.4,13.8,13.2c3.7-0.1,7.2-1.7,9.6-4.4c5,5.6,13.6,6.2,19.2,1.2s6.2-13.6,1.2-19.2C71.7,18.6,68,17,64.1,17 M64.1,38.2c-4.2,0-7.6-3.4-7.6-7.5c0-0.1,0-0.1,0-0.2v0c0.1-4.2,3.6-7.4,7.8-7.3c4.2,0.1,7.4,3.6,7.3,7.8C71.5,35,68.1,38.2,64.1,38.2"></path>
+                            <path d="M166.7,10h-26v6h10v27.8h6.1V16h10L166.7,10z"></path>
+                            <path d="M136.9,30.5v-1.4l0,0v-8h-6.1v8l0,0v1.4c0,0.1,0,0.1,0,0.2v0.4h0c0.3,7.2,6.3,12.9,13.5,12.9v-6.1C140.2,37.9,136.9,34.6,136.9,30.5"></path>
+                            <rect x="130.8" y="10" width="6.1" height="7.5"></rect>
+                            <path d="M5.3,13.5H0V7.4h5.3c4,0,7.3-3.3,7.3-7.3h6.1C18.7,7.5,12.7,13.5,5.3,13.5"></path>
+                        </g>
+                    </svg>
+                    <div class="school-tag" style="margin-top: 0.3rem;">Programme volontaire</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ═══════ QU'EST-CE QUE L'ASD ═══════ -->
+        <h2 class="section-title">Qu'est-ce que le titre ASD ?</h2>
+        <div class="card card-info">
+            <p>Le titre <strong>Administrateur Systèmes DevOps (ASD)</strong> est un diplôme reconnu par l'État, inscrit au Répertoire National des Certifications Professionnelles.</p>
+            <p>Il atteste de votre capacité à <strong>automatiser le déploiement d'infrastructures dans le cloud, déployer en continu des applications et superviser les services déployés</strong>. C'est un atout majeur pour votre employabilité.</p>
+            <p><strong>Code RNCP :</strong> <a class="rncp-link" href="https://www.francecompetences.fr/recherche/rncp/36061/" target="_blank">RNCP36061</a> · Niveau 6 (Bac+3/4) · Certificateur : Ministère du Travail · Échéance : 30/11/2026</p>
+        </div>
+
+        <!-- ═══════ EXAMEN OFFICIEL ═══════ -->
+        <h2 class="section-title">L'examen officiel RNCP (titre complet)</h2>
+        <div class="card card-info" style="margin-bottom: 0.8rem;">
+            <span class="card-label label-info">Format de l'examen</span>
+            <p>L'examen se déroule devant un <strong>jury de professionnels</strong> habilités par le représentant territorial du ministère chargé de l'emploi. Le candidat présente un projet réalisé en amont. Le jury dispose de <strong>15 min</strong> pour lire le dossier, puis le candidat présente pendant <strong>30 min</strong>.</p>
+        </div>
+        <table class="exam-table">
+            <thead>
+                <tr>
+                    <th colspan="3" style="text-align: center;">Épreuves individuelles (devant le jury)</th>
+                </tr>
+                <tr>
+                    <th style="width: 50%;">Épreuve</th>
+                    <th style="width: 25%;">Durée</th>
+                    <th style="width: 25%;">Détail</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><strong>Présentation du projet</strong> (réalisé en amont)</td>
+                    <td>45 min</td>
+                    <td>15 min lecture jury + 30 min présentation</td>
+                </tr>
+                <tr>
+                    <td><strong>Entretien technique</strong></td>
+                    <td>30 min</td>
+                    <td>Questions sur le projet et les compétences</td>
+                </tr>
+                <tr>
+                    <td><strong>Entretien final</strong></td>
+                    <td>20 min</td>
+                    <td>Échange sur le dossier professionnel</td>
+                </tr>
+            </tbody>
+            <tfoot>
+                <tr>
+                    <td>Sous-total individuel</td>
+                    <td colspan="2" style="text-align: center;">1h35</td>
+                </tr>
+            </tfoot>
+        </table>
+        <table class="exam-table">
+            <thead>
+                <tr>
+                    <th colspan="3" style="text-align: center;">Épreuve collective (écrit surveillé par le référent pédagogique)</th>
+                </tr>
+                <tr>
+                    <th style="width: 50%;">Épreuve</th>
+                    <th style="width: 25%;">Durée</th>
+                    <th style="width: 25%;">Détail</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><strong>Questionnaire professionnel</strong></td>
+                    <td>30 min</td>
+                    <td>Doc technique en anglais · Questions ouvertes (EN) + questions statistiques de services</td>
+                </tr>
+            </tbody>
+            <tfoot>
+                <tr>
+                    <td>Sous-total collectif</td>
+                    <td colspan="2" style="text-align: center;">30 min</td>
+                </tr>
+            </tfoot>
+        </table>
+        <div class="card card-success" style="margin-bottom: 0.8rem;">
+            <span class="card-label label-success">Durée totale</span>
+            <p><strong>2h05</strong> par candidat (1h35 individuel + 30 min collectif)</p>
+        </div>
+        <div class="card card-alert">
+            <span class="card-label label-alert">Anglais obligatoire</span>
+            <p>Le questionnaire professionnel est une <strong>épreuve écrite collective</strong> : tous les candidats passent en même temps, sous la surveillance du référent pédagogique (responsable de la session de jury). Il comporte un <strong>document technique rédigé en anglais</strong>. Vous répondrez en anglais par écrit à des questions ouvertes, puis à des questions sur la compétence « Définir et mettre en place des statistiques de services ». Niveau attendu : <strong>B2 compréhension écrite, B1 expression écrite</strong> (CECRL).</p>
+        </div>
+
+        <!-- ═══════ BLOCS DE COMPÉTENCES ═══════ -->
+        <h2 class="section-title">Les 3 blocs de compétences (RNCP36061)</h2>
+        <div class="blocs-grid">
+            <div class="bloc-card">
+                <div class="bloc-number">1</div>
+                <div class="bloc-content">
+                    <strong>BC01 — Automatiser le déploiement d'une infrastructure dans le cloud</strong>
+                    <small>Automatiser la création de serveurs à l'aide de scripts · Automatiser le déploiement d'une infrastructure · Sécuriser l'infrastructure · Mettre l'infrastructure en production dans le cloud.</small>
+                </div>
+            </div>
+            <div class="bloc-card">
+                <div class="bloc-number">2</div>
+                <div class="bloc-content">
+                    <strong>BC02 — Déployer en continu une application</strong>
+                    <small>Préparer un environnement de test · Gérer le stockage des données · Gérer des containers · Automatiser la mise en production d'une application avec une plateforme.</small>
+                </div>
+            </div>
+            <div class="bloc-card">
+                <div class="bloc-number">3</div>
+                <div class="bloc-content">
+                    <strong>BC03 — Superviser les services déployés</strong>
+                    <small>Définir et mettre en place des statistiques de services · Exploiter une solution de supervision · Échanger sur des réseaux professionnels éventuellement en anglais.</small>
+                </div>
+            </div>
+        </div>
+
+        <!-- ═══════ ORGANISATION ═══════ -->
+        <h2 class="section-title">Organisation pratique</h2>
+        <div class="orga-grid">
+            <div class="orga-card">
+                <div class="orga-icon">—</div>
+                <div class="orga-title">Séances hebdomadaires</div>
+                <span class="orga-mode mode-distanciel">En distanciel</span><br>
+                <strong>Lundis ET Jeudis</strong> de 17h à 18h<br>
+                <small>32 séances du 02/03 au 29/06/2026 · Visioconférence</small>
+            </div>
+            <div class="orga-card">
+                <div class="orga-icon">—</div>
+                <div class="orga-title">Session intensive (9 jours)</div>
+                <span class="orga-mode mode-presentiel">En présentiel</span><br>
+                <strong>63 heures</strong> · Dates du 3PRJ3<br>
+                <small>Sur votre centre + en distanciel avec le formateur référent</small>
+            </div>
+        </div>
+        <div class="volume-bar">
+            <span class="total">95h</span>
+            <span>de préparation : <strong>32h</strong> séances hebdo (distanciel) + <strong>63h</strong> session intensive (présentiel)</span>
+        </div>
+
+        <!-- ═══════ REMPLACEMENT 3PRJ3 ═══════ -->
+        <h2 class="section-title">Remplacement du projet 3PRJ3</h2>
+        <div class="card card-important">
+            <span class="card-label label-important">Point important</span>
+            <p>En vous inscrivant au parcours ASD, vous <strong>ne participerez pas au projet 3PRJ3</strong> (Projet de fin d'unité 3, 9 jours). Les 9 jours du 3PRJ3 seront consacrés à votre <strong>session intensive de préparation au diplôme</strong>.</p>
+        </div>
+        <div class="card card-alert">
+            <span class="card-label label-alert">Conséquence</span>
+            <p>Vous n'aurez pas de note 3PRJ3 (projet + oral + participation). Cette note sera <strong>remplacée</strong> par une évaluation spécifique au parcours ASD, détaillée ci-dessous.</p>
+        </div>
+
+        <!-- ═══════ ÉVALUATION ═══════ -->
+        <h2 class="section-title">Votre évaluation (remplace 3PRJ3)</h2>
+        <p style="margin-bottom: 0.8rem;">Votre note 3PRJ3 sera remplacée par une évaluation en deux volets :</p>
+
+        <div class="eval-volets">
+            <div class="volet-card">
+                <h4>Volet 1 — Évaluation continue</h4>
+                <ul>
+                    <li><strong>Motivation et engagement</strong> : assiduité, implication</li>
+                    <li><strong>Participation active</strong> : contribution aux échanges</li>
+                    <li><strong>Travail personnel</strong> : avancement du dossier professionnel</li>
+                    <li><strong>Autonomie</strong> : travail entre les séances, initiative</li>
+                </ul>
+            </div>
+            <div class="volet-card">
+                <h4>Volet 2 — Oral (simulation jury RNCP)</h4>
+                <ul>
+                    <li><strong>Présentation projet</strong> (45 min) : 15 min lecture + 30 min présentation</li>
+                    <li><strong>Entretien technique</strong> (30 min) : questions sur les 3 blocs</li>
+                    <li><strong>Questionnaire pro</strong> (30 min) : épreuve écrite collective, doc technique en anglais</li>
+                    <li><strong>Dossier professionnel</strong> : couverture des compétences par bloc</li>
+                </ul>
+            </div>
+        </div>
+
+        <table class="eval-table">
+            <thead>
+                <tr>
+                    <th style="width: 26%; text-align: left;">Critère</th>
+                    <th style="width: 22%;">0 pt</th>
+                    <th style="width: 22%;">1 pt</th>
+                    <th style="width: 22%;">2 pts</th>
+                    <th style="width: 8%;">Note</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr class="section-row"><td colspan="5">Évaluation continue — 10 points</td></tr>
+                <tr><td>1. Assiduité et ponctualité</td><td class="n0">Absences répétées non justifiées</td><td class="n1">Présence régulière, quelques absences</td><td class="n2">Présence exemplaire à toutes les séances</td><td class="note">/2</td></tr>
+                <tr><td>2. Motivation et engagement</td><td class="n0">Passif, aucun intérêt visible</td><td class="n1">Engagement correct, travail régulier</td><td class="n2">Très motivé, investissement constant</td><td class="note">/2</td></tr>
+                <tr><td>3. Participation active</td><td class="n0">Aucune contribution aux échanges</td><td class="n1">Participation quand sollicité</td><td class="n2">Participation spontanée et constructive</td><td class="note">/2</td></tr>
+                <tr><td>4. Travail personnel</td><td class="n0">Aucun travail entre les séances</td><td class="n1">Travail régulier, progression visible</td><td class="n2">Travail soutenu, progression remarquable</td><td class="note">/2</td></tr>
+                <tr><td>5. Autonomie et initiative</td><td class="n0">Dépendance constante au formateur</td><td class="n1">Autonome sur les tâches guidées</td><td class="n2">Proactif, recherche de solutions seul</td><td class="note">/2</td></tr>
+                <tr class="section-row"><td colspan="5">Simulation jury RNCP — 10 points</td></tr>
+                <tr><td>6. Dossier professionnel (DP)</td><td class="n0">DP incomplet, compétences non couvertes</td><td class="n1">DP couvre les 3 blocs, exemples concrets</td><td class="n2">DP exemplaire, chaque compétence illustrée par un projet réel</td><td class="note">/2</td></tr>
+                <tr><td>7. BC01 — Infra cloud</td><td class="n0">Ne sait pas expliquer ses scripts de création de serveurs ni sa sécurisation</td><td class="n1">Explique son automatisation serveurs, déploiement infra et sécurisation</td><td class="n2">Justifie ses choix (scripts, IaC, sécurité, mise en production cloud)</td><td class="note">/2</td></tr>
+                <tr><td>8. BC02 — Déploiement continu</td><td class="n0">Ne sait pas expliquer ses environnements de test ni ses containers</td><td class="n1">Explique son environnement de test, stockage, containers et pipeline</td><td class="n2">Justifie ses choix (Docker, Kubernetes, automatisation mise en production)</td><td class="note">/2</td></tr>
+                <tr><td>9. BC03 — Supervision</td><td class="n0">Ne sait pas expliquer sa supervision ni ses statistiques de services</td><td class="n1">Explique ses indicateurs, sa solution de supervision et ses échanges en anglais</td><td class="n2">Justifie ses choix (métriques, alerting, dashboards, veille communautaire EN)</td><td class="note">/2</td></tr>
+                <tr><td>10. Présentation orale (30 min + entretien)</td><td class="n0">Présentation confuse, hors timing, ne répond pas aux questions</td><td class="n1">Présentation structurée, respecte le timing, répond correctement</td><td class="n2">Pitch professionnel convaincant, argumentation technique précise</td><td class="note">/2</td></tr>
+            </tbody>
+            <tfoot>
+                <tr><td colspan="4" style="text-align: right;">TOTAL (10 critères × 2 pts)</td><td style="text-align: center; font-size: 1rem;">/20</td></tr>
+            </tfoot>
+        </table>
+
+        <!-- ═══════ PLANNING ═══════ -->
+        <h2 class="section-title page-break">Planning des séances (Lundis + Jeudis, 17h-18h)</h2>
+
+        <table class="planning-table">
+            <thead>
+                <tr>
+                    <th>S.</th>
+                    <th style="width: 47%;">Lundi 17h-18h</th>
+                    <th style="width: 47%;">Jeudi 17h-18h</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr class="phase-row phase-1"><td colspan="3">Phase 1 — Cadrage et BC01 : Automatisation infra cloud (mars) · 8 séances</td></tr>
+                <tr>
+                    <td>1</td>
+                    <td><span class="date">Lun 02/03</span> — <span class="topic">Cadrage RNCP ASD</span><br><span class="detail">Comprendre l'examen : 45 min présentation (15 lecture + 30 oral) + 30 min entretien technique + 30 min questionnaire anglais + 20 min entretien final = 2h05. Attentes du jury. Choix du projet d'infrastructure.</span></td>
+                    <td><span class="date">Jeu 05/03</span> — <span class="topic">Dossier de projet &amp; dossier professionnel</span><br><span class="detail">Différence entre dossier de projet (technique) et dossier professionnel (parcours). Les compétences à couvrir par bloc. Exemples de DP réussis. Début de rédaction.</span></td>
+                </tr>
+                <tr>
+                    <td>2</td>
+                    <td><span class="date">Lun 09/03</span> — <span class="topic">Architecture de l'infrastructure</span><br><span class="detail">Concevoir le schéma de son infra projet : serveurs, réseau, services cloud. Le jury attend un schéma global clair et justifié.</span></td>
+                    <td><span class="date">Jeu 12/03</span> — <span class="topic">Automatisation création de serveurs</span><br><span class="detail">BC01 : automatiser la création de serveurs à l'aide de scripts. Scripts Bash/PowerShell/Python. Documenter chaque étape pour le DP.</span></td>
+                </tr>
+                <tr>
+                    <td>3</td>
+                    <td><span class="date">Lun 16/03</span> — <span class="topic">Automatisation déploiement infra</span><br><span class="detail">BC01 : automatiser le déploiement d'une infrastructure. Ansible, Terraform. Savoir justifier ses choix d'outils IaC au jury.</span></td>
+                    <td><span class="date">Jeu 19/03</span> — <span class="topic">Sécuriser l'infrastructure</span><br><span class="detail">BC01 : sécuriser l'infrastructure. Hardening, pare-feu, politiques de sécurité, gestion des accès. Questions fréquentes du jury.</span></td>
+                </tr>
+                <tr>
+                    <td>4</td>
+                    <td><span class="date">Lun 23/03</span> — <span class="topic">Mise en production dans le cloud</span><br><span class="detail">BC01 : mettre l'infrastructure en production dans le cloud (public, privé ou hybride). Le jury évalue la maîtrise du cloud.</span></td>
+                    <td><span class="date">Jeu 26/03</span> — <span class="topic">Point d'avancement + DP BC01</span><br><span class="detail">Revue : scripts d'automatisation fonctionnels ? Infra sécurisée ? Cloud en place ? Rédiger la section BC01 du DP.</span></td>
+                </tr>
+
+                <tr class="phase-row phase-2"><td colspan="3">Phase 2 — BC02 : Déployer en continu une application (fin mars - fin avril) · 9 séances</td></tr>
+                <tr>
+                    <td>5</td>
+                    <td><span class="date">Lun 30/03</span> — <span class="topic">Environnement de test</span><br><span class="detail">BC02 : préparer un environnement de test. Mise en place d'environnements isolés, staging, pré-production. Documenter pour le jury.</span></td>
+                    <td><span class="date">Jeu 02/04</span> — <span class="topic">Stockage des données</span><br><span class="detail">BC02 : gérer le stockage des données. Volumes, snapshots, migration de données. Le jury vérifie la stratégie de stockage.</span></td>
+                </tr>
+                <tr>
+                    <td>6</td>
+                    <td class="ferie"><s>Lun 06/04</s> — Lundi de Pâques</td>
+                    <td><span class="date">Jeu 09/04</span> — <span class="topic">Conteneurisation Docker</span><br><span class="detail">BC02 : gérer des containers. Docker, Docker Compose, images, registries. Le jury évalue la pertinence de la conteneurisation.</span></td>
+                </tr>
+                <tr>
+                    <td>7</td>
+                    <td><span class="date">Lun 13/04</span> — <span class="topic">Orchestration Kubernetes</span><br><span class="detail">BC02 : gérer des containers avec une plateforme d'orchestration. Pods, services, ingress, scaling. Savoir expliquer au jury.</span></td>
+                    <td><span class="date">Jeu 16/04</span> — <span class="topic">Automatiser la mise en production</span><br><span class="detail">BC02 : automatiser la mise en production d'une application avec une plateforme. Pipeline CI/CD, GitLab CI ou Jenkins.</span></td>
+                </tr>
+                <tr>
+                    <td>8</td>
+                    <td><span class="date">Lun 20/04</span> — <span class="topic">Pipeline CI/CD avancé</span><br><span class="detail">BC02 : affiner le pipeline. Tests automatisés, déploiement blue/green, rollback. Le jury interroge sur la stratégie de déploiement.</span></td>
+                    <td><span class="date">Jeu 23/04</span> — <span class="topic">Point d'avancement + DP BC02</span><br><span class="detail">Revue : environnement de test en place ? Containers fonctionnels ? Pipeline CI/CD opérationnel ? Rédiger la section BC02 du DP.</span></td>
+                </tr>
+
+                <tr class="phase-row phase-3"><td colspan="3">Phase 3 — BC03 : Superviser les services déployés (mai) · 8 séances</td></tr>
+                <tr>
+                    <td>9</td>
+                    <td><span class="date">Lun 27/04</span> — <span class="topic">Statistiques de services</span><br><span class="detail">BC03 : définir et mettre en place des statistiques de services. Métriques, KPI, indicateurs de performance. Le jury attend des exemples concrets.</span></td>
+                    <td><span class="date">Jeu 30/04</span> — <span class="topic">Solution de supervision</span><br><span class="detail">BC03 : exploiter une solution de supervision. Prometheus, Grafana, Zabbix. Alerting, dashboards. Le jury attend un système fonctionnel.</span></td>
+                </tr>
+                <tr>
+                    <td>10</td>
+                    <td><span class="date">Lun 04/05</span> — <span class="topic">Supervision avancée</span><br><span class="detail">BC03 : dashboards avancés, capacity planning, analyse des tendances. Montrer au jury un monitoring complet et exploitable.</span></td>
+                    <td><span class="date">Jeu 07/05</span> — <span class="topic">Échanges communautaires &amp; anglais</span><br><span class="detail">BC03 : échanger sur des réseaux professionnels éventuellement en anglais. Forums, Stack Overflow, GitHub Issues. Pratique anglais technique.</span></td>
+                </tr>
+                <tr>
+                    <td>11</td>
+                    <td><span class="date">Lun 11/05</span> — <span class="topic">Diagnostic et résolution</span><br><span class="detail">BC03 : utiliser la supervision pour diagnostiquer des problèmes. Démarche structurée de résolution, post-mortem. Le jury évalue l'analyse.</span></td>
+                    <td class="ferie"><s>Jeu 14/05</s> — Ascension</td>
+                </tr>
+                <tr>
+                    <td>12</td>
+                    <td><span class="date">Lun 18/05</span> — <span class="topic">Documentation technique</span><br><span class="detail">Documenter intégralement son infra : schémas, procédures, modes opératoires. Attendu par le jury pour l'entretien.</span></td>
+                    <td><span class="date">Jeu 21/05</span> — <span class="topic">Préparation questionnaire anglais</span><br><span class="detail">Entraînement au questionnaire pro : lire une doc technique en anglais, répondre aux questions ouvertes en anglais. Vocabulaire clé DevOps.</span></td>
+                </tr>
+                <tr>
+                    <td>13</td>
+                    <td class="ferie"><s>Lun 25/05</s> — Lundi de Pentecôte</td>
+                    <td><span class="date">Jeu 28/05</span> — <span class="topic">Point d'avancement + DP BC03</span><br><span class="detail">Revue : supervision en place ? Statistiques opérationnelles ? Rédiger la section BC03 du DP : métriques, supervision, veille anglais.</span></td>
+                </tr>
+
+                <tr class="phase-row phase-4"><td colspan="3">Phase 4 — Finalisation DP et entraînement jury (juin) · 9 séances</td></tr>
+                <tr>
+                    <td>14</td>
+                    <td><span class="date">Lun 01/06</span> — <span class="topic">Finalisation de l'infrastructure</span><br><span class="detail">Dernières corrections, vérification que tous les services fonctionnent. L'infra doit être présentable et démontrable.</span></td>
+                    <td><span class="date">Jeu 04/06</span> — <span class="topic">Relecture croisée du DP</span><br><span class="detail">Relecture entre pairs : chaque compétence est-elle couverte ? Les exemples sont-ils concrets ? Corrections mutuelles.</span></td>
+                </tr>
+                <tr>
+                    <td>15</td>
+                    <td><span class="date">Lun 08/06</span> — <span class="topic">Finalisation du DP</span><br><span class="detail">Derniers ajustements du DP. Vérifier la couverture complète des 3 blocs. Le formateur valide le DP.</span></td>
+                    <td><span class="date">Jeu 11/06</span> — <span class="topic">Préparer sa présentation orale</span><br><span class="detail">Structure des 30 min de présentation : intro, démo infra, choix techniques, conclusion. Préparer ses schémas et sa démo live.</span></td>
+                </tr>
+                <tr>
+                    <td>16</td>
+                    <td><span class="date">Lun 15/06</span> — <span class="topic">Entraînement oral (1)</span><br><span class="detail">Passage devant le formateur : timing 30 min, posture, clarté. Retours individuels. Préparation aux questions pièges.</span></td>
+                    <td><span class="date">Jeu 18/06</span> — <span class="topic">Entraînement oral (2)</span><br><span class="detail">Simulation des questions d'entretien technique : le jury vous interroge sur vos choix d'infra, bloc par bloc.</span></td>
+                </tr>
+                <tr>
+                    <td>17</td>
+                    <td><span class="date">Lun 22/06</span> — <span class="topic">Simulation jury complète</span><br><span class="detail">Passage blanc en conditions réelles : 30 min présentation + 30 min entretien technique + questionnaire anglais devant formateur + pairs.</span></td>
+                    <td><span class="date">Jeu 25/06</span> — <span class="topic">Débriefing + corrections</span><br><span class="detail">Retours détaillés sur la simulation : points forts, axes d'amélioration, dernières corrections DP et oral.</span></td>
+                </tr>
+                <tr>
+                    <td>18</td>
+                    <td><span class="date">Lun 29/06</span> — <span class="topic">Derniers ajustements</span><br><span class="detail">Vérification finale : DP complet, infra fonctionnelle, démo prête, timing oral maîtrisé. Vous êtes prêts.</span></td>
+                    <td style="color: #ccc; text-align: center;">—</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <!-- ═══════ SESSION INTENSIVE ═══════ -->
+        <h2 class="section-title">Session intensive (9 jours — remplace 3PRJ3)</h2>
+        <div class="card card-important" style="margin-bottom: 0.6rem;">
+            <span class="card-label label-important">Attention</span>
+            <p><strong>9 jours ne suffisent pas pour tout construire de zéro.</strong> Si vous arrivez à la session intensive sans avoir avancé votre infrastructure et votre DP tout au long du cycle, vous n'aurez pas le temps de rattraper. <strong>Le travail personnel entre les séances est indispensable dès la semaine 1.</strong></p>
+            <p style="margin-top: 0.5rem;"><strong>Un candidat qui n'aura pas suffisamment travaillé sa préparation ne sera pas autorisé à se présenter au passage du diplôme.</strong> Cette appréciation reste sous la décision du référent de chaque centre.</p>
+        </div>
+        <div class="card card-info" style="margin-bottom: 0.8rem;">
+            <span class="card-label label-info">Présentiel sur le centre</span>
+            <p><strong>Ces 9 jours servent à finaliser, pas à commencer.</strong> Vous travaillez à temps plein (7h/jour) sur la finalisation de votre infrastructure et de votre dossier professionnel ASD.</p>
+        </div>
+        <table class="intensive-table">
+            <thead><tr><th style="width: 8%;">Jour</th><th>Programme</th></tr></thead>
+            <tbody>
+                <tr><td>J1</td><td>Finalisation de l'infrastructure : corriger les derniers problèmes, compléter les services manquants</td></tr>
+                <tr><td>J2</td><td>BC01 : vérifier l'automatisation des serveurs (scripts), le déploiement IaC, la sécurisation et la mise en production cloud</td></tr>
+                <tr><td>J3</td><td>BC02 : vérifier l'environnement de test, le stockage, les containers Docker/K8s et le pipeline CI/CD de mise en production</td></tr>
+                <tr><td>J4</td><td>BC03 : vérifier les statistiques de services, la solution de supervision, les dashboards et la pratique anglais technique</td></tr>
+                <tr><td>J5</td><td>Rédaction intensive du DP : BC01 (scripts serveurs, automatisation infra, sécurité, cloud)</td></tr>
+                <tr><td>J6</td><td>Rédaction intensive du DP : BC02 (environnement test, stockage, containers, mise en production) et BC03 (statistiques, supervision, anglais)</td></tr>
+                <tr><td>J7</td><td>Finalisation du DP : relecture, couverture de toutes les compétences, schémas d'infrastructure, annexes</td></tr>
+                <tr><td>J8</td><td>Préparation de l'oral : construire la présentation de 30 min, préparer la démo live de l'infra, entraînement questionnaire anglais</td></tr>
+                <tr><td>J9</td><td>Simulation jury en conditions réelles : 30 min présentation + 30 min entretien technique + questionnaire anglais + débriefing</td></tr>
+            </tbody>
+        </table>
+
+        <!-- ═══════ EN RÉSUMÉ ═══════ -->
+        <h2 class="section-title">En résumé</h2>
+        <div class="resume-card">
+            <h3>En vous inscrivant au parcours ASD, vous vous engagez à :</h3>
+            <ul>
+                <li>Être présent et motivé chaque <strong>lundi ET jeudi de 17h à 18h</strong> (32 séances)</li>
+                <li>Participer à la <strong>session intensive de 9 jours</strong> (au lieu du 3PRJ3)</li>
+                <li>Préparer un <strong>dossier de projet</strong> (technique) et un <strong>dossier professionnel</strong> (parcours) couvrant les 3 blocs</li>
+                <li>Vous entraîner au <strong>questionnaire professionnel en anglais</strong> (documentation technique EN, réponses EN)</li>
+                <li>Passer un <strong>oral de préparation au diplôme</strong> en fin de cycle</li>
+                <li>Être évalué sur votre <strong>motivation, participation et travail</strong> tout au long du parcours</li>
+                <li><strong>Travailler entre les séances</strong> : l'infrastructure et le DP se construisent progressivement, pas en 9 jours</li>
+            </ul>
+        </div>
+        <div class="gain-card">
+            <strong>Ce que vous gagnez :</strong> Un titre RNCP reconnu par l'État (Niveau 6, Bac+3/4), un dossier professionnel solide, une expérience de passage devant jury, et un avantage concurrentiel sur le marché de l'emploi.
+        </div>
+
+        <footer>
+            <strong>École IT</strong> · Préparation ASD · B3 2025-2026 · Document de présentation · Février 2026
+        </footer>
+    </div>
+</body>
+</html>

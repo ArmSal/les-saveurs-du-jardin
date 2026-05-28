@@ -18,3 +18,11 @@ variable "key_name" {
   type        = string
   default     = "lsdj"
 }
+
+# CIDR autorise pour les interfaces d'administration (Grafana, Prometheus, Adminer)
+# Restreindre a l'IP de l'administrateur en production (ex: "203.0.113.10/32")
+variable "admin_ip_cidr" {
+  description = "CIDR IP autorise pour acceder aux interfaces d'administration. Restreindre en production."
+  type        = string
+  default     = "0.0.0.0/0"
+}

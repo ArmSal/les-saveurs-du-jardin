@@ -1,0 +1,161 @@
+# =============================================================================
+# Application Symfony (PHP-FPM) + Nginx - Deployments & Services
+# =============================================================================
+# Compétences ASD couvertes :
+#   CP7  - Gérer des containers (containers décrits sur la plateforme)
+#   CP8  - Automatiser la mise en production avec une plateforme (Kubernetes)
+# Critère RE CP8 : "Les containers sont décrits sur la plateforme"
+# =============================================================================
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: lsdj-app
+  namespace: lsdj
+  labels:
+    app.kubernetes.io/name: les-saveurs-du-jardin
+    app.kubernetes.io/component: app
+spec:
+  replicas: 2  # Haute disponibilité : 2 pods PHP-FPM
+  selector:
+    matchLabels:
+      app: lsdj-app
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 0   # Zéro downtime lors du déploiement
+      maxSurge: 1
+  template:
+    metadata:
+      labels:
+        app: lsdj-app
+        app.kubernetes.io/component: app
+    spec:
+      containers:
+        - name: php-fpm
+          image: ghcr.io/armsalihu/les-saveurs-du-jardin:latest
+          ports:
+            - containerPort: 9000
+              name: php-fpm
+          envFrom:
+            - configMapRef:
+                name: lsdj-config
+          env:
+            - name: DATABASE_URL
+              value: "mysql://$(MYSQL_USER):$(MYSQL_PASSWORD)@lsdj-db:3306/$(MYSQL_DATABASE)?serverVersion=8.0&charset=utf8mb4"
+            - name: MYSQL_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: lsdj-secrets
+                  key: MYSQL_PASSWORD
+          resources:
+            requests:
+              memory: "128Mi"
+              cpu: "100m"
+            limits:
+              memory: "512Mi"
+              cpu: "1000m"
+          readinessProbe:
+            exec:
+              command: ["php", "-r", "exit(0);"]
+            initialDelaySeconds: 10
+            periodSeconds: 5
+          livenessProbe:
+            exec:
+              command: ["php", "-r", "exit(0);"]
+            initialDelaySeconds: 30
+            periodSeconds: 15
+
+---
+# Service ClusterIP pour PHP-FPM (accessible depuis Nginx uniquement)
+apiVersion: v1
+kind: Service
+metadata:
+  name: lsdj-app
+  namespace: lsdj
+  labels:
+    app.kubernetes.io/name: les-saveurs-du-jardin
+    app.kubernetes.io/component: app
+spec:
+  selector:
+    app: lsdj-app
+  ports:
+    - name: php-fpm
+      port: 9000
+      targetPort: 9000
+  type: ClusterIP
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: lsdj-web
+  namespace: lsdj
+  labels:
+    app.kubernetes.io/name: les-saveurs-du-jardin
+    app.kubernetes.io/component: web
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: lsdj-web
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 0
+      maxSurge: 1
+  template:
+    metadata:
+      labels:
+        app: lsdj-web
+        app.kubernetes.io/component: web
+    spec:
+      containers:
+        - name: nginx
+          image: nginx:1.27-alpine
+          ports:
+            - containerPort: 80
+              name: http
+            - containerPort: 443
+              name: https
+          resources:
+            requests:
+              memory: "32Mi"
+              cpu: "50m"
+            limits:
+              memory: "128Mi"
+              cpu: "500m"
+          readinessProbe:
+            httpGet:
+              path: /nginx_status
+              port: 80
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /nginx_status
+              port: 80
+            initialDelaySeconds: 10
+            periodSeconds: 15
+
+---
+# Service LoadBalancer pour Nginx (expose l'application vers l'extérieur)
+apiVersion: v1
+kind: Service
+metadata:
+  name: lsdj-web
+  namespace: lsdj
+  labels:
+    app.kubernetes.io/name: les-saveurs-du-jardin
+    app.kubernetes.io/component: web
+spec:
+  selector:
+    app: lsdj-web
+  ports:
+    - name: http
+      port: 80
+      targetPort: 80
+    - name: https
+      port: 443
+      targetPort: 443
+  type: LoadBalancer

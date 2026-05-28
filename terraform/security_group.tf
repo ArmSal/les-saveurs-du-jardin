@@ -30,31 +30,31 @@ resource "aws_security_group" "lsdj_sg" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
-  # Port 3000 : Interface Grafana pour la supervision
+  # Port 3000 : Interface Grafana - acces restreint a l'IP administrateur
   ingress {
-    description = "Grafana Dashboards"
+    description = "Grafana Dashboards (admin only)"
     from_port   = 3000
     to_port     = 3000
     protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
+    cidr_blocks = [var.admin_ip_cidr]
   }
 
-  # Port 9090 : Interface Prometheus (optionnel, pour debug)
+  # Port 9090 : Interface Prometheus - acces restreint a l'IP administrateur
   ingress {
-    description = "Prometheus UI"
+    description = "Prometheus UI (admin only)"
     from_port   = 9090
     to_port     = 9090
     protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
+    cidr_blocks = [var.admin_ip_cidr]
   }
 
-  # Port 8081 : Adminer (pour gerer la base de donnees en dev/test)
+  # Port 8081 : Adminer - acces restreint a l'IP administrateur (hors production)
   ingress {
-    description = "Adminer"
+    description = "Adminer DB UI (admin only)"
     from_port   = 8081
     to_port     = 8081
     protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
+    cidr_blocks = [var.admin_ip_cidr]
   }
 
   # Regle par defaut pour autoriser le serveur a sortir sur Internet (mises a jour, telechargements, etc.)

@@ -1,0 +1,59 @@
+# =============================================================================
+# Ingress Controller - Routage HTTP/HTTPS
+# =============================================================================
+# L'Ingress expose les services vers l'extérieur via une seule IP publique.
+# Prérequis : nginx-ingress-controller déployé dans le cluster
+#   kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v1.10.1/deploy/static/provider/aws/deploy.yaml
+#
+# Compétence ASD couverte : CP4 - Mettre l'infrastructure en production dans le cloud
+# Critère RE : "Les serveurs sont accessibles par les utilisateurs finaux"
+# =============================================================================
+
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: lsdj-ingress
+  namespace: lsdj
+  labels:
+    app.kubernetes.io/name: les-saveurs-du-jardin
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
+    # Redirection automatique HTTP → HTTPS
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
+    # Certificat TLS géré par cert-manager (Let's Encrypt)
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+    # Headers de sécurité
+    nginx.ingress.kubernetes.io/configuration-snippet: |
+      add_header X-Frame-Options "SAMEORIGIN" always;
+      add_header X-Content-Type-Options "nosniff" always;
+      add_header Strict-Transport-Security "max-age=31536000; includeSubDomains" always;
+spec:
+  ingressClassName: nginx
+  tls:
+    - hosts:
+        - lesdj.example.com
+      secretName: lsdj-tls
+  rules:
+    # Application principale
+    - host: lesdj.example.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: lsdj-web
+                port:
+                  number: 80
+    # Interface Grafana (sous-chemin /grafana)
+    - host: lesdj.example.com
+      http:
+        paths:
+          - path: /grafana
+            pathType: Prefix
+            backend:
+              service:
+                name: lsdj-grafana
+                port:
+                  number: 3000

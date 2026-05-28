@@ -1,0 +1,12 @@
+# =============================================================================
+# Namespace - Les Saveurs du Jardin
+# =============================================================================
+# Isole toutes les ressources LSDJ dans un namespace dédié.
+# Permet de gérer les quotas, la sécurité et le RBAC par namespace.
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: lsdj
+  labels:
+    app.kubernetes.io/name: les-saveurs-du-jardin
+    environment: production

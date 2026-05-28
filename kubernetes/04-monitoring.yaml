@@ -1,0 +1,226 @@
+# =============================================================================
+# Stack de supervision : Prometheus + Grafana
+# =============================================================================
+# Compétences ASD couvertes :
+#   CP9  - Définir et mettre en place des statistiques de services
+#   CP10 - Exploiter une solution de supervision
+# Critère RE : "Les indicateurs définis sont pertinents / Les alertes sont
+#              correctement interprétées"
+# =============================================================================
+
+# --- PersistentVolumeClaims pour la persistance des données de supervision ---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: prometheus-pvc
+  namespace: lsdj
+  labels:
+    app.kubernetes.io/component: monitoring
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 5Gi
+  storageClassName: gp2
+
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: grafana-pvc
+  namespace: lsdj
+  labels:
+    app.kubernetes.io/component: monitoring
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 2Gi
+  storageClassName: gp2
+
+---
+# --- ConfigMap Prometheus ---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: prometheus-config
+  namespace: lsdj
+  labels:
+    app.kubernetes.io/component: monitoring
+data:
+  prometheus.yml: |
+    global:
+      scrape_interval: 15s
+      evaluation_interval: 15s
+
+    rule_files:
+      - /etc/prometheus/alert_rules.yml
+
+    alerting:
+      alertmanagers:
+        - static_configs:
+            - targets: ['lsdj-alertmanager:9093']
+
+    scrape_configs:
+      - job_name: 'prometheus'
+        static_configs:
+          - targets: ['localhost:9090']
+
+      - job_name: 'node-exporter'
+        static_configs:
+          - targets: ['lsdj-node-exporter:9100']
+
+      - job_name: 'cadvisor'
+        static_configs:
+          - targets: ['lsdj-cadvisor:8080']
+
+      - job_name: 'nginx'
+        static_configs:
+          - targets: ['lsdj-nginx-exporter:9113']
+
+      - job_name: 'php-fpm'
+        static_configs:
+          - targets: ['lsdj-php-fpm-exporter:9253']
+
+      - job_name: 'mysql'
+        static_configs:
+          - targets: ['lsdj-mysqld-exporter:9104']
+
+---
+# --- Déploiement Prometheus ---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: lsdj-prometheus
+  namespace: lsdj
+  labels:
+    app.kubernetes.io/name: les-saveurs-du-jardin
+    app.kubernetes.io/component: monitoring
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: lsdj-prometheus
+  template:
+    metadata:
+      labels:
+        app: lsdj-prometheus
+    spec:
+      containers:
+        - name: prometheus
+          image: prom/prometheus:v2.54.1
+          args:
+            - "--config.file=/etc/prometheus/prometheus.yml"
+            - "--storage.tsdb.path=/prometheus"
+            - "--storage.tsdb.retention.time=15d"
+          ports:
+            - containerPort: 9090
+              name: prometheus
+          volumeMounts:
+            - name: config
+              mountPath: /etc/prometheus
+            - name: data
+              mountPath: /prometheus
+          resources:
+            requests:
+              memory: "128Mi"
+              cpu: "100m"
+            limits:
+              memory: "256Mi"
+              cpu: "500m"
+      volumes:
+        - name: config
+          configMap:
+            name: prometheus-config
+        - name: data
+          persistentVolumeClaim:
+            claimName: prometheus-pvc
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: lsdj-prometheus
+  namespace: lsdj
+  labels:
+    app.kubernetes.io/component: monitoring
+spec:
+  selector:
+    app: lsdj-prometheus
+  ports:
+    - name: prometheus
+      port: 9090
+      targetPort: 9090
+  type: ClusterIP  # Accessible uniquement en interne (via Ingress si besoin)
+
+---
+# --- Déploiement Grafana ---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: lsdj-grafana
+  namespace: lsdj
+  labels:
+    app.kubernetes.io/name: les-saveurs-du-jardin
+    app.kubernetes.io/component: monitoring
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: lsdj-grafana
+  template:
+    metadata:
+      labels:
+        app: lsdj-grafana
+    spec:
+      containers:
+        - name: grafana
+          image: grafana/grafana:11.2.2
+          ports:
+            - containerPort: 3000
+              name: grafana
+          env:
+            - name: GF_SECURITY_ADMIN_USER
+              value: "admin"
+            - name: GF_SECURITY_ADMIN_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: lsdj-secrets
+                  key: GF_SECURITY_ADMIN_PASSWORD
+            - name: GF_SERVER_ROOT_URL
+              value: "%(protocol)s://%(domain)s/grafana"
+            - name: GF_SERVER_SERVE_FROM_SUB_PATH
+              value: "true"
+          volumeMounts:
+            - name: grafana-data
+              mountPath: /var/lib/grafana
+          resources:
+            requests:
+              memory: "128Mi"
+              cpu: "100m"
+            limits:
+              memory: "256Mi"
+              cpu: "500m"
+      volumes:
+        - name: grafana-data
+          persistentVolumeClaim:
+            claimName: grafana-pvc
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: lsdj-grafana
+  namespace: lsdj
+  labels:
+    app.kubernetes.io/component: monitoring
+spec:
+  selector:
+    app: lsdj-grafana
+  ports:
+    - name: grafana
+      port: 3000
+      targetPort: 3000
+  type: ClusterIP
